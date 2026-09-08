@@ -254,8 +254,19 @@ body,
      under it, a row with a phone and an envelope — so the card plainly holds a
      person's details, and none of the details. */
   background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(5px);
+  /* Prefixed first, standard last, and it has to stay that way. The minifier
+     reads the pair as one property declared twice and keeps only the last —
+     so written the other way round the build shipped `-webkit-backdrop-filter`
+     alone. Current Chromium answers false to
+     CSS.supports('-webkit-backdrop-filter', ...), so production had no blur at
+     all: only the white wash, over perfectly sharp text, on every build this
+     file has ever produced. It never showed up in dev, where the stylesheet is
+     served unminified and the standard property is right there.
+
+     Swapping the order is the whole fix — both survive, and the standard one
+     is last, which is also the order it should have been in for the cascade. */
   -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
   z-index: 2;
   pointer-events: none;
   opacity: 1;
