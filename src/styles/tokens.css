@@ -1,0 +1,168 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Buyer Intent — design tokens
+   ══════════════════════════════════════════════════════════════════════
+   Extracted from the shipped source: every value below already appears in
+   src/components, src/imports or src/index.css. Nothing here is invented,
+   and nothing here changes existing output — the hardcoded arbitrary values
+   throughout the app keep rendering exactly as they do today. These tokens
+   are the vocabulary new work should be written against.
+
+   Tailwind v4 @theme, so each entry is both a CSS custom property and a
+   generated utility: --color-accent gives you bg-accent / text-accent.
+
+   Deliberately excluded: third-party brand colours (Figma #f24e1e/#a259ff,
+   LinkedIn #0077b5, VS Code #007acc, HubSpot #ff7a59 …). Those are logo
+   assets, not part of this system.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@theme static {
+  /* ── Font ──────────────────────────────────────────────────────────
+     One family, no exceptions. index.css enforces it on the #root subtree. */
+  --font-sans: Inter, sans-serif;
+
+  /* ── Ink — deep teal ───────────────────────────────────────────────
+     The interactive colour. Primary buttons, checked checkboxes, active
+     tab glyphs, focus rings, the donut ring. Not a text colour. */
+  --color-ink:            #072929;
+  --color-ink-hover:      #0a3a3a;
+  --color-ink-30:         rgba(7, 41, 41, 0.30);  /* CTA shadow */
+  --color-ink-18:         rgba(7, 41, 41, 0.18);  /* empty-state stroke */
+  --color-ink-16:         rgba(7, 41, 41, 0.16);
+  --color-ink-10:         rgba(7, 41, 41, 0.10);  /* raised shadow */
+  --color-ink-06:         rgba(7, 41, 41, 0.06);  /* hover wash */
+  --color-ink-04:         rgba(7, 41, 41, 0.04);
+
+  /* ── Accent — lime ─────────────────────────────────────────────────
+     Signal, intent and selection. Never a text colour: 13px lime on white
+     does not clear 4.5:1. Label text on lime fills is --color-ink. */
+  --color-accent:         #b1fa63;
+  --color-accent-strong:  #72ef7e;
+  --color-accent-bright:  #3ee950;
+  --color-accent-warm:    #f1f46a;  /* low end of the intent meter */
+  --color-accent-olive:   #b2c248;
+  --color-accent-100:     #e6fdcd;
+  --color-accent-ring:    #e8fed0;  /* reveal-meter track */
+  --color-accent-32:      rgba(177, 250, 99, 0.32);  /* count-badge fill */
+  --color-accent-22:      rgba(177, 250, 99, 0.22);  /* intent-meter track */
+  --color-accent-15:      rgba(177, 250, 99, 0.15);
+  --color-accent-06:      rgba(177, 250, 99, 0.06);  /* selectable row hover */
+
+  /* ── Text ──────────────────────────────────────────────────────────
+     Four steps, all derived from one #2f2b3d. Ranked by real usage:
+     `text` carries ~390 call sites, `text-secondary` ~95. */
+  --color-text:           #2f2b3d;
+  --color-text-secondary: rgba(47, 43, 61, 0.70);
+  --color-text-muted:     rgba(47, 43, 61, 0.60);
+  --color-text-subtle:    rgba(47, 43, 61, 0.55);
+  --color-text-icon:      #585164;  /* inactive tab + icon strokes */
+
+  /* ── Surface ───────────────────────────────────────────────────────
+     Warm neutrals for chrome, cool mints for data panels. */
+  --color-surface:        #ffffff;
+  --color-surface-subtle: #fbfaf9;
+  --color-surface-muted:  #f4f2f0;  /* selectable cards, inset fills */
+  --color-surface-cool:   #f5f6f6;
+  --color-surface-cool-2: #f3f7f6;
+  --color-surface-mint:   #dbe9e5;
+  --color-surface-mint-2: #dde8e5;
+  --color-surface-gray:   #f3f2f5;  /* icon-button fill */
+  --color-surface-scrim:  rgba(0, 0, 0, 0.30);      /* detail-modal backdrop */
+  --color-surface-scrim-heavy: rgba(0, 0, 0, 0.40); /* buy-more backdrop */
+  --color-surface-veil:   rgba(255, 255, 255, 0.80); /* locked-card veil */
+  --color-surface-veil-soft: rgba(255, 255, 255, 0.60);
+
+  /* ── Border ────────────────────────────────────────────────────────
+     border-default is the form-control stroke (checkboxes, inputs,
+     activity swatches); border-subtle / border-medium are structural. */
+  --color-border-default:  rgba(47, 43, 61, 0.18);
+  --color-border-medium:   rgba(0, 0, 0, 0.12);
+  --color-border-subtle:   rgba(0, 0, 0, 0.08);
+  --color-border-hairline: rgba(47, 43, 61, 0.06);  /* footer divider */
+  --color-border-mint:     #cdd4d4;
+  --color-border-mint-2:   #bbc9c7;
+  --color-border-dot:      #dddde0;  /* inactive activity dot */
+
+  /* ── Status ────────────────────────────────────────────────────────
+     Chips only, each a fill + a same-hue stroke + a same-hue label. */
+  --color-danger:         #ff4c51;
+  --color-danger-bg:      rgba(255, 219, 220, 0.40);  /* the "Hot" chip */
+  --color-warning:        #fea832;
+  --color-warning-strong: #fe9923;
+  --color-warning-soft:   #fecd3d;
+  --color-warning-text:   #e68f3c;
+  --color-warning-bg:     #fff9f5;  /* the "GROWTH" chip */
+  --color-success:        #24b364;  /* copy-confirmed state */
+  --color-info:           #0082ff;
+
+  /* ── Type scale ────────────────────────────────────────────────────
+     Size is paired with its line height — they are not independent here.
+     body-sm (13/19) is the workhorse: table cells, filter rows, card
+     labels, ~195 call sites. */
+  --text-display:      28px;  --text-display--line-height:     36px;
+  --text-title:        24px;  --text-title--line-height:       32px;
+  --text-heading:      18px;  --text-heading--line-height:     28px;
+  --text-subheading:   16px;  --text-subheading--line-height:  24px;
+  --text-body:         15px;  --text-body--line-height:        22px;
+  --text-body-md:      14px;  --text-body-md--line-height:     20px;
+  --text-body-sm:      13px;  --text-body-sm--line-height:     19px;
+  --text-control:      13px;  --text-control--line-height:     22px;  /* buttons, list rows */
+  --text-action:       12px;  --text-action--line-height:      20px;  /* compact CTA */
+  --text-caption:      11px;  --text-caption--line-height:     16px;  /* badges, reset links */
+  --text-overline:      9px;  --text-overline--line-height:    12px;  /* uppercase chips */
+  --text-overline-xs:   8px;  --text-overline-xs--line-height: 12px;
+
+  /* Column headers: 13px medium, uppercase, +0.2px. */
+  --tracking-header: 0.2px;
+
+  /* ── Radius ────────────────────────────────────────────────────────
+     A 2px-stepped ladder. Pills use 100px, which the intent-meter
+     detection in App.tsx reads back via getComputedStyle — keep it 100px,
+     not 9999px, or that lookup stops matching. */
+  --radius-xs:   2px;   /* checkbox tick, micro chips */
+  --radius-sm:   4px;   /* icon buttons, activity swatch */
+  --radius-md:   6px;   /* list rows, count badge, inset fills */
+  --radius-lg:   8px;   /* filter rows, apply button, avatars */
+  --radius-xl:  10px;   /* inputs, primary CTA */
+  --radius-2xl: 12px;   /* cards, popovers */
+  --radius-3xl: 16px;   /* modals */
+  --radius-pill: 100px; /* chips, meter pills, reveal button */
+
+  /* ── Shadow ────────────────────────────────────────────────────────
+     Elevation is carried almost entirely by the 47,43,61 ink at low alpha. */
+  --shadow-popover: 0px 4px 18px 0px rgba(47, 43, 61, 0.16);
+  --shadow-modal:   0px 4px  9px 0px rgba(47, 43, 61, 0.16);
+  --shadow-raised:  0px 1px  3px 0px rgba(7, 41, 41, 0.10);
+  --shadow-micro:   0px 0px  2px 0px rgba(0, 0, 0, 0.12);
+  --shadow-cta:     0px 2px  6px 0px rgba(7, 41, 41, 0.30);
+  --shadow-cta-alt: 0px 2px  6px 0px rgba(0, 66, 75, 0.30);
+}
+
+/* ── Motion ──────────────────────────────────────────────────────────
+   Outside @theme: these are read by hand in transitions, not by utilities.
+   Every animation in index.css already resolves to one of these. */
+:root {
+  --duration-hover:   120ms;  /* row and button background washes */
+  --duration-fade:    140ms;  /* copy affordance */
+  --duration-lift:    300ms;  /* reveal-button hover lift + glow */
+  --duration-reveal:  480ms;  /* locked to revealed card crossfade */
+  --duration-pop:     520ms;  /* verification badge pop */
+  --duration-spring:  711ms;  /* avatar-group spring, settle time */
+
+  --ease-standard: ease;
+  --ease-lift:     cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-pop:      cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* ── Layout constants ────────────────────────────────────────────────
+   Fixed geometry the design depends on, currently duplicated across
+   components. Documented here so the numbers have one home. */
+:root {
+  --filter-card-width:   220px;  /* FilterPrimitives.FILTER_CARD_W */
+  --filter-card-gap:       8px;  /* FilterPrimitives.FILTER_CARD_GAP */
+  --filter-row-height:    34px;
+  --detail-modal-width:  754px;
+  --detail-modal-height: 638px;
+  --detail-modal-header:  76px;
+  --detail-tab-rail:     254px;
+  --detail-column:       500px;
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Buyer Intelligence",
+  "description": "Engage users with an interactive platform designed to enhance user experience through dynamic content and responsive features for seamless interaction.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

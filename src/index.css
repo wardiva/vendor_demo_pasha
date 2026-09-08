@@ -1,0 +1,734 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+@import './styles/tokens.css';
+
+/* ── shadcn/ui theme tokens ───────────────────────────────────────────
+   The registry components are painted in theme entries — `bg-primary`,
+   `text-muted-foreground`, `bg-accent` — rather than values of their own. The
+   app had no shadcn theme layer, so the entries they read are declared here
+   and mapped onto the palette the rest of the product already uses: primary is
+   the ink #072929 that the Apply Filters button and the reveal control are
+   drawn in, accent is the 6% wash every hover in the module takes, and the
+   muted ink and hairlines are the ones the filter fields already carry.
+   Nothing is restyled — this only gives the tokens something to resolve to,
+   so a registry component lands in the product's own colours. */
+@theme {
+  --color-background: #ffffff;
+  --color-foreground: #2f2b3d;
+  --color-primary: #072929;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f4f2f0;
+  --color-secondary-foreground: #2f2b3d;
+  --color-muted: #f4f2f0;
+  --color-muted-foreground: rgba(47, 43, 61, 0.55);
+  --color-accent: rgba(7, 41, 41, 0.08);
+  --color-accent-foreground: #072929;
+  --color-destructive: #b3261e;
+  --color-destructive-foreground: #ffffff;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #2f2b3d;
+  --color-card: #ffffff;
+  --color-card-foreground: #2f2b3d;
+  --color-border: rgba(47, 43, 61, 0.12);
+  --color-input: rgba(47, 43, 61, 0.18);
+  --color-ring: #072929;
+}
+
+html, body, #root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ── Typography ────────────────────────────────────────────────────────
+   Inter everywhere. The root declaration is what everything inherits; the
+   subtree rule is the guarantee, so a copied or third-party component cannot
+   reintroduce system-ui, a bare sans-serif or any other family. Weights,
+   sizes, line heights and colours are left to the existing utilities. */
+html,
+body,
+#root {
+  font-family: Inter, sans-serif;
+}
+
+#root,
+#root *,
+#root *::before,
+#root *::after {
+  font-family: Inter, sans-serif;
+}
+
+/* ── Scrollbars ────────────────────────────────────────────────────────
+   Every surface here scrolls without showing the chrome for it: the page, the
+   table that runs wider than its column, the modal panels and the dropdown
+   cards. Only the bars are hidden — overflow is untouched, so the wheel, the
+   trackpad, touch, the keyboard and programmatic scrolling all behave exactly
+   as before, and nothing becomes unreachable.
+
+   Three declarations because three engines: the standard property, the WebKit
+   pseudo-element, and the old Edge/IE hint. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Filter menu option lists ─────────────────────────────────────────
+   Scrollbars are hidden module-wide; a filter menu whose list is longer than
+   the menu opts back in, because a list that scrolls has to say so. The bar
+   is the narrowest that still takes a drag, has no buttons and no track at
+   all, and its thumb is the same ink as the muted labels beside it. Nothing
+   is drawn until the list is genuinely taller than the menu — `auto` decides
+   that, so the short groups look exactly as they did. */
+.filter-option-scroll {
+  overflow-y: auto;
+  /* The list scrolls one way only. `overflow-y: auto` on its own leaves x as
+     `visible`, which CSS then computes to `auto` — so a row a pixel too wide
+     for the card put a second bar under the list. The card is sized to its
+     widest row instead, and this makes the sideways bar impossible rather
+     than merely unlikely. */
+  overflow-x: hidden;
+  /* A wheel that reaches the end of the list stops there rather than carrying
+     on into the page behind the menu. */
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(47, 43, 61, 0.22) transparent;
+}
+
+.filter-option-scroll::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+}
+
+.filter-option-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.filter-option-scroll::-webkit-scrollbar-thumb {
+  background: rgba(47, 43, 61, 0.22);
+  border-radius: 999px;
+}
+
+.filter-option-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(47, 43, 61, 0.34);
+}
+
+/* The stepper arrows at either end are not part of this design system. */
+.filter-option-scroll::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* Selectable leads-table rows. The summary cards and the Leads page toolbar
+   carry the same data-name but are not selectable, so they opt out. */
+[data-name="Row"]:not([data-summary-cards]):not([data-toolbar-row]):not([data-no-row-hover]):hover {
+  background-color: rgba(177, 250, 99, 0.06);
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+/* The BUYER column is sticky, so it paints an opaque fill of its own and the
+   row hover behind it would not show through. Repeating the tint as an overlay
+   keeps that fill and lands the same colour on top, so a hovered row reads as
+   one continuous band across the join. */
+[data-name="Row"]:not([data-summary-cards]):not([data-toolbar-row]):not([data-no-row-hover]):hover
+  .table-sticky-cell {
+  background-image: linear-gradient(rgba(177, 250, 99, 0.06), rgba(177, 250, 99, 0.06));
+  transition: background-color 0.12s ease;
+}
+
+/* The Signals page's prospect cards are selectable rows of the same kind, and
+   each paints an opaque white card of its own, so the row hover behind it
+   would not show through either. Same treatment as the sticky cell above: the
+   tint is repeated as an overlay, in the same colour and over the same
+   transition, so a hovered card reads exactly as a hovered table row did. */
+[data-prospect-row]:hover > [data-name="Card"] {
+  background-image: linear-gradient(rgba(177, 250, 99, 0.06), rgba(177, 250, 99, 0.06));
+  transition: background-color 0.12s ease;
+}
+
+/* The contact panel carries its own ash tint as a background image, so the
+   wash is stacked above it rather than replacing it — the panel keeps its
+   fill and the band stays continuous across the whole card. */
+[data-prospect-row]:hover .lead-contact-card {
+  background-image:
+    linear-gradient(rgba(177, 250, 99, 0.06), rgba(177, 250, 99, 0.06)),
+    linear-gradient(rgba(244, 242, 240, 0.6), rgba(244, 242, 240, 0.6));
+}
+
+/* The four summary cards stay visually static — no hover background, border,
+   shadow, movement or pointer cursor. */
+[data-summary-cards],
+[data-summary-cards] * {
+  cursor: default;
+}
+
+[data-name="ListItem"]:hover {
+  background-color: rgba(7, 41, 41, 0.06);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.12s ease;
+}
+
+/* ── The date range trigger ────────────────────────────────────────────
+   Every other field in the action row is 12px in from the left and 10px from
+   the right — the filter chips draw it, and so does the search field. The date
+   trigger shipped with those two reversed, which sat its contents a pixel-pair
+   closer to its left edge and further from its right than every control beside
+   it, and read as the field being pushed off the row's right side. This is the
+   row's own convention, applied to the trigger wherever it is rendered: the
+   Prospects toolbar's own component and the Signals page's exported field are
+   both marked with this attribute. Nothing else about the field changes — same
+   height, radius, fill, mark and active treatment. */
+[data-date-field] {
+  padding-left: 12px;
+  padding-right: 10px;
+}
+
+[data-name="Outline Button"]:hover {
+  background-color: rgba(7, 41, 41, 0.06);
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+[data-name="btn-text-secondary btn-sm"]:hover {
+  opacity: 0.7;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+[data-name="text-field"]:hover {
+  cursor: pointer;
+}
+
+
+
+/* ── Locked contact card states ───────────────────────────────────────
+   Shared by the Prospects page contact panels and the contact cards in the
+   Prospect Details modal. Host-agnostic, so any card carrying these classes
+   gets the same treatment at its own corner radius. The locked state is the
+   frosted veil below; the card's own solid border is set on the element. */
+.lead-card-locked,
+.lead-card-revealed {
+  transition: filter 480ms ease;
+}
+
+
+.lead-card-revealed {
+  filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0));
+}
+
+
+/* Once the fade has finished the card is byte-identical to a normal card. */
+.lead-card-settled {
+  filter: none;
+}
+
+/* Locked card veil: one frosted layer over the whole card. The imported card
+   ships eight fixed rectangles that miss the avatar and several icons, so they
+   are hidden and this replaces them. Hot and Reveal Contact are lifted above
+   it and stay sharp. */
+.lead-card-locked::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  /* Figma insets the frosted rectangle 2px on every side of the contact card,
+     so the card's own fill shows as a thin rim around the frost. The table
+     cells, which carry no card of their own, keep the full-bleed veil. */
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 2;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 480ms ease;
+}
+
+.lead-card-revealed::before {
+  opacity: 0;
+}
+
+/* Figma 237:3673 draws the frost as a 448x71 rectangle held 2px off the
+   container's right edge — the inner card's own box, not the container's. The
+   modal's cards carry that 2px frame in both states now, so the frost stops at
+   the frame there and the tint reads as a rim around it; every other surface
+   keeps the full-bleed veil. The radius is the inner card's, so the frost's
+   corners follow the white beneath rather than the frame's. */
+.lead-card-locked.lead-card-framed::before {
+  inset: 2px;
+  border-radius: 10px;
+}
+
+
+/* ── Contact card hover stroke ─────────────────────────────────────────
+   A gradient that travels the card's whole perimeter on hover.
+
+   The colour is one conic gradient centred on the card, and the animation
+   turns it — so a single sweep runs top → right → bottom → left without a
+   seam, at the same 1px on every side and following the card's own radius
+   through all four corners. Turning the gradient rather than moving a blob is
+   what makes the long edges work: a translated blob only ever covers its own
+   width, which on a 312px card left the left and right edges untouched.
+
+   The layer is the card's border and nothing else: a transparent 1px border
+   carries the gradient, and the mask cuts the padding box away so no colour
+   reaches the content. It is absolutely positioned and pointer-transparent,
+   so it costs no layout and the card cannot change size on hover. It sits
+   above the locked veil, which would otherwise wash the stroke out.
+
+   Locked cards only, and it only animates while hovered. A revealed card is
+   an ordinary card and stays static: the element is not rendered once the
+   contact is out, and the selector below would not match it even if it were. */
+@property --lead-stroke-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.lead-glow-stroke {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  /* The closing #4fcf70 repeats the opening one, so the loop has no seam. */
+  background: conic-gradient(
+      from var(--lead-stroke-angle),
+      #4fcf70,
+      #fad648,
+      #a767e5,
+      #12bcfe,
+      #44ce7b,
+      #4fcf70
+    )
+    border-box;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  /* Keep the border band, drop everything inside it. */
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+}
+
+.lead-contact-card.lead-card-locked:hover > .lead-glow-stroke {
+  opacity: 1;
+  animation: lead-stroke-spin 1.5s linear infinite;
+}
+
+@keyframes lead-stroke-spin {
+  to { --lead-stroke-angle: 360deg; }
+}
+
+/* The gradient still shows, it just stops turning. */
+@media (prefers-reduced-motion: reduce) {
+  .lead-contact-card.lead-card-locked:hover > .lead-glow-stroke { animation: none; }
+}
+
+/* ── ENTERPRISE plan chip stroke ───────────────────────────────────────
+   The contact card's travelling stroke, on the chip's border: the same
+   transparent border filled by a conic gradient in border-box and masked down
+   to the band, so the gradient runs the whole rounded perimeter — sides and
+   corners alike — rather than sweeping each edge on its own.
+
+   Two differences from the card's. It carries one colour, the chip's own
+   stroke, dipping to a fifth of its opacity halfway round and back, so the
+   travel reads as a highlight moving over the existing stroke rather than as
+   colour arriving. And it runs from the moment the chip renders rather than on
+   hover — nothing about this chip is interactive — at about the card's own
+   pace, so the highlight reads as travelling the perimeter rather than
+   drifting round it. */
+@property --enterprise-stroke-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.enterprise-stroke {
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  /* The closing #00beff repeats the opening one, so the loop has no seam. */
+  background: conic-gradient(
+      from var(--enterprise-stroke-angle),
+      #00beff,
+      rgba(0, 190, 255, 0.2),
+      #00beff
+    )
+    border-box;
+  pointer-events: none;
+  /* Keep the border band, drop everything inside it. */
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: enterprise-stroke-spin 1.4s linear infinite;
+}
+
+@keyframes enterprise-stroke-spin {
+  to { --enterprise-stroke-angle: 360deg; }
+}
+
+/* The stroke still shows, it just stops turning. */
+@media (prefers-reduced-motion: reduce) {
+  .enterprise-stroke { animation: none; }
+}
+
+/* ── Reveal Contact button ─────────────────────────────────────────────
+   No animation of its own. Hover is the same wash every other outlined
+   control in the product uses — [data-name="Outline Button"] above — so the
+   pill changes background and nothing else: no movement, glow or gradient. */
+.lead-reveal-btn {
+  transition: background-color 0.12s ease;
+}
+
+.lead-reveal-btn:hover {
+  background-color: rgba(7, 41, 41, 0.06);
+}
+
+.lead-reveal-btn[data-variant="label"]:hover {
+  background-color: rgba(7, 41, 41, 0.18);
+}
+
+.lead-reveal-btn[data-loading="true"] {
+  cursor: default;
+}
+
+@keyframes lead-reveal-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Sits in the eye icon's own 11px slot, so it inherits that position, size
+   and the 4px gap to the label — no reflow and no width change. */
+.lead-reveal-spinner {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid rgba(7, 41, 41, 0.18);
+  border-top-color: #072929;
+  animation: lead-reveal-spin 1s linear infinite;
+}
+
+/* Highlight on the verification badges beside the email and phone once the
+   contact is revealed. Transform only, so the icons themselves never move. */
+@keyframes lead-verify-pop {
+  0%   { opacity: 0; transform: scale(0.6); }
+  60%  { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.lead-verify-pop {
+  animation: lead-verify-pop 520ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lead-reveal-spinner { animation-duration: 1600ms; }
+  .lead-verify-pop { animation: none; }
+}
+
+/* Brief slope on the phone icon when a contact is revealed. Transform only,
+   so the phone row and the rest of the card never move. */
+@keyframes lead-phone-slope {
+  0%   { transform: rotate(0deg); }
+  50%  { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.lead-phone-slope {
+  transform-origin: center;
+  animation: lead-phone-slope 620ms ease-in-out 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lead-phone-slope { animation: none; }
+}
+
+/* ── Copyable email and phone ──────────────────────────────────────────
+   The affordance is absolutely positioned in the gap after the value, so it
+   adds no width and nothing shifts when it appears. The value carries no
+   hover treatment of its own — no colour, background, underline or pointer —
+   and stays exactly as it renders at rest; only the button reacts. */
+.lead-copy-btn {
+  position: absolute;
+  left: calc(100% + 4px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  color: rgba(47, 43, 61, 0.55);
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  /* Colour transitions only for the copied state below; the button has no
+     hover colour of its own and stays this grey while hovered. */
+  transition: opacity 140ms ease, color 140ms ease;
+}
+
+/* The Company Information rows set their values hard against the right edge
+   of the row, so the icon takes the space on the other side of the value.
+   Still absolute, so it costs no width and revealing it shifts nothing. */
+[data-copy-row].lead-copy-left .lead-copy-btn {
+  left: auto;
+  right: calc(100% + 4px);
+}
+
+/* ── and the row is what reveals it ──
+   Because it sits outside the value it belongs to, the value cannot be the
+   thing that shows it: crossing the 4px between them left the value's box and
+   took the button away exactly as the pointer arrived. The row holds both, so
+   the row is the hover zone — the label, the value, the gap and the button are
+   one surface, and the pointer can move anywhere inside it without the icon
+   going. The value keeps no hover treatment of its own, and the button fades on
+   the transition it already had, so nothing flickers.
+
+   Scoped to rows that carry this affordance; a row with nothing to copy has no
+   button for the rule to reach. */
+[data-detail-row]:hover [data-copy-row].lead-copy-left .lead-copy-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Two values on one line ──
+   Where a phone and an address sit side by side, the affordance cannot hang in
+   the gap after its value: 4px past the phone number is exactly where the
+   envelope beside it is drawn, so hovering one put its copy icon on top of the
+   other field. The row reserves the icon's own width at its end instead and
+   the button sits inside that reservation — it can no longer reach its
+   neighbour, and because the space is always there, showing the icon shifts
+   nothing. Each row reserves its own, so only the field under the cursor ever
+   draws one. */
+[data-copy-row].lead-copy-inline {
+  padding-right: 20px;
+}
+
+[data-copy-row].lead-copy-inline .lead-copy-btn {
+  left: auto;
+  right: 0;
+}
+
+[data-copy-row]:hover .lead-copy-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── The copy control inside a tooltip ──
+   On the prospect card the marks no longer copy — they open a tooltip that
+   carries the value and the control together, so the compact card gains no
+   button of its own. Here the affordance is the point of the tooltip rather
+   than something revealed on hover, so it sits in the flow after the value and
+   is drawn from the moment the tooltip is: absolute positioning and the
+   hover-gated opacity both come off. Everything else is the shared control —
+   the same delegate, the same glyph swap, the same green tick. */
+[data-copy-row].lead-copy-tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-copy-row].lead-copy-tip .lead-copy-btn {
+  position: static;
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── The mark as the copy control ──
+   The prospect card writes out no phone number any more (Figma 219:1028), so
+   there is no value for the affordance to sit beside: the mark itself is the
+   control. The button fills the mark's own 15px box instead of the gap after a
+   value, and stays out of the way until it has something to confirm — the copy
+   glyph appearing over the phone would read as a second icon. Clicking still
+   goes through the same [data-copy-row] delegate, so the clipboard call, the
+   failure toast and the tick are the ones every other value uses. */
+[data-copy-row].lead-copy-icon {
+  cursor: pointer;
+}
+
+[data-copy-row].lead-copy-icon .lead-copy-btn {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+
+[data-copy-row].lead-copy-icon:hover .lead-copy-btn {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The tick takes the mark's place for the moment it is held, on a fill of the
+   panel's own colour so the mark beneath it does not show through. */
+[data-copy-row].lead-copy-icon .lead-copy-btn.is-copied {
+  background: rgb(250, 249, 248);
+  opacity: 1;
+  pointer-events: none;
+}
+
+/* Both glyphs ship in the button and CSS picks one, so confirming a copy is a
+   class toggle and never rewrites the button's contents behind React. */
+.lead-copy-glyph--check,
+.lead-copy-btn.is-copied .lead-copy-glyph--copy {
+  display: none;
+}
+
+.lead-copy-btn.is-copied .lead-copy-glyph--check {
+  display: block;
+}
+
+/* Success state held briefly after a copy. */
+.lead-copy-btn.is-copied {
+  opacity: 1;
+  pointer-events: auto;
+  color: #24b364;
+}
+
+/* A locked card's value is behind the veil, so there is nothing to copy yet. */
+.lead-card-locked [data-copy-row] .lead-copy-btn {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lead-copy-btn { transition: none; }
+}
+
+/* ── Avatar group hover ────────────────────────────────────────────────
+   Animate UI's AvatarGroup motion: each avatar springs up by 30% of its own
+   height on hover and springs back on exit. Their spring — stiffness 300,
+   damping 17, mass 1 — is underdamped (zeta 0.49), overshoots the target by
+   17% and settles at 711ms, so it is reproduced here as that spring's exact
+   curve rather than approximated with a cubic-bezier. Animation only: no
+   tooltip, and the images, sizes, borders and -4px overlap are untouched. */
+[data-name="Friends"] > * {
+  /* The leading avatar ships pointer-events-none from the Figma export and
+     would be the one avatar that never responded to hover. */
+  pointer-events: auto;
+  transition: transform 711ms
+    linear(
+      0, 0.0356, 0.1283, 0.258, 0.407, 0.5607, 0.7073, 0.8386, 0.9493, 1.0369,
+      1.101, 1.1428, 1.1648, 1.1703, 1.1629, 1.1462, 1.1236, 1.098, 1.0718,
+      1.0471, 1.0251, 1.0067, 0.9922, 0.9818, 0.9751, 0.9717, 0.971, 0.9725,
+      0.9755, 0.9794, 0.9838, 0.9883, 0.9924, 0.9961, 0.9992, 1.0016, 1.0033,
+      1.0043, 1.0049, 1.0049, 1.0046, 1.0041, 1.0034, 1.0027, 1
+    );
+}
+
+/* Matches Animate UI's default translate of -30%, measured against the
+   avatar's own height. Stacking is left as the export has it, which is
+   already the ascending order their default (invertOverlap: false) uses. */
+[data-name="Friends"] > *:hover {
+  transform: translateY(-30%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-name="Friends"] > * { transition: none; }
+  [data-name="Friends"] > *:hover { transform: none; }
+}
+
+/* The whole avatar group opens the Prospects page — every avatar, the "+1"
+   badge and the gaps between them — so the entire group reads as clickable.
+   It sits inside the summary cards, which force `cursor: default` on
+   everything they contain, so this has to outrank that rule. Cursor only: the
+   group's hover spring, colours and spacing are untouched. */
+[data-name="Friends"],
+[data-name="Friends"] * {
+  cursor: pointer;
+}
+
+/* The date range field opens the picker, so it reads as clickable. */
+[data-date-field] {
+  cursor: pointer;
+}
+
+/* ── Contact value tooltip ────────────────────────────────────────────
+   The label fades up onto the mark rather than appearing outright, at the
+   same speed and easing the menus use. It leaves with the cursor: the element
+   unmounts on mouseleave, so there is nothing to animate out. */
+@keyframes lead-tooltip-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lead-tooltip {
+  animation: lead-tooltip-in 100ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lead-tooltip { animation: none; }
+}
+
+/* The contact tag's word closes into its mark when the contact is disclosed.
+   The motion is only there to stop the swap happening between two frames, so
+   with motion reduced it goes back to being exactly that — the end state,
+   arrived at outright. */
+@media (prefers-reduced-motion: reduce) {
+  .lead-tag-label { transition: none; }
+}
+
+/* ── The avatar crossfade ──────────────────────────────────────────────
+   A disclosed contact's photograph arrives over the placeholder that stood in
+   for it. The placeholder fades out on a transition, which needs a value to
+   move from; the photograph is only mounted at the moment it is disclosed, and
+   a transition has nothing to start from on mount — so it fades in on an
+   animation instead. Both run 240ms ease-out — the card's own timing for the
+   pair is repeated on the placeholder's `duration-[240ms]` — so the two cross
+   rather than cut, and both are absolutely positioned in the avatar's own box,
+   so the slot never changes size and nothing around it moves.
+
+   The photograph also settles the last 3% of its size as it arrives. Fading
+   alone reads as one picture swapped for another at the same instant; coming
+   to rest reads as this person's face resolving out of the stand-in. It is
+   deliberately small and it eases out to exactly 1 with no overshoot, so it
+   registers as smoothing rather than as an effect. Scale is a transform, so it
+   moves nothing in the layout and the placeholder underneath is left at its
+   own full size to fade out behind it — the slot is covered throughout and
+   never blanks.
+
+   The class is only applied to a photograph that has just arrived, so avatars
+   already disclosed when the page loads simply render. */
+@keyframes lead-avatar-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.lead-avatar-in {
+  animation: lead-avatar-in 240ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lead-avatar-in { animation: none; }
+}
+
+/* The Date Range menu settles in rather than appearing outright — a short
+   fade over the 4px it rises, from the field it hangs off. */
+@keyframes date-menu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.date-menu-enter {
+  animation: date-menu-in 120ms ease-out;
+  transform-origin: top center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .date-menu-enter { animation: none; }
+}
+
+/* The contact card's frost is the design's 308x70 rectangle: 2px in on every
+   side, and a radius that keeps it concentric with the card's 12px corners.
+   Strength is untouched — this is where the blur sits, not how strong it is. */
+.lead-contact-card.lead-card-locked::before {
+  inset: 2px;
+  border-radius: 10px;
+}
