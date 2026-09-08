@@ -236,20 +236,26 @@ body,
   border-radius: inherit;
   /* Figma insets the frosted rectangle 2px on every side of the contact card,
      so the card's own fill shows as a thin rim around the frost. The table
-     cells, which carry no card of their own, keep the full-bleed veil. */
-  background: rgba(255, 255, 255, 0.8);
-  /* Strong enough that the words are gone, not merely softened.
-     The card withholds a name, a job title, a phone number and an email at
-     11-14px, and 2px of blur leaves glyphs that size still shaped well enough
-     to read — the veil looked like protection while the contact was legible
-     straight through it. Blur has to be read against the type it covers, not
-     as an absolute: at 10px the radius is comfortably wider than the stroke
-     and counter of every glyph here, so letterforms merge into their
-     neighbours and no word survives at any of those sizes. The 0.8 white over
-     it does the rest, leaving the shape of a person and their details without
-     any of the content. */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+     cells, which carry no card of their own, keep the full-bleed veil.
+
+     Two values decide what this veil reads as, and they have to be set
+     together. The blur is what makes the words unreadable; the white over it
+     is what decides whether anything is left to look at. At 0.8 the wash keeps
+     only a fifth of what is behind it, which — under a blur heavy enough to
+     destroy the type — is not enough to see a face, four lines of text and two
+     icons in. The card went blank, and a blank card says nothing about what a
+     reveal would buy.
+
+     So the wash comes down to 0.55, and the blur to the least that still
+     defeats reading. 5px is a shade over a third of the x-height of the
+     smallest type here, which is where adjacent glyphs stop resolving: strokes
+     run into their neighbours and words collapse into bands. What survives is
+     the layout — a portrait, a long line where the name is, a shorter one
+     under it, a row with a phone and an envelope — so the card plainly holds a
+     person's details, and none of the details. */
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   z-index: 2;
   pointer-events: none;
   opacity: 1;
