@@ -234,26 +234,31 @@ body,
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  /* Figma insets the frosted rectangle 2px on every side of the contact card,
-     so the card's own fill shows as a thin rim around the frost. The table
-     cells, which carry no card of their own, keep the full-bleed veil.
+  /* The frost is Figma 309:1083, "Rectangle 18369", read off the node itself:
 
-     Two values decide what this veil reads as, and they have to be set
-     together. The blur is what makes the words unreadable; the white over it
-     is what decides whether anything is left to look at. At 0.8 the wash keeps
-     only a fifth of what is behind it, which — under a blur heavy enough to
-     destroy the type — is not enough to see a face, four lines of text and two
-     icons in. The card went blank, and a blank card says nothing about what a
-     reveal would buy.
+         448 x 71
+         effects: [{ type: BACKGROUND_BLUR, radius: 4, blurType: NORMAL }]
+         fills:   [{ type: SOLID, color: #FFFFFF, opacity: 0.8 }]
+         node opacity: 1
 
-     So the wash comes down to 0.55, and the blur to the least that still
-     defeats reading. 5px is a shade over a third of the x-height of the
-     smallest type here, which is where adjacent glyphs stop resolving: strokes
-     run into their neighbours and words collapse into bands. What survives is
-     the layout — a portrait, a long line where the name is, a shorter one
-     under it, a row with a phone and an envelope — so the card plainly holds a
-     person's details, and none of the details. */
-  background: rgba(255, 255, 255, 0.55);
+     Its sibling 309:1051, "Container", is the card the frost sits in — 452 x 75
+     at a 12 radius, filled #F4F2F0 at 0.6 — which is where the 2px inset and
+     the 10 radius below come from: 452 - 448 and 75 - 71 are 4, two a side, and
+     a frost inset 2px inside a 12 corner is concentric at 10.
+
+     Figma's radius is 1:1 with CSS pixels here, not halved. The same design's
+     drop shadow — radius 18, offset y 4, rgba(47,43,61,0.16) — is written all
+     over this codebase as shadow-[0px_4px_18px_0px_rgba(47,43,61,0.16)], so a
+     BACKGROUND_BLUR of 4 is backdrop-filter: blur(4px), and a solid white fill
+     at 0.8 opacity is rgba(255,255,255,0.8). No judgement of mine is left in
+     either number.
+
+     What the two earlier passes were chasing — 10px, then 5px over a 0.55 wash
+     — was a veil that had never rendered at all: the pair below was ordered so
+     that minification dropped the standard property, so production showed the
+     wash over sharp text and no blur, whatever the radius said. With the order
+     fixed, the design's own values render as drawn. */
+  background: rgba(255, 255, 255, 0.8);
   /* Prefixed first, standard last, and it has to stay that way. The minifier
      reads the pair as one property declared twice and keeps only the last —
      so written the other way round the build shipped `-webkit-backdrop-filter`
@@ -265,8 +270,8 @@ body,
 
      Swapping the order is the whole fix — both survive, and the standard one
      is last, which is also the order it should have been in for the cascade. */
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   z-index: 2;
   pointer-events: none;
   opacity: 1;
