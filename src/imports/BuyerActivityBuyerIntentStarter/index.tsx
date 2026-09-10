@@ -812,6 +812,25 @@ function MemoryUsagePricing() {
   );
 }
 
+/**
+ * Whether this page is being served locally rather than from the deployment.
+ *
+ * Two tests because "local" arrives two ways. `import.meta.env.DEV` is true
+ * under `vite dev` however the page is reached — including over the network
+ * address the dev server also binds, which is not spelled "localhost" but is
+ * the same server. The hostname test then covers a production build served
+ * locally, `vite preview`, where DEV is false but the page is still not the
+ * deployment. Vercel is neither, so it is unaffected.
+ *
+ * Read once at module scope: a page cannot change the host it was loaded from,
+ * and the build folds the DEV half to a constant, so the deployed bundle
+ * carries no runtime cost for this.
+ */
+const IS_LOCAL =
+  import.meta.env.DEV ||
+  (typeof window !== "undefined" &&
+    ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"].includes(window.location.hostname));
+
 function Row() {
   /* data-summary-cards opts this row out of the [data-name="Row"] hover styling
    * that the selectable leads-table rows use — these cards are static.
@@ -838,10 +857,18 @@ function Row() {
       data-summary-cards
     >
       {/* Buyers in Market, then the two page signals it breaks down into, then
-          Competitor — the whole audience first, then what it looked at. */}
+          Competitor — the whole audience first, then what it looked at.
+
+          Profile and Pricing are held back locally and shipped everywhere
+          else. Nothing about them is removed: the cards, their figures, their
+          avatar stacks and the filters those stacks open are all still here and
+          still built — this only decides whether the two are put on the row.
+          The row is flex-wrap over cards that each take an equal share of it,
+          so the two that remain simply widen to fill the line; no layout rule
+          knows how many cards there are. */}
       <MemoryUsage />
-      <MemoryUsageProfile />
-      <MemoryUsagePricing />
+      {!IS_LOCAL && <MemoryUsageProfile />}
+      {!IS_LOCAL && <MemoryUsagePricing />}
       <MemoryUsage3 />
     </div>
   );
