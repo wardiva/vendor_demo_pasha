@@ -470,14 +470,25 @@ export default function App() {
      the date range leave, so the summary cards, their trends and all four
      breakdowns move with the selected period — through the same aggregation,
      so the chart and counter animations run exactly as they did. */
-  const analytics = useMemo(
-    () =>
-      aggregate(
-        filterCompanies(appliedFilters, d => isDateWithin(d, dateSelection)),
-        appliedFilters.techStack,
-      ),
-    [appliedFilters, dateSelection],
-  );
+  const analytics = useMemo(() => {
+    const within = (d: Date) => isDateWithin(d, dateSelection);
+    /* The charts take every filter, the Competitors chip included: picking an
+       account there is a request to see that account's activity, tech stack,
+       location and size, and the four breakdowns are where that reads. */
+    const charted = filterCompanies(appliedFilters, within);
+    /* The summary cards take every filter but that one. The chip picks named
+       accounts, and a top-line figure recounted over the two accounts picked
+       reads as "Buyers in Market: 2" — an answer about the pick, not about the
+       market. So the four figures and their trends hold their ground when a
+       competitor is selected, and still move for the date range and the facet
+       chips exactly as they did. When nothing but a competitor is selected
+       this is the whole dated dataset, which is the number the cards opened on. */
+    const summarised = filterCompanies(
+      { ...appliedFilters, signals: { ...appliedFilters.signals, competitor: [] } },
+      within,
+    );
+    return aggregate(charted, appliedFilters.techStack, summarised);
+  }, [appliedFilters, dateSelection]);
 
   /* The table's full body height, so the empty state fills the same space. */
   const fullTableBodyHeight = SIGNAL_ROWS.length * SIGNAL_ROW_HEIGHT;
