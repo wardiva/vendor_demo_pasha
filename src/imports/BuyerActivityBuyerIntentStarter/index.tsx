@@ -31,6 +31,7 @@ import ContactRevealsMeter from "@/components/ContactRevealsMeter";
 import SignalsFilterRow from "@/components/signals/SignalsFilterRow";
 import { COMPANIES, type SignalsAnalytics, type SummaryStat } from "@/data/signals";
 import { PROSPECT_COMPANIES } from "@/data/prospects";
+import { IS_LOCAL } from "@/lib/environment";
 import { CardEmptyState, DonutChart, MAX_BAR_FILL, barWidth, largest } from "@/components/analytics/ChartPrimitives";
 import { HelpControl } from "@/components/HelpIcon";
 
@@ -811,25 +812,6 @@ function MemoryUsagePricing() {
     />
   );
 }
-
-/**
- * Whether this page is being served locally rather than from the deployment.
- *
- * Two tests because "local" arrives two ways. `import.meta.env.DEV` is true
- * under `vite dev` however the page is reached — including over the network
- * address the dev server also binds, which is not spelled "localhost" but is
- * the same server. The hostname test then covers a production build served
- * locally, `vite preview`, where DEV is false but the page is still not the
- * deployment. Vercel is neither, so it is unaffected.
- *
- * Read once at module scope: a page cannot change the host it was loaded from,
- * and the build folds the DEV half to a constant, so the deployed bundle
- * carries no runtime cost for this.
- */
-const IS_LOCAL =
-  import.meta.env.DEV ||
-  (typeof window !== "undefined" &&
-    ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"].includes(window.location.hostname));
 
 function Row() {
   /* data-summary-cards opts this row out of the [data-name="Row"] hover styling
