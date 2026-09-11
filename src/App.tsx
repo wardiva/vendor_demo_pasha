@@ -476,13 +476,18 @@ export default function App() {
        account there is a request to see that account's activity, tech stack,
        location and size, and the four breakdowns are where that reads. */
     const charted = filterCompanies(appliedFilters, within);
-    /* The summary cards take every filter but that one. The chip picks named
-       accounts, and a top-line figure recounted over the two accounts picked
-       reads as "Buyers in Market: 2" — an answer about the pick, not about the
-       market. So the four figures and their trends hold their ground when a
-       competitor is selected, and still move for the date range and the facet
-       chips exactly as they did. When nothing but a competitor is selected
-       this is the whole dated dataset, which is the number the cards opened on. */
+    /* Buyers in Market, Profile Signals and Pricing Signals take every filter
+       but that one. The chip picks named accounts, and a top-line figure
+       recounted over the two accounts picked reads as "Buyers in Market: 2" —
+       an answer about the pick, not about the market. So those three and their
+       trends hold their ground when a competitor is selected, and still move
+       for the date range and the facet chips exactly as they did. When nothing
+       but a competitor is selected this is the whole dated dataset, which is
+       the number the cards opened on.
+
+       Competitor Signals is the exception and follows the chip with the
+       charts: selecting a competitor is precisely what that card measures, so
+       `aggregate` counts it from `charted`. */
     const summarised = filterCompanies(
       { ...appliedFilters, signals: { ...appliedFilters.signals, competitor: [] } },
       within,

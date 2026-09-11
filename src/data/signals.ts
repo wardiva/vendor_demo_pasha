@@ -548,16 +548,16 @@ const share = (part: number, whole: number) => (whole === 0 ? 0 : Math.round((pa
  *                         filter empties their bars instead of removing their
  *                         rows. Counts stay derived from `companies`. Empty —
  *                         no Tech Stack filter — charts them all.
- * @param summaryCompanies The accounts the four summary cards — Buyers in
- *                         Market, Profile, Pricing and Competitor Signals — are
- *                         counted from, with their trends. Defaults to the same
- *                         set as the charts. The Signals page passes a set that
- *                         leaves the Competitors chip out: that chip picks
- *                         named accounts, and a top-line figure recounted over
- *                         two picked accounts reads as "Buyers in Market: 2",
- *                         which is not a fact about the market. The charts
- *                         still narrow to the picked accounts, which is what
- *                         picking them is for.
+ * @param summaryCompanies The accounts Buyers in Market, Profile Signals and
+ *                         Pricing Signals are counted from, with their trends.
+ *                         Defaults to the same set as the charts. The Signals
+ *                         page passes a set that leaves the Competitors chip
+ *                         out: that chip picks named accounts, and a top-line
+ *                         figure recounted over two picked accounts reads as
+ *                         "Buyers in Market: 2", which is not a fact about the
+ *                         market. Competitor Signals is the one card that does
+ *                         follow the chip — it is the chip's own metric, so it
+ *                         counts from `companies` alongside the charts.
  */
 export function aggregate(
   companies: Company[],
@@ -565,21 +565,27 @@ export function aggregate(
   summaryCompanies: Company[] = companies,
 ): SignalsAnalytics {
   const total = companies.length;
-  /* The summary cards' own denominator, for their share-of-selection figure. */
+  /* The held cards' own denominator, for their share-of-selection figure. */
   const summaryTotal = summaryCompanies.length;
+
+  /* Which set each signal is counted from. Competitor follows the charts —
+     selecting a competitor is exactly the thing that card measures — and the
+     two page signals hold with Buyers in Market. */
+  const setFor = (kind: SignalKind): Company[] => (kind === "competitor" ? companies : summaryCompanies);
+  const totalFor = (kind: SignalKind): number => (kind === "competitor" ? total : summaryTotal);
 
   const buyers = summaryCompanies.reduce((sum, c) => sum + c.buyers, 0);
   const signalTotals = {
-    profile: summaryCompanies.filter(c => c.signals.profile).length,
-    pricing: summaryCompanies.filter(c => c.signals.pricing).length,
-    competitor: summaryCompanies.filter(c => c.signals.competitor).length,
+    profile: setFor("profile").filter(c => c.signals.profile).length,
+    pricing: setFor("pricing").filter(c => c.signals.pricing).length,
+    competitor: setFor("competitor").filter(c => c.signals.competitor).length,
   };
 
   const previousBuyers = summaryCompanies.reduce((sum, c) => sum + c.previousBuyers, 0);
   const previousSignalTotals = {
-    profile: summaryCompanies.filter(c => c.previousSignals.profile).length,
-    pricing: summaryCompanies.filter(c => c.previousSignals.pricing).length,
-    competitor: summaryCompanies.filter(c => c.previousSignals.competitor).length,
+    profile: setFor("profile").filter(c => c.previousSignals.profile).length,
+    pricing: setFor("pricing").filter(c => c.previousSignals.pricing).length,
+    competitor: setFor("competitor").filter(c => c.previousSignals.competitor).length,
   };
 
   /* No previous-period baseline means the change is undefined, not zero. */
@@ -603,12 +609,12 @@ export function aggregate(
    */
   const signalBuyers = Object.fromEntries(
     SIGNAL_KINDS.map(kind => {
-      const value = summaryCompanies.reduce((sum, c) => (c.signals[kind] ? sum + c.buyers : sum), 0);
-      const previous = summaryCompanies.reduce(
-        (sum, c) => (c.previousSignals[kind] ? sum + c.previousBuyers : sum),
-        0,
-      );
-      return [kind, stat(kind, value, previous, share(value, buyers))];
+      const set = setFor(kind);
+      const value = set.reduce((sum, c) => (c.signals[kind] ? sum + c.buyers : sum), 0);
+      const previous = set.reduce((sum, c) => (c.previousSignals[kind] ? sum + c.previousBuyers : sum), 0);
+      /* Share of the buyers in the set this signal was counted over. */
+      const setBuyers = set.reduce((sum, c) => sum + c.buyers, 0);
+      return [kind, stat(kind, value, previous, share(value, setBuyers))];
     }),
   ) as Record<SignalKind, SummaryStat>;
 
@@ -650,9 +656,9 @@ export function aggregate(
     isEmpty: total === 0,
     stats: {
       buyers: stat("buyers", buyers, previousBuyers, 100),
-      profile: stat("profile", signalTotals.profile, previousSignalTotals.profile, share(signalTotals.profile, summaryTotal)),
-      pricing: stat("pricing", signalTotals.pricing, previousSignalTotals.pricing, share(signalTotals.pricing, summaryTotal)),
-      competitor: stat("competitor", signalTotals.competitor, previousSignalTotals.competitor, share(signalTotals.competitor, summaryTotal)),
+      profile: stat("profile", signalTotals.profile, previousSignalTotals.profile, share(signalTotals.profile, totalFor("profile"))),
+      pricing: stat("pricing", signalTotals.pricing, previousSignalTotals.pricing, share(signalTotals.pricing, totalFor("pricing"))),
+      competitor: stat("competitor", signalTotals.competitor, previousSignalTotals.competitor, share(signalTotals.competitor, totalFor("competitor"))),
     },
     signalBuyers,
     activity,
