@@ -118,11 +118,14 @@
   100% { opacity: 0; transform: translate(-127px, 192px) scale(0.92); }
 }
 
-/* Tray takes the success border and halo as the slot fills. */
+/* Tray takes the lit border and halo as the slot fills. The handoff's teal
+   (#9fd3c7 on a rgba(15,118,110) halo) becomes the app's primary at the same
+   weights: the border is primary at 40%, which is the tint #9fd3c7 was of its
+   teal, and the halo keeps its 12%. */
 @keyframes pes-tray {
   0%, 88% { border-color: #e6e9ee; box-shadow: 0 8px 24px rgba(16, 24, 40, 0.07); }
-  91% { border-color: #9fd3c7; box-shadow: 0 0 0 6px rgba(15, 118, 110, 0.12), 0 8px 24px rgba(16, 24, 40, 0.07); }
-  100% { border-color: #9fd3c7; box-shadow: 0 0 0 6px rgba(15, 118, 110, 0.12), 0 8px 24px rgba(16, 24, 40, 0.07); }
+  91% { border-color: rgba(7, 41, 41, 0.4); box-shadow: 0 0 0 6px rgba(7, 41, 41, 0.12), 0 8px 24px rgba(16, 24, 40, 0.07); }
+  100% { border-color: rgba(7, 41, 41, 0.4); box-shadow: 0 0 0 6px rgba(7, 41, 41, 0.12), 0 8px 24px rgba(16, 24, 40, 0.07); }
 }
 
 /* First slot: dashed placeholder out, avatar in with a spring. */

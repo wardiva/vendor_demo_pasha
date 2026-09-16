@@ -266,20 +266,24 @@ function Stage() {
               >
                 <div data-pes="count">
                   <div>0</div>
-                  <div style={{ color: "#0f766e" }}>1</div>
+                  <div className="text-primary">1</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Assigned — pops in last, over the tray. */}
+          {/* Assigned — pops in last, over the tray. The handoff drew the
+              success moments — this tag, the counter's 1 and the tray's lit
+              border — in its own teal; here they take the app's primary, the
+              ink the Apply and Reveal controls already carry, so the win
+              reads in the product's colour rather than a colour of its own. */}
           <div
-            className="absolute whitespace-nowrap font-['Inter',sans-serif] font-semibold text-white"
+            className="absolute whitespace-nowrap bg-primary font-['Inter',sans-serif] font-semibold text-primary-foreground"
             data-pes="assigned"
             style={{
-              left: 258, top: 318, height: 22, padding: "0 9px", borderRadius: 999, background: "#0f766e",
+              left: 258, top: 318, height: 22, padding: "0 9px", borderRadius: 999,
               fontSize: 10.5, lineHeight: "22px", letterSpacing: "0.02em",
-              boxShadow: "0 6px 14px rgba(15,118,110,.28)",
+              boxShadow: "0 6px 14px rgba(7,41,41,.28)",
             }}
           >
             Assigned
