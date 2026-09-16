@@ -30,26 +30,26 @@
 /* ── colour ──────────────────────────────────────────────────────────
    Every colour in these keyframes is a design-system token or a tint of one
    — see src/styles/tokens.css. The handoff's navy shadow base becomes the
-   system's text ink at the same weights, its product blue becomes --color-info,
-   and its success teal becomes --color-ink. Named here once so the keyframes
-   read as motion. */
+   system's text ink at the same weights, and both its product blue and its
+   success teal become --color-ink: one interactive colour for everything on
+   the stage that carries colour, with only the Jira mark keeping its own.
+   Named here once so the keyframes read as motion. */
 .pes-stage {
   --pes-shadow-05: color-mix(in srgb, var(--color-text) 5%, transparent);
   --pes-shadow-07: color-mix(in srgb, var(--color-text) 7%, transparent);
   --pes-shadow-12: color-mix(in srgb, var(--color-text) 12%, transparent);
-  --pes-info-12: color-mix(in srgb, var(--color-info) 12%, transparent);
-  --pes-info-00: color-mix(in srgb, var(--color-info) 0%, transparent);
   --pes-ink-40: color-mix(in srgb, var(--color-ink) 40%, transparent);
   --pes-ink-12: color-mix(in srgb, var(--color-ink) 12%, transparent);
+  --pes-ink-00: color-mix(in srgb, var(--color-ink) 0%, transparent);
 }
 
 /* Jira tile: a 10px halo while the buyer is being qualified (57-78%). */
 @keyframes pes-surface {
   0%, 57% { box-shadow: 0 0 0 1px var(--pes-shadow-05), 0 10px 26px var(--pes-shadow-12); }
-  61% { box-shadow: 0 0 0 10px var(--pes-info-12), 0 10px 26px var(--pes-shadow-12); }
-  72% { box-shadow: 0 0 0 10px var(--pes-info-12), 0 10px 26px var(--pes-shadow-12); }
-  78% { box-shadow: 0 0 0 0 var(--pes-info-00), 0 10px 26px var(--pes-shadow-12); }
-  100% { box-shadow: 0 0 0 0 var(--pes-info-00), 0 10px 26px var(--pes-shadow-12); }
+  61% { box-shadow: 0 0 0 10px var(--pes-ink-12), 0 10px 26px var(--pes-shadow-12); }
+  72% { box-shadow: 0 0 0 10px var(--pes-ink-12), 0 10px 26px var(--pes-shadow-12); }
+  78% { box-shadow: 0 0 0 0 var(--pes-ink-00), 0 10px 26px var(--pes-shadow-12); }
+  100% { box-shadow: 0 0 0 0 var(--pes-ink-00), 0 10px 26px var(--pes-shadow-12); }
 }
 
 /* The focus buyer and its label leave in place as the lift-off chip appears. */

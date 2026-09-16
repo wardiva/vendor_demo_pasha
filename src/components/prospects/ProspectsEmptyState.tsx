@@ -28,7 +28,7 @@ import "./ProspectsEmptyState.css";
  *   faded labels  #8a94a6 on #f1f4f8      →  --color-text-muted on --color-surface-muted
  *   counter       #94a3b8, then teal       →  --color-text-subtle, then --color-ink
  *   success       #0f766e and its tints   →  --color-ink and its tints
- *   product blue  #2563eb                 →  --color-info, the Jira blue the sidebar draws
+ *   product blue  #2563eb and its tints   →  --color-ink and its tints, likewise
  *   lines         #cbd5e1 / #e3e7ec / …   →  the --color-border ladder
  *   shadows       rgba(16,24,40, a)       →  --color-text at the same a — the ink the
  *                                            system's elevation is carried by
@@ -169,7 +169,7 @@ function Stage() {
               The rings step down the border ladder, outer to inner. */}
           <div className="absolute rounded-full" style={{ left: 170, top: 22, width: 300, height: 300, border: "1.5px dashed var(--color-border-medium)" }} />
           <div className="absolute rounded-full" style={{ left: 224, top: 76, width: 192, height: 192, border: "1.5px dashed var(--color-border-subtle)" }} />
-          <div className="absolute rounded-full" style={{ left: 200, top: 52, width: 240, height: 240, background: `radial-gradient(circle, ${tint("--color-info", 6)}, transparent 70%)` }} />
+          <div className="absolute rounded-full" style={{ left: 200, top: 52, width: 240, height: 240, background: "radial-gradient(circle, var(--color-ink-06), transparent 70%)" }} />
 
           {/* Three buyers browsing other categories, faded, on the outer ring. */}
           <BackgroundBuyer angle={40} avatar={avatarJames} tag="CRM" />
@@ -194,7 +194,7 @@ function Stage() {
                 data-pes="tether"
                 style={{
                   left: 0, top: -1, height: 2, borderRadius: 1,
-                  background: `linear-gradient(90deg, ${tint("--color-info", 0)}, ${tint("--color-info", 55)})`,
+                  background: `linear-gradient(90deg, ${tint("--color-ink", 0)}, ${tint("--color-ink", 55)})`,
                   transformOrigin: "left center",
                 }}
               />
@@ -235,11 +235,11 @@ function Stage() {
           </div>
 
           {/* Qualifying ring: r = 76 around (350, 172), a 28/72 dash, rotating.
-              In the system's ink, with the Assigned tag and the filled count:
-              the ring is the moment the buyer qualifies, and the product's
-              interactive colour is what that reads in. The tether, glow and
-              tile halo stay in --color-info — those are Jira's pull, not the
-              product's verdict. */}
+              In the system's ink, as is everything else on the stage that
+              carries colour — the tether, the glow field, the tile's halo,
+              the Assigned tag and the filled count. The handoff's product
+              blue is gone from all of them; only the Jira mark keeps its
+              own colours, being a logo. */}
           <svg className="absolute" data-pes="qualify" height="180" style={{ left: 260, top: 82 }} viewBox="0 0 180 180" width="180">
             <circle cx="90" cy="90" fill="none" pathLength="100" r="76" stroke="var(--color-ink)" strokeDasharray="28 72" strokeLinecap="round" strokeWidth="2" />
           </svg>
