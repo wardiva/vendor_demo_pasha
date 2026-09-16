@@ -224,12 +224,13 @@ function Frame79() {
   return (
     <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
       <ProspectsToolbar />
-      {/* The prototype switch, local hosts only. Everything above it — the
-          toolbar, its filters, search, date range, sort and view control — and
-          everything the page computes stay exactly as they are; only what the
-          slot below renders is swapped. */}
-      {IS_LOCAL && <ProspectsPrototypeBar view={prototype} onChange={choose} />}
       {IS_LOCAL && prototype === "empty" ? <ProspectsEmptyState /> : <Frame78 />}
+      {/* The prototype switch, local hosts only. Fixed to the window's
+          bottom-right, so it takes no room here — the toolbar, its filters,
+          search, date range, sort and view control, and everything the page
+          computes stay exactly as they are; only what the slot above renders
+          is swapped. */}
+      {IS_LOCAL && <ProspectsPrototypeBar view={prototype} onChange={choose} />}
     </div>
   );
 }
