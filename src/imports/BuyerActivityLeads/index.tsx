@@ -221,15 +221,25 @@ function Frame79() {
     }
   };
 
+  const showEmptyState = IS_LOCAL && prototype === "empty";
+
   return (
     <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
-      <ProspectsToolbar />
-      {IS_LOCAL && prototype === "empty" ? <ProspectsEmptyState /> : <Frame78 />}
+      {/* The toolbar goes with the list. A vendor with no prospects has
+          nothing to filter, search, sort or re-view, so the empty state
+          stands alone under the heading — which is how it will ship. The
+          toolbar's state is untouched underneath; it is simply not drawn
+          while the prototype is up, and returns exactly as it was. */}
+      {showEmptyState ? <ProspectsEmptyState /> : (
+        <>
+          <ProspectsToolbar />
+          <Frame78 />
+        </>
+      )}
       {/* The prototype switch, local hosts only. Fixed to the window's
-          bottom-right, so it takes no room here — the toolbar, its filters,
-          search, date range, sort and view control, and everything the page
-          computes stay exactly as they are; only what the slot above renders
-          is swapped. */}
+          bottom-right, so it takes no room here; everything the page
+          computes stays exactly as it is, and only what is drawn in this
+          column is swapped. */}
       {IS_LOCAL && <ProspectsPrototypeBar view={prototype} onChange={choose} />}
     </div>
   );
