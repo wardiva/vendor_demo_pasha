@@ -234,9 +234,14 @@ function Stage() {
             </div>
           </div>
 
-          {/* Qualifying ring: r = 76 around (350, 172), a 28/72 dash, rotating. */}
+          {/* Qualifying ring: r = 76 around (350, 172), a 28/72 dash, rotating.
+              In the system's ink, with the Assigned tag and the filled count:
+              the ring is the moment the buyer qualifies, and the product's
+              interactive colour is what that reads in. The tether, glow and
+              tile halo stay in --color-info — those are Jira's pull, not the
+              product's verdict. */}
           <svg className="absolute" data-pes="qualify" height="180" style={{ left: 260, top: 82 }} viewBox="0 0 180 180" width="180">
-            <circle cx="90" cy="90" fill="none" pathLength="100" r="76" stroke="var(--color-info)" strokeDasharray="28 72" strokeLinecap="round" strokeWidth="2" />
+            <circle cx="90" cy="90" fill="none" pathLength="100" r="76" stroke="var(--color-ink)" strokeDasharray="28 72" strokeLinecap="round" strokeWidth="2" />
           </svg>
 
           {/* Lift-off chip: buyer + Jira as one pill, from the landing spot to the tray. */}
