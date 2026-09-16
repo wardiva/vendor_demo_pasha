@@ -208,13 +208,15 @@ function Stage() {
                   >
                     <Avatar size={40} src={avatarElena} />
                   </div>
-                  {/* "Project mgmt" — bare text, no pill — goes as the buyer wakes. */}
+                  {/* The category the buyer is browsing — bare text, no pill —
+                      goes as the buyer wakes. Spelled out, and cased as the
+                      sidebar's own label for it is. */}
                   <div
                     className="absolute whitespace-nowrap font-['Inter',sans-serif] font-medium"
                     data-pes="chip-out"
                     style={{ left: 46, top: 11, height: 18, fontSize: 9.5, lineHeight: "18px", color: "var(--color-text-muted)" }}
                   >
-                    Project mgmt
+                    Project Management
                   </div>
                   {/* …and the Jira label springs in where it was. */}
                   <div
