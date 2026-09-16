@@ -12,6 +12,10 @@ import imgAvatar from "./148b1a6d07c50cdb128bc8e19f77df73c62e2be8.png";
 import { imgGroup, imgGroup1 } from "./svg-9f9zr";
 import { HelpControl } from "@/components/HelpIcon";
 import InfoIcon from "@/components/InfoIcon";
+import { useState } from "react";
+import ProspectsEmptyState from "@/components/prospects/ProspectsEmptyState";
+import ProspectsPrototypeBar, { type ProspectsPrototypeView } from "@/components/prospects/ProspectsPrototypeBar";
+import { IS_LOCAL } from "@/lib/environment";
 
 /** Counts the prospects actually listed below it, filters and search included. */
 function ChipBgLabelSuccess() {
@@ -188,11 +192,44 @@ function Frame78() {
   );
 }
 
+/**
+ * Which the list slot shows while prototyping: the real prospects, or the
+ * empty state in their place. Remembered for the tab so a reload while
+ * evaluating the loop comes back where it was, and forgotten when the tab
+ * closes. Read only on local hosts — on the deployment the switch is not
+ * rendered and the slot always shows the prospects.
+ */
+const PROTOTYPE_KEY = "prospects-prototype-view";
+
+function readPrototypeView(): ProspectsPrototypeView {
+  if (!IS_LOCAL) return "prospects";
+  try {
+    return sessionStorage.getItem(PROTOTYPE_KEY) === "empty" ? "empty" : "prospects";
+  } catch {
+    return "prospects";
+  }
+}
+
 function Frame79() {
+  const [prototype, setPrototype] = useState<ProspectsPrototypeView>(readPrototypeView);
+  const choose = (view: ProspectsPrototypeView) => {
+    setPrototype(view);
+    try {
+      sessionStorage.setItem(PROTOTYPE_KEY, view);
+    } catch {
+      /* Storage unavailable — the choice still holds for this render. */
+    }
+  };
+
   return (
     <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
       <ProspectsToolbar />
-      <Frame78 />
+      {/* The prototype switch, local hosts only. Everything above it — the
+          toolbar, its filters, search, date range, sort and view control — and
+          everything the page computes stay exactly as they are; only what the
+          slot below renders is swapped. */}
+      {IS_LOCAL && <ProspectsPrototypeBar view={prototype} onChange={choose} />}
+      {IS_LOCAL && prototype === "empty" ? <ProspectsEmptyState /> : <Frame78 />}
     </div>
   );
 }
