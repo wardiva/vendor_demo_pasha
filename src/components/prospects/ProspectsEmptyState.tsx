@@ -43,6 +43,18 @@ const LOOP_SECONDS = 12;
 const STAGE_W = 344;
 const STAGE_H = 176;
 
+/**
+ * How much of the source's size the illustration is drawn at.
+ *
+ * Applied as one transform over the whole stage rather than by resizing the
+ * box: everything inside is absolutely positioned against the 344 x 176
+ * above, so a smaller box would crop it and leave the contents at full size.
+ * Scaling the picture takes every distance, radius, hairline and the flap's
+ * perspective down together, which is the only way the motion stays the
+ * motion that was designed.
+ */
+const SCALE = 0.7;
+
 /** Tints of a token, so each stays attached to the token it is a shade of. */
 const ink = (pct: number) => `color-mix(in srgb, var(--color-ink) ${pct}%, transparent)`;
 
@@ -80,10 +92,16 @@ function Stage() {
   return (
     <div
       aria-hidden
-      className="pes-stage relative flex justify-center overflow-hidden"
-      style={{ height: STAGE_H, ["--pes-dur" as string]: `${LOOP_SECONDS}s` }}
+      className="pes-stage relative overflow-hidden"
+      style={{
+        width: STAGE_W * SCALE, height: STAGE_H * SCALE,
+        ["--pes-dur" as string]: `${LOOP_SECONDS}s`,
+      }}
     >
-      <div className="relative" style={{ width: STAGE_W, height: STAGE_H }}>
+      <div
+        className="absolute left-0 top-0"
+        style={{ width: STAGE_W, height: STAGE_H, transform: `scale(${SCALE})`, transformOrigin: "0 0" }}
+      >
         {/* The drop zone. Masked out at its foot so a card is already fading
             as it passes behind the folder's lip rather than cutting off. */}
         <div
