@@ -4,98 +4,35 @@ import "./ProspectsEmptyState.css";
  * The Prospects page's empty state — cards filing into a folder.
  *
  * Ported from Claude Design, project "Avatars falling into prospect cards",
- * file `Reveal Contact Card.dc.html`. Three prospect cards fall in one after
- * another; the folder's flap tips open to take each one, the folder squashes
- * under the weight and settles, and a sheet stacks inside. After the third
- * the stack clears and the loop comes round — which is the page's own story:
- * this is where prospects land as buyers engage.
+ * file `Prospects Empty State Folder.dc.html`, as drawn: every dimension,
+ * offset, radius, colour and shadow below is that file's literal value, and
+ * the stylesheet beside this file is its keyframes percentage for
+ * percentage. Nothing is re-coloured to the design system or re-scaled —
+ * the illustration is the design, and the design is the source of truth.
  *
- * The geometry is the source's, element for element and pixel for pixel on
- * its 344 x 176 stage, and the stylesheet beside this file is its keyframes
- * percentage for percentage. `support.js`, which the source imports, is the
- * Claude Design canvas runtime — a React template renderer for previewing
- * .dc.html on the canvas — so there is nothing in it to port; its only
- * bearing here is the `loopSeconds` prop it feeds the stage, which is the
- * LOOP_SECONDS below.
+ * Three prospect cards fall in one after another; the folder's flap tips
+ * open to take each one, the folder squashes under the weight and settles,
+ * and a sheet stacks inside. After the third the stack clears and the loop
+ * comes round. The folder is two layers on the same box — the back (tab,
+ * body, sheets) beneath the drop zone and the front (the flap) above it, so
+ * a falling card passes behind the flap and into the pocket.
  *
- * Colour is the design system's, not the source's slate — see
- * src/styles/tokens.css. Every value is a token or a tint of one:
- *
- *   card / sheet surface    #fff                →  --color-surface
- *   card / sheet hairline   #e9edf2             →  --color-border-subtle
- *   avatar block            #eef1f5             →  ink 8%
- *   name bar                #e2e8f0             →  ink 12%
- *   role bar                #eef1f5             →  ink 6%
- *   folder tab / flap dot   #dfe5ec             →  ink 12%
- *   folder body             #e5eaf0             →  ink 9%
- *   flap                    #f4f6f9 → #eceff3   →  ink 5% → ink 8%
- *   shadows                 rgba(16,24,40, a)   →  --color-text at the same a
+ * The source draws its 344 x 176 stage at scale(.8) inside a 275 x 141
+ * window; that is reproduced as-is. `support.js`, which the source imports,
+ * is the Claude Design canvas runtime — a React template renderer for
+ * previewing .dc.html on the canvas — so there is nothing in it to port; its
+ * only bearing here is the `loopSeconds` prop it feeds into `--dur`, which
+ * is LOOP_SECONDS below.
  *
  * Decorative: the stage is aria-hidden and the heading and subline are the
- * accessible content. Under prefers-reduced-motion the loop holds on the
- * frame where all three are filed; see the stylesheet.
+ * accessible content.
  */
 
 /* The source's `loopSeconds` prop — its default, and its whole logic. */
 const LOOP_SECONDS = 12;
 
-/* The source's stage. Nothing inside reflows, so these are fixed. */
-const STAGE_W = 344;
-const STAGE_H = 176;
-
-/**
- * How much of the source's size the illustration is drawn at.
- *
- * Applied as one transform over the whole stage rather than by resizing the
- * box: everything inside is absolutely positioned against the 344 x 176
- * above, so a smaller box would crop it and leave the contents at full size.
- * Scaling the picture takes every distance, radius, hairline and the flap's
- * perspective down together, which is the only way the motion stays the
- * motion that was designed.
- */
-const SCALE = 0.7;
-
-/**
- * How much of its drawn size the folder is shown at, the cards untouched.
- *
- * The source draws the folder 200 wide against a 172-wide card, which left
- * it looking heavy beside what it is catching. This trims the folder alone.
- *
- * It rides a wrapper rather than the folder itself: the folder's own
- * transform is animated — the squash on each impact and the settle at the
- * end — so a scale written on it would be overwritten the moment the
- * animation started. The wrapper shrinks from `center bottom`, so the folder
- * keeps its footing on the same line and narrows toward its own centre
- * instead of drifting.
- */
-const FOLDER_SCALE = 0.9;
-
-/**
- * The folder's own box, and the only place this departs from the source.
- *
- * The source draws it 200 x 82 — very nearly 2.5:1 — which reads as a wide
- * shallow tray rather than something with a pocket deep enough to file into.
- * The other folder study in the same project draws it identically, so there
- * was no better-proportioned reference to take; 200 x 100 is a judgement,
- * and an even 2:1.
- *
- * It grows upward: the foot stays on FOLDER_BASE_Y, the line the source put
- * it on and the line the falling cards are timed against, so the extra
- * height opens the pocket rather than pushing the folder off the stage. The
- * 12px of back wall standing above the flap is the source's and is kept, so
- * the sheets peek over the flap's lip by exactly as much as before.
- */
-const FOLDER_W = 200;
-const FOLDER_H = 100;
-/** Where the folder's foot sits on the stage — the source's 82 + 82. */
-const FOLDER_BASE_Y = 164;
-const FOLDER_TOP = FOLDER_BASE_Y - FOLDER_H;
-/** The body starts below the tab; the flap below that, leaving the back wall. */
-const BODY_TOP = 10;
-const FLAP_TOP = 22;
-
-/** Tints of a token, so each stays attached to the token it is a shade of. */
-const ink = (pct: number) => `color-mix(in srgb, var(--color-ink) ${pct}%, transparent)`;
+/* The source's card border and sheet border, one hairline for both. */
+const HAIRLINE = "1px solid #e9edf2";
 
 /**
  * One falling prospect card: an avatar block over a name and a role bar.
@@ -103,7 +40,7 @@ const ink = (pct: number) => `color-mix(in srgb, var(--color-ink) ${pct}%, trans
  * the loop reading as the same card three times.
  *
  * @param offset  How far into the loop this card starts, as a fraction. The
- *                three share one timeline at 0, 1/4 and 1/2 of it — written
+ *                three share one timeline at 0, 3/4 and 1/2 of it — written
  *                as a negative delay, so all three are already in flight on
  *                the first frame rather than waiting their turn once.
  */
@@ -113,108 +50,99 @@ function FallingCard({ nameW, roleW, offset }: { nameW: number; roleW: number; o
       className="absolute"
       data-pes="drop"
       style={{
-        left: 86, top: 14, width: 172, height: 44, borderRadius: 10,
-        background: "var(--color-surface)", border: "1px solid var(--color-border-subtle)",
-        boxShadow: "0 6px 16px var(--pes-shadow-06)",
-        animationDelay: `calc(var(--pes-dur) * -${offset})`,
+        left: 104, top: 10, width: 136, height: 40, borderRadius: 10,
+        background: "#fff", border: HAIRLINE,
+        boxShadow: "0 6px 16px rgba(16,24,40,.06)",
+        animationDelay: offset ? `calc(var(--pes-dur) * -${offset})` : undefined,
       }}
     >
-      <div className="absolute" style={{ left: 9, top: 8, width: 28, height: 28, borderRadius: 7, background: ink(8) }} />
-      <div className="absolute" style={{ left: 46, top: 12, width: nameW, height: 8, borderRadius: 4, background: ink(12) }} />
-      <div className="absolute" style={{ left: 46, top: 26, width: roleW, height: 6, borderRadius: 3, background: ink(6) }} />
+      <div className="absolute" style={{ left: 8, top: 7, width: 26, height: 26, borderRadius: 7, background: "#eef1f5" }} />
+      <div className="absolute" style={{ left: 42, top: 11, width: nameW, height: 8, borderRadius: 4, background: "#e2e8f0" }} />
+      <div className="absolute" style={{ left: 42, top: 24, width: roleW, height: 6, borderRadius: 3, background: "#eef1f5" }} />
     </div>
   );
 }
 
-/** The 344 x 176 loop. */
+/** The source's stage: a 344 x 176 loop drawn at .8 in a 275 x 141 window. */
 function Stage() {
   return (
-    <div
-      aria-hidden
-      className="pes-stage relative overflow-hidden"
-      style={{
-        width: STAGE_W * SCALE, height: STAGE_H * SCALE,
-        ["--pes-dur" as string]: `${LOOP_SECONDS}s`,
-      }}
-    >
+    <div className="flex items-center justify-center p-0">
       <div
-        className="absolute left-0 top-0"
-        style={{ width: STAGE_W, height: STAGE_H, transform: `scale(${SCALE})`, transformOrigin: "0 0" }}
+        aria-hidden
+        className="pes-stage relative overflow-hidden"
+        style={{ width: 275, height: 141, ["--pes-dur" as string]: `${LOOP_SECONDS}s` }}
       >
-        {/* The drop zone. Masked out at its foot so a card is already fading
-            as it passes behind the folder's lip rather than cutting off. */}
         <div
-          className="absolute overflow-hidden"
-          style={{
-            left: 0, top: 0, width: STAGE_W, height: 112,
-            WebkitMaskImage: "linear-gradient(#000 86%, transparent)",
-            maskImage: "linear-gradient(#000 86%, transparent)",
-          }}
+          className="absolute left-0 top-0"
+          style={{ width: 344, height: 176, transform: "scale(.8)", transformOrigin: "top left" }}
         >
-          <FallingCard nameW={84} offset={0} roleW={58} />
-          <FallingCard nameW={66} offset={0.75} roleW={72} />
-          <FallingCard nameW={96} offset={0.5} roleW={50} />
-        </div>
+          {/* The drop zone, layered between the folder's back and its flap.
+              Masked out at its foot so a card is already fading as it passes
+              behind the flap's lip rather than cutting off. */}
+          <div
+            className="pointer-events-none absolute overflow-hidden"
+            style={{
+              left: 0, top: 0, width: 344, height: 130, zIndex: 2,
+              WebkitMaskImage: "linear-gradient(#000 78%, transparent 100%)",
+              maskImage: "linear-gradient(#000 78%, transparent 100%)",
+            }}
+          >
+            <FallingCard nameW={64} offset={0} roleW={44} />
+            <FallingCard nameW={52} offset={0.75} roleW={56} />
+            <FallingCard nameW={74} offset={0.5} roleW={38} />
+          </div>
 
-        {/* The folder: a tab, a body, the sheets that collect inside it, and
-            the front flap that opens to take each card. The outer box carries
-            FOLDER_SCALE and the inner one the animation, so the two transforms
-            do not contend for the same property. */}
-        <div
-          className="absolute"
-          style={{
-            left: 72, top: FOLDER_TOP, width: FOLDER_W, height: FOLDER_H,
-            transform: `scale(${FOLDER_SCALE})`, transformOrigin: "center bottom",
-          }}
-        >
-        <div
-          className="absolute inset-0"
-          data-pes="folder"
-          style={{ transformOrigin: "center bottom" }}
-        >
-          <div className="absolute" style={{ left: 0, top: 0, width: 76, height: 14, borderRadius: "6px 6px 0 0", background: ink(12) }} />
-          <div className="absolute" style={{ left: 0, top: BODY_TOP, width: FOLDER_W, height: FOLDER_H - BODY_TOP, borderRadius: "6px 10px 10px 10px", background: ink(9) }} />
-
-          {/* Filed sheets — smallest at the back, each arriving with its card. */}
+          {/* The folder's back: tab, body, and the sheets that collect inside. */}
           <div
             className="absolute"
-            data-pes="stack-1"
-            style={{ left: 24, top: 2, width: 152, height: 26, borderRadius: 6, background: "var(--color-surface)", border: "1px solid var(--color-border-subtle)", opacity: 0.9 }}
-          />
-          <div
-            className="absolute"
-            data-pes="stack-2"
-            style={{ left: 20, top: 8, width: 160, height: 26, borderRadius: 6, background: "var(--color-surface)", border: "1px solid var(--color-border-subtle)" }}
-          />
-          <div
-            className="absolute"
-            data-pes="stack-3"
-            style={{ left: 16, top: 14, width: 168, height: 26, borderRadius: 6, background: "var(--color-surface)", border: "1px solid var(--color-border-subtle)" }}
-          />
+            data-pes="folder"
+            style={{ left: 92, top: 74, width: 160, height: 90, zIndex: 1, transformOrigin: "center bottom" }}
+          >
+            <div className="absolute" style={{ left: 0, top: 0, width: 60, height: 14, borderRadius: "6px 6px 0 0", background: "#dfe5ec" }} />
+            <div className="absolute" style={{ left: 0, top: 10, width: 160, height: 80, borderRadius: "6px 10px 10px 10px", background: "#e5eaf0" }} />
 
-          {/* The flap tips on its own perspective so the rotation reads as
-              depth rather than a squashed rectangle. */}
-          <div className="absolute" style={{ left: 0, top: FLAP_TOP, width: FOLDER_W, height: FOLDER_H - FLAP_TOP, perspective: 600 }}>
+            {/* Filed sheets — smallest at the back, each arriving with its card. */}
             <div
-              className="absolute inset-0"
-              data-pes="flap"
-              style={{
-                borderRadius: "8px 10px 10px 10px",
-                background: `linear-gradient(${ink(5)}, ${ink(8)})`,
-                transformOrigin: "center bottom",
-              }}
-            >
-              {/* The clasp, centred in whatever height the flap now has. */}
+              className="absolute"
+              data-pes="stack-1"
+              style={{ left: 20, top: 2, width: 120, height: 26, borderRadius: 6, background: "#fff", border: HAIRLINE, opacity: 0.9 }}
+            />
+            <div
+              className="absolute"
+              data-pes="stack-2"
+              style={{ left: 16, top: 8, width: 128, height: 26, borderRadius: 6, background: "#fff", border: HAIRLINE }}
+            />
+            <div
+              className="absolute"
+              data-pes="stack-3"
+              style={{ left: 12, top: 14, width: 136, height: 26, borderRadius: 6, background: "#fff", border: HAIRLINE }}
+            />
+          </div>
+
+          {/* The folder's front: the same box, the same squash and settle, so
+              the flap moves with the body it is attached to. The flap tips on
+              its own perspective so the rotation reads as depth rather than a
+              squashed rectangle. */}
+          <div
+            className="pointer-events-none absolute"
+            data-pes="folder"
+            style={{ left: 92, top: 74, width: 160, height: 90, zIndex: 3, transformOrigin: "center bottom" }}
+          >
+            <div className="absolute" style={{ left: 0, top: 22, width: 160, height: 68, perspective: 600 }}>
               <div
-                className="absolute"
+                className="absolute inset-0"
+                data-pes="flap"
                 style={{
-                  left: (FOLDER_W - 16) / 2, top: (FOLDER_H - FLAP_TOP - 16) / 2,
-                  width: 16, height: 16, borderRadius: "50%", background: ink(12),
+                  borderRadius: "8px 10px 10px 10px",
+                  background: "linear-gradient(#f4f6f9, #eceff3)",
+                  transformOrigin: "center bottom",
                 }}
-              />
+              >
+                {/* The clasp. */}
+                <div className="absolute" style={{ left: 72, top: 30, width: 16, height: 16, borderRadius: "50%", background: "#dfe5ec" }} />
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
     </div>

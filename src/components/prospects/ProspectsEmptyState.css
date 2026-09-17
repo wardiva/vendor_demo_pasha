@@ -1,9 +1,8 @@
 /* ── Prospects empty state — "Cards filing into a folder" ─────────────
    Ported from Claude Design, project "Avatars falling into prospect cards",
-   file `Reveal Contact Card.dc.html`. Every keyframe below is that file's,
-   percentage for percentage; only the names are prefixed `pes-` so nothing
-   here can collide with the app's own keyframes, and the colours are the
-   design system's rather than the source's slate — see the component.
+   file `Prospects Empty State Folder.dc.html`. Every keyframe below is that
+   file's, percentage for percentage and value for value; only the names are
+   prefixed `pes-` so nothing here can collide with the app's own keyframes.
 
    One loop is --pes-dur (the source's `loopSeconds` prop, default 12s).
    Three cards share the one rcDrop timeline, offset by -3/4 and -1/2 of it,
@@ -38,16 +37,16 @@
 
 /* The flap's shadow tightens as it meets the ground on each impact. */
 @keyframes pes-shadow {
-  0%, 19% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
-  21.5% { box-shadow: inset 0 1px 0 var(--color-surface), 0 3px 10px var(--pes-shadow-09); }
-  32% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
-  44% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
-  46.5% { box-shadow: inset 0 1px 0 var(--color-surface), 0 3px 10px var(--pes-shadow-09); }
-  57% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
-  69% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
-  71.5% { box-shadow: inset 0 1px 0 var(--color-surface), 0 3px 10px var(--pes-shadow-09); }
-  82% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
-  100% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
+  0%, 19% { box-shadow: inset 0 1px 0 #fff, 0 8px 20px rgba(16,24,40,.06); }
+  21.5% { box-shadow: inset 0 1px 0 #fff, 0 3px 10px rgba(16,24,40,.09); }
+  32% { box-shadow: inset 0 1px 0 #fff, 0 8px 20px rgba(16,24,40,.06); }
+  44% { box-shadow: inset 0 1px 0 #fff, 0 8px 20px rgba(16,24,40,.06); }
+  46.5% { box-shadow: inset 0 1px 0 #fff, 0 3px 10px rgba(16,24,40,.09); }
+  57% { box-shadow: inset 0 1px 0 #fff, 0 8px 20px rgba(16,24,40,.06); }
+  69% { box-shadow: inset 0 1px 0 #fff, 0 8px 20px rgba(16,24,40,.06); }
+  71.5% { box-shadow: inset 0 1px 0 #fff, 0 3px 10px rgba(16,24,40,.09); }
+  82% { box-shadow: inset 0 1px 0 #fff, 0 8px 20px rgba(16,24,40,.06); }
+  100% { box-shadow: inset 0 1px 0 #fff, 0 8px 20px rgba(16,24,40,.06); }
 }
 
 /* The front flap tips open to receive each card, then closes. */
@@ -98,22 +97,16 @@
 }
 
 /* ── the rig ─────────────────────────────────────────────────────────
-   One clock for everything, and the shadow tints named once. The source's
-   navy rgba(16,24,40, a) becomes the system's text ink at the same a — the
-   ink the system's own elevation is carried by. */
-.pes-stage {
-  --pes-shadow-06: color-mix(in srgb, var(--color-text) 6%, transparent);
-  --pes-shadow-09: color-mix(in srgb, var(--color-text) 9%, transparent);
-}
-
+   One clock for everything: --pes-dur is the source's --dur. The source
+   writes `<name> var(--dur,12s) linear infinite` on each element; that is
+   what these three lines say once. */
 .pes-stage [data-pes] {
   animation-duration: var(--pes-dur);
   animation-timing-function: linear;
   animation-iteration-count: infinite;
-  animation-fill-mode: both;
 }
 
-.pes-stage [data-pes="drop"] { animation-name: pes-drop; will-change: transform, opacity; }
+.pes-stage [data-pes="drop"] { animation-name: pes-drop; animation-fill-mode: both; will-change: transform, opacity; }
 .pes-stage [data-pes="folder"] { animation-name: pes-folder, pes-clear; will-change: transform; }
 .pes-stage [data-pes="flap"] { animation-name: pes-flap, pes-shadow; }
 .pes-stage [data-pes="stack-1"] { animation-name: pes-stack-1; }
