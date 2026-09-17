@@ -168,12 +168,21 @@ function Stage() {
 export default function ProspectsEmptyState() {
   return (
     /* The page's panel: white, a hairline, 16 radius, a whisper of shadow,
-       the stage and the copy stacked 20px apart. */
+       the stage and the copy stacked 20px apart.
+
+       A floor under it, and the pair centred in whatever height that gives.
+       Sized to its content the panel came to 316px — a short band directly
+       under the heading, with the page's ground running away beneath it,
+       which read as something still loading rather than as the answer. The
+       list it stands in for is far taller than that, so the panel holds a
+       comparable block and the illustration sits in the middle of it. A
+       floor, not a fixed height: the copy can wrap to a third line at a
+       narrow width and the panel simply grows. */
     <div
-      className="flex w-full flex-col items-center bg-surface"
+      className="flex w-full flex-col items-center justify-center bg-surface"
       data-name="Prospects Empty State"
       style={{
-        gap: 20, padding: "40px 24px 48px", borderRadius: 16,
+        gap: 20, padding: "40px 24px 48px", minHeight: 520, borderRadius: 16,
         border: "1px solid var(--color-border-hairline)",
         boxShadow: "0 1px 2px color-mix(in srgb, var(--color-text) 5%, transparent)",
       }}
