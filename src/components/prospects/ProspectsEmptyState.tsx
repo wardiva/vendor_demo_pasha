@@ -176,7 +176,7 @@ export default function ProspectsEmptyState() {
           No Prospects Found
         </h2>
         <p className="m-0 font-['Inter',sans-serif] font-normal" style={{ fontSize: 15, lineHeight: 1.5, color: "var(--color-text-secondary)", textWrap: "pretty" }}>
-          Prospects appear here once buyers engage with your profile or similar products.
+          We’re loading your prospects now. They’ll appear here shortly once they’re ready.
         </p>
       </div>
     </div>
