@@ -70,6 +70,30 @@ const SCALE = 0.7;
  */
 const FOLDER_SCALE = 0.9;
 
+/**
+ * The folder's own box, and the only place this departs from the source.
+ *
+ * The source draws it 200 x 82 — very nearly 2.5:1 — which reads as a wide
+ * shallow tray rather than something with a pocket deep enough to file into.
+ * The other folder study in the same project draws it identically, so there
+ * was no better-proportioned reference to take; 200 x 100 is a judgement,
+ * and an even 2:1.
+ *
+ * It grows upward: the foot stays on FOLDER_BASE_Y, the line the source put
+ * it on and the line the falling cards are timed against, so the extra
+ * height opens the pocket rather than pushing the folder off the stage. The
+ * 12px of back wall standing above the flap is the source's and is kept, so
+ * the sheets peek over the flap's lip by exactly as much as before.
+ */
+const FOLDER_W = 200;
+const FOLDER_H = 100;
+/** Where the folder's foot sits on the stage — the source's 82 + 82. */
+const FOLDER_BASE_Y = 164;
+const FOLDER_TOP = FOLDER_BASE_Y - FOLDER_H;
+/** The body starts below the tab; the flap below that, leaving the back wall. */
+const BODY_TOP = 10;
+const FLAP_TOP = 22;
+
 /** Tints of a token, so each stays attached to the token it is a shade of. */
 const ink = (pct: number) => `color-mix(in srgb, var(--color-ink) ${pct}%, transparent)`;
 
@@ -139,7 +163,7 @@ function Stage() {
         <div
           className="absolute"
           style={{
-            left: 72, top: 82, width: 200, height: 82,
+            left: 72, top: FOLDER_TOP, width: FOLDER_W, height: FOLDER_H,
             transform: `scale(${FOLDER_SCALE})`, transformOrigin: "center bottom",
           }}
         >
@@ -149,7 +173,7 @@ function Stage() {
           style={{ transformOrigin: "center bottom" }}
         >
           <div className="absolute" style={{ left: 0, top: 0, width: 76, height: 14, borderRadius: "6px 6px 0 0", background: ink(12) }} />
-          <div className="absolute" style={{ left: 0, top: 10, width: 200, height: 72, borderRadius: "6px 10px 10px 10px", background: ink(9) }} />
+          <div className="absolute" style={{ left: 0, top: BODY_TOP, width: FOLDER_W, height: FOLDER_H - BODY_TOP, borderRadius: "6px 10px 10px 10px", background: ink(9) }} />
 
           {/* Filed sheets — smallest at the back, each arriving with its card. */}
           <div
@@ -170,7 +194,7 @@ function Stage() {
 
           {/* The flap tips on its own perspective so the rotation reads as
               depth rather than a squashed rectangle. */}
-          <div className="absolute" style={{ left: 0, top: 22, width: 200, height: 60, perspective: 600 }}>
+          <div className="absolute" style={{ left: 0, top: FLAP_TOP, width: FOLDER_W, height: FOLDER_H - FLAP_TOP, perspective: 600 }}>
             <div
               className="absolute inset-0"
               data-pes="flap"
@@ -180,7 +204,14 @@ function Stage() {
                 transformOrigin: "center bottom",
               }}
             >
-              <div className="absolute" style={{ left: 92, top: 26, width: 16, height: 16, borderRadius: "50%", background: ink(12) }} />
+              {/* The clasp, centred in whatever height the flap now has. */}
+              <div
+                className="absolute"
+                style={{
+                  left: (FOLDER_W - 16) / 2, top: (FOLDER_H - FLAP_TOP - 16) / 2,
+                  width: 16, height: 16, borderRadius: "50%", background: ink(12),
+                }}
+              />
             </div>
           </div>
         </div>
