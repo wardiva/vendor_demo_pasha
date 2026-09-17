@@ -1,222 +1,132 @@
-/* ── Prospects empty state — "Buyer pulled into Jira" (handoff option 6a) ──
-   The 14s loop from design_handoff_prospects_empty_state. Every keyframe below
-   is the reference's, percentage for percentage; the timing table in its
-   README is the source of truth and these are that table written as CSS.
+/* ── Prospects empty state — "Cards filing into a folder" ─────────────
+   Ported from Claude Design, project "Avatars falling into prospect cards",
+   file `Reveal Contact Card.dc.html`. Every keyframe below is that file's,
+   percentage for percentage; only the names are prefixed `pes-` so nothing
+   here can collide with the app's own keyframes, and the colours are the
+   design system's rather than the source's slate — see the component.
 
-   Names are prefixed `pes-` so nothing here can collide with the app's own
-   keyframes. Geometry lives in the component; this file is motion only. */
+   One loop is --pes-dur (the source's `loopSeconds` prop, default 12s).
+   Three cards share the one rcDrop timeline, offset by -3/4 and -1/2 of it,
+   so one lands every third of the loop and the folder answers each. */
 
-/* Whole stage: 2% fade in, fade out from 94%, so the loop restarts cleanly. */
-@keyframes pes-loop {
-  0% { opacity: 0; }
-  2% { opacity: 1; }
-  94% { opacity: 1; }
-  97% { opacity: 0; }
-  100% { opacity: 0; }
+/* A card falls in from above, holds a beat, then drops into the folder. */
+@keyframes pes-drop {
+  0% { opacity: 0; transform: translateY(-22px) scale(0.96); animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+  6.5% { opacity: 1; transform: translateY(-10px) scale(1); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+  9.5% { transform: translateY(-10px) scale(1); animation-timing-function: cubic-bezier(0.55, 0, 0.8, 0.35); }
+  20% { opacity: 1; transform: translateY(84px) scale(0.86); }
+  23% { opacity: 0; transform: translateY(104px) scale(0.8); }
+  100% { opacity: 0; transform: translateY(104px) scale(0.8); }
 }
 
-/* Background buyers: a full counter-clockwise turn every 23.8s (14s x 1.7),
-   from each one's own start angle. The pivot turns, the avatar counter-turns,
-   so the photo and its tag stay upright. */
-@keyframes pes-sat {
-  0% { transform: rotate(var(--a, 0deg)); }
-  100% { transform: rotate(calc(var(--a, 0deg) - 360deg)); }
-}
-@keyframes pes-sat-counter {
-  0% { transform: rotate(calc(var(--a, 0deg) * -1)); }
-  100% { transform: rotate(calc(360deg - var(--a, 0deg))); }
+/* The folder takes the weight of each arrival — a short squash and settle. */
+@keyframes pes-folder {
+  0%, 19% { transform: translateY(0) scaleY(1); }
+  21.5% { transform: translateY(3px) scaleY(0.985); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  27% { transform: translateY(-1px) scaleY(1.004); }
+  32% { transform: translateY(0) scaleY(1); }
+  44% { transform: translateY(0) scaleY(1); }
+  46.5% { transform: translateY(3px) scaleY(0.985); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  52% { transform: translateY(-1px) scaleY(1.004); }
+  57% { transform: translateY(0) scaleY(1); }
+  69% { transform: translateY(0) scaleY(1); }
+  71.5% { transform: translateY(3px) scaleY(0.985); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  77% { transform: translateY(-1px) scaleY(1.004); }
+  82% { transform: translateY(0) scaleY(1); }
+  100% { transform: translateY(0) scaleY(1); }
 }
 
-/* ── colour ──────────────────────────────────────────────────────────
-   Every colour in these keyframes is a design-system token or a tint of one
-   — see src/styles/tokens.css. The handoff's navy shadow base becomes the
-   system's text ink at the same weights, and both its product blue and its
-   success teal become --color-ink: one interactive colour for everything on
-   the stage that carries colour, with only the Jira mark keeping its own.
-   Named here once so the keyframes read as motion. */
+/* The flap's shadow tightens as it meets the ground on each impact. */
+@keyframes pes-shadow {
+  0%, 19% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
+  21.5% { box-shadow: inset 0 1px 0 var(--color-surface), 0 3px 10px var(--pes-shadow-09); }
+  32% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
+  44% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
+  46.5% { box-shadow: inset 0 1px 0 var(--color-surface), 0 3px 10px var(--pes-shadow-09); }
+  57% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
+  69% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
+  71.5% { box-shadow: inset 0 1px 0 var(--color-surface), 0 3px 10px var(--pes-shadow-09); }
+  82% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
+  100% { box-shadow: inset 0 1px 0 var(--color-surface), 0 8px 20px var(--pes-shadow-06); }
+}
+
+/* The front flap tips open to receive each card, then closes. */
+@keyframes pes-flap {
+  0%, 14% { transform: rotateX(0deg); }
+  19% { transform: rotateX(-14deg); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  22% { transform: rotateX(-14deg); }
+  30% { transform: rotateX(0deg); }
+  39% { transform: rotateX(0deg); }
+  44% { transform: rotateX(-14deg); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  47% { transform: rotateX(-14deg); }
+  55% { transform: rotateX(0deg); }
+  64% { transform: rotateX(0deg); }
+  69% { transform: rotateX(-14deg); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  72% { transform: rotateX(-14deg); }
+  80% { transform: rotateX(0deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+/* Three sheets settle into the folder, one per arrival, and clear together. */
+@keyframes pes-stack-1 {
+  0%, 20% { opacity: 0; transform: translateY(5px) scale(1); }
+  25% { opacity: 1; transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  84% { opacity: 1; transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+  92% { opacity: 0; transform: translateY(8px) scale(0.92); }
+  100% { opacity: 0; transform: translateY(8px) scale(0.92); }
+}
+@keyframes pes-stack-2 {
+  0%, 45% { opacity: 0; transform: translateY(5px) scale(1); }
+  50% { opacity: 1; transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  87% { opacity: 1; transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+  95% { opacity: 0; transform: translateY(8px) scale(0.92); }
+  100% { opacity: 0; transform: translateY(8px) scale(0.92); }
+}
+@keyframes pes-stack-3 {
+  0%, 70% { opacity: 0; transform: translateY(5px) scale(1); }
+  75% { opacity: 1; transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  90% { opacity: 1; transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+  98% { opacity: 0; transform: translateY(8px) scale(0.92); }
+  100% { opacity: 0; transform: translateY(8px) scale(0.92); }
+}
+
+/* A last small settle as the folder empties and the loop comes round. */
+@keyframes pes-clear {
+  0%, 84% { transform: translateY(0) scaleY(1); }
+  90% { transform: translateY(1.5px) scaleY(0.994); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  100% { transform: translateY(0) scaleY(1); }
+}
+
+/* ── the rig ─────────────────────────────────────────────────────────
+   One clock for everything, and the shadow tints named once. The source's
+   navy rgba(16,24,40, a) becomes the system's text ink at the same a — the
+   ink the system's own elevation is carried by. */
 .pes-stage {
-  --pes-shadow-05: color-mix(in srgb, var(--color-text) 5%, transparent);
-  --pes-shadow-07: color-mix(in srgb, var(--color-text) 7%, transparent);
-  --pes-shadow-12: color-mix(in srgb, var(--color-text) 12%, transparent);
-  --pes-ink-40: color-mix(in srgb, var(--color-ink) 40%, transparent);
-  --pes-ink-12: color-mix(in srgb, var(--color-ink) 12%, transparent);
-  --pes-ink-00: color-mix(in srgb, var(--color-ink) 0%, transparent);
+  --pes-shadow-06: color-mix(in srgb, var(--color-text) 6%, transparent);
+  --pes-shadow-09: color-mix(in srgb, var(--color-text) 9%, transparent);
 }
 
-/* Jira tile: a 10px halo while the buyer is being qualified (57-78%). */
-@keyframes pes-surface {
-  0%, 57% { box-shadow: 0 0 0 1px var(--pes-shadow-05), 0 10px 26px var(--pes-shadow-12); }
-  61% { box-shadow: 0 0 0 10px var(--pes-ink-12), 0 10px 26px var(--pes-shadow-12); }
-  72% { box-shadow: 0 0 0 10px var(--pes-ink-12), 0 10px 26px var(--pes-shadow-12); }
-  78% { box-shadow: 0 0 0 0 var(--pes-ink-00), 0 10px 26px var(--pes-shadow-12); }
-  100% { box-shadow: 0 0 0 0 var(--pes-ink-00), 0 10px 26px var(--pes-shadow-12); }
-}
-
-/* The focus buyer and its label leave in place as the lift-off chip appears. */
-@keyframes pes-hide-buyer {
-  0%, 79% { opacity: 1; }
-  81% { opacity: 0; }
-  100% { opacity: 0; }
-}
-
-/* Orbit angle: drift 300 -> 250, then pulled round to 0 (Jira's right side). */
-@keyframes pes-spin {
-  0% { transform: rotate(300deg); }
-  18% { transform: rotate(250deg); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
-  58% { transform: rotate(0deg); }
-  100% { transform: rotate(0deg); }
-}
-@keyframes pes-counter-spin {
-  0% { transform: rotate(-300deg); }
-  18% { transform: rotate(-250deg); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
-  58% { transform: rotate(0deg); }
-  100% { transform: rotate(0deg); }
-}
-
-/* Tether: fades in at the outer ring, shortens with the orbit, fades out. */
-@keyframes pes-tether {
-  0%, 15% { opacity: 0; width: 150px; }
-  18% { opacity: 1; width: 150px; }
-  32% { width: 96px; }
-  44% { width: 96px; }
-  58% { width: 60px; }
-  74% { opacity: 1; width: 60px; }
-  77% { opacity: 0; }
-  100% { opacity: 0; width: 60px; }
-}
-
-/* Orbit radius: outer ring, inner ring, touchdown with a squash. */
-@keyframes pes-radius {
-  0%, 18% { transform: translateX(150px); }
-  32% { transform: translateX(96px); }
-  44% { transform: translateX(96px); }
-  58% { transform: translateX(60px); animation-timing-function: cubic-bezier(0.3, 1.5, 0.5, 1); }
-  60.5% { transform: translateX(56px) scale(1.1, 0.92); }
-  64% { transform: translateX(60px) scale(1); }
-  100% { transform: translateX(60px); }
-}
-
-/* Buyer wakes: faded and grey until they open the Jira page. */
-@keyframes pes-wake {
-  0%, 13% { opacity: 0.38; filter: grayscale(1); }
-  17% { opacity: 1; filter: grayscale(0); }
-  100% { opacity: 1; filter: grayscale(0); }
-}
-
-/* "Project mgmt" label out, Jira label in with a spring. */
-@keyframes pes-chip-out {
-  0%, 13% { opacity: 0.8; transform: translateY(0); }
-  16% { opacity: 0; transform: translateY(-6px); }
-  100% { opacity: 0; }
-}
-@keyframes pes-chip-in {
-  0%, 15% { opacity: 0; transform: scale(0.5); }
-  19% { opacity: 1; transform: scale(1.08); animation-timing-function: cubic-bezier(0.2, 1.4, 0.4, 1); }
-  22% { transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-/* Qualifying ring: one and a half turns around the pair, then gone. */
-@keyframes pes-qualify {
-  0%, 60% { opacity: 0; transform: rotate(0deg); }
-  62% { opacity: 1; }
-  71% { opacity: 1; transform: rotate(540deg); }
-  73% { opacity: 0; transform: rotate(600deg); }
-  100% { opacity: 0; transform: rotate(600deg); }
-}
-
-/* Lift-off chip: rises, then travels to the tray's first slot. */
-@keyframes pes-lift {
-  0%, 79% { opacity: 0; transform: translate(0, 0) scale(1); }
-  80% { opacity: 1; transform: translate(0, -8px) scale(1.06); animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
-  88% { opacity: 1; transform: translate(-127px, 192px) scale(0.92); }
-  89% { opacity: 0; }
-  100% { opacity: 0; transform: translate(-127px, 192px) scale(0.92); }
-}
-
-/* Tray takes the lit border and halo as the slot fills: the resting border
-   is the system's medium line, the lit one is ink at 40% — the tint the
-   handoff's #9fd3c7 was of its teal — over a 12% ink halo. */
-@keyframes pes-tray {
-  0%, 88% { border-color: var(--color-border-medium); box-shadow: 0 8px 24px var(--pes-shadow-07); }
-  91% { border-color: var(--pes-ink-40); box-shadow: 0 0 0 6px var(--pes-ink-12), 0 8px 24px var(--pes-shadow-07); }
-  100% { border-color: var(--pes-ink-40); box-shadow: 0 0 0 6px var(--pes-ink-12), 0 8px 24px var(--pes-shadow-07); }
-}
-
-/* First slot: dashed placeholder out, avatar in with a spring. */
-@keyframes pes-slot-dash {
-  0%, 88% { opacity: 1; }
-  90% { opacity: 0; }
-  100% { opacity: 0; }
-}
-@keyframes pes-slot-in {
-  0%, 88% { opacity: 0; transform: scale(0.6); }
-  91% { opacity: 1; transform: scale(1.08); animation-timing-function: cubic-bezier(0.2, 1.4, 0.4, 1); }
-  94% { transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-/* Counter flips 0 -> 1: a two-line stack slides up inside a 20px clip. */
-@keyframes pes-count {
-  0%, 88% { transform: translateY(0); }
-  91% { transform: translateY(-20px); animation-timing-function: cubic-bezier(0.2, 1.2, 0.4, 1); }
-  100% { transform: translateY(-20px); }
-}
-
-/* "Assigned" tag pops in last. */
-@keyframes pes-assigned {
-  0%, 90% { opacity: 0; transform: translateY(6px) scale(0.8); }
-  93% { opacity: 1; transform: translateY(0) scale(1.05); animation-timing-function: cubic-bezier(0.2, 1.4, 0.4, 1); }
-  95% { transform: translateY(0) scale(1); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* ── the rig ─────────────────────────────────────────────────────────── */
-
-/* Every animated node runs on the same 14s clock so the story stays in
-   step; the three background satellites run on the slower 23.8s one. */
 .pes-stage [data-pes] {
-  animation-duration: 14s;
+  animation-duration: var(--pes-dur);
   animation-timing-function: linear;
   animation-iteration-count: infinite;
-}
-.pes-stage [data-pes="sat"],
-.pes-stage [data-pes="sat-counter"] {
-  animation-duration: 23.8s;
+  animation-fill-mode: both;
 }
 
-.pes-stage [data-pes="loop"] { animation-name: pes-loop; }
-.pes-stage [data-pes="sat"] { animation-name: pes-sat; }
-.pes-stage [data-pes="sat-counter"] { animation-name: pes-sat-counter; }
-.pes-stage [data-pes="surface"] { animation-name: pes-surface; }
-.pes-stage [data-pes="hide-buyer"] { animation-name: pes-hide-buyer; }
-.pes-stage [data-pes="spin"] { animation-name: pes-spin; }
-.pes-stage [data-pes="counter-spin"] { animation-name: pes-counter-spin; }
-.pes-stage [data-pes="tether"] { animation-name: pes-tether; }
-.pes-stage [data-pes="radius"] { animation-name: pes-radius; }
-.pes-stage [data-pes="wake"] { animation-name: pes-wake; }
-.pes-stage [data-pes="chip-out"] { animation-name: pes-chip-out; }
-.pes-stage [data-pes="chip-in"] { animation-name: pes-chip-in; }
-.pes-stage [data-pes="qualify"] { animation-name: pes-qualify; }
-.pes-stage [data-pes="lift"] { animation-name: pes-lift; }
-.pes-stage [data-pes="tray"] { animation-name: pes-tray; }
-.pes-stage [data-pes="slot-dash"] { animation-name: pes-slot-dash; }
-.pes-stage [data-pes="slot-in"] { animation-name: pes-slot-in; }
-.pes-stage [data-pes="count"] { animation-name: pes-count; }
-.pes-stage [data-pes="assigned"] { animation-name: pes-assigned; }
+.pes-stage [data-pes="drop"] { animation-name: pes-drop; will-change: transform, opacity; }
+.pes-stage [data-pes="folder"] { animation-name: pes-folder, pes-clear; will-change: transform; }
+.pes-stage [data-pes="flap"] { animation-name: pes-flap, pes-shadow; }
+.pes-stage [data-pes="stack-1"] { animation-name: pes-stack-1; }
+.pes-stage [data-pes="stack-2"] { animation-name: pes-stack-2; }
+.pes-stage [data-pes="stack-3"] { animation-name: pes-stack-3; }
 
-/* Reduced motion: the README asks for the final frame — buyer seated in the
-   tray, count at 1, Assigned tag up — rather than the opening one. Every
-   animation is parked at 94% of its loop, which is that frame, just before
-   the stage's own fade-out begins; the satellites are parked at the same
-   moment of theirs so nothing is left mid-turn. */
+/* Reduced motion: hold the loop at 80%, where the three sheets are filed
+   and nothing is mid-air — the state the animation is about, rather than
+   the empty folder it starts and ends on. The delay has to beat the two
+   cards' own inline offsets, hence the !important. */
 @media (prefers-reduced-motion: reduce) {
   .pes-stage [data-pes] {
     animation-play-state: paused;
-    animation-delay: calc(-14s * 0.94);
-  }
-  .pes-stage [data-pes="sat"],
-  .pes-stage [data-pes="sat-counter"] {
-    animation-delay: calc(-23.8s * 0.94);
+    animation-delay: calc(var(--pes-dur) * -0.8) !important;
   }
 }
