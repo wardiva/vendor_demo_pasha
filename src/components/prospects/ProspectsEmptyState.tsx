@@ -173,7 +173,7 @@ export default function ProspectsEmptyState() {
       <Stage />
       <div className="flex flex-col items-center text-center" style={{ gap: 7, maxWidth: 520 }}>
         <h2 className="m-0 font-['Inter',sans-serif] font-semibold" style={{ fontSize: 24, lineHeight: 1.3, color: "var(--color-text)" }}>
-          Prospects Are On The Way
+          Prospects are on the Way
         </h2>
         <p className="m-0 font-['Inter',sans-serif] font-normal" style={{ fontSize: 15, lineHeight: 1.5, color: "var(--color-text-secondary)", textWrap: "pretty" }}>
           We’re loading your prospects now. They’ll appear here shortly once they’re ready.
