@@ -55,6 +55,21 @@ const STAGE_H = 176;
  */
 const SCALE = 0.7;
 
+/**
+ * How much of its drawn size the folder is shown at, the cards untouched.
+ *
+ * The source draws the folder 200 wide against a 172-wide card, which left
+ * it looking heavy beside what it is catching. This trims the folder alone.
+ *
+ * It rides a wrapper rather than the folder itself: the folder's own
+ * transform is animated — the squash on each impact and the settle at the
+ * end — so a scale written on it would be overwritten the moment the
+ * animation started. The wrapper shrinks from `center bottom`, so the folder
+ * keeps its footing on the same line and narrows toward its own centre
+ * instead of drifting.
+ */
+const FOLDER_SCALE = 0.9;
+
 /** Tints of a token, so each stays attached to the token it is a shade of. */
 const ink = (pct: number) => `color-mix(in srgb, var(--color-ink) ${pct}%, transparent)`;
 
@@ -118,11 +133,20 @@ function Stage() {
         </div>
 
         {/* The folder: a tab, a body, the sheets that collect inside it, and
-            the front flap that opens to take each card. */}
+            the front flap that opens to take each card. The outer box carries
+            FOLDER_SCALE and the inner one the animation, so the two transforms
+            do not contend for the same property. */}
         <div
           className="absolute"
+          style={{
+            left: 72, top: 82, width: 200, height: 82,
+            transform: `scale(${FOLDER_SCALE})`, transformOrigin: "center bottom",
+          }}
+        >
+        <div
+          className="absolute inset-0"
           data-pes="folder"
-          style={{ left: 72, top: 82, width: 200, height: 82, transformOrigin: "center bottom" }}
+          style={{ transformOrigin: "center bottom" }}
         >
           <div className="absolute" style={{ left: 0, top: 0, width: 76, height: 14, borderRadius: "6px 6px 0 0", background: ink(12) }} />
           <div className="absolute" style={{ left: 0, top: 10, width: 200, height: 72, borderRadius: "6px 10px 10px 10px", background: ink(9) }} />
@@ -159,6 +183,7 @@ function Stage() {
               <div className="absolute" style={{ left: 92, top: 26, width: 16, height: 16, borderRadius: "50%", background: ink(12) }} />
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
