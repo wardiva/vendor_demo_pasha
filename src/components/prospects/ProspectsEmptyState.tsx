@@ -9,6 +9,8 @@ import "./ProspectsEmptyState.css";
  * the stylesheet beside this file is its keyframes percentage for
  * percentage. Nothing is re-coloured to the design system or re-scaled —
  * the illustration is the design, and the design is the source of truth.
+ * The one omission is the source's clasp, a 16px dot on the flap, left off
+ * at the design's request.
  *
  * Three prospect cards fall in one after another; the folder's flap tips
  * open to take each one, the folder squashes under the weight and settles,
@@ -137,10 +139,7 @@ function Stage() {
                   background: "linear-gradient(#f4f6f9, #eceff3)",
                   transformOrigin: "center bottom",
                 }}
-              >
-                {/* The clasp. */}
-                <div className="absolute" style={{ left: 72, top: 30, width: 16, height: 16, borderRadius: "50%", background: "#dfe5ec" }} />
-              </div>
+              />
             </div>
           </div>
         </div>
