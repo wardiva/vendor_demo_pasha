@@ -22,7 +22,8 @@ export type RevealVariation =
   | "v5"
   | "v6"
   | "v7"
-  | "v8";
+  | "v8"
+  | "v10";
 
 export const REVEAL_VARIATIONS: ReadonlyArray<{
   key: RevealVariation;
@@ -43,6 +44,11 @@ export const REVEAL_VARIATIONS: ReadonlyArray<{
     key: "v8",
     label: "8 · Grouped + Contact Selector",
     description: "Three seats, one unlock, then pick a contact",
+  },
+  {
+    key: "v10",
+    label: "10 · Stacked deck + Interactive Contacts",
+    description: "Deck sealed, deck opened — shuffle the faces",
   },
 ];
 
