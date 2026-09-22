@@ -1,5 +1,6 @@
 import { getActivitySessions } from "@/data/activitySessions";
 import { LEADS } from "@/data/leads";
+import { getCompanyProfile } from "@/data/companies";
 
 /**
  * The signals a prospect's intent score is built from.
@@ -38,16 +39,30 @@ export const INTENT_BANDS: ReadonlyArray<{ range: string; min: number; max: numb
 /**
  * Which of the six this company has actually produced.
  *
- * Read off what the app already holds rather than stored a second time, so a
- * prospect's signals cannot drift from the activity and the counts the rest of
- * the module reports.
+ * Two questions, asked in order, because they are different questions and
+ * running them together is what produced a 50% prospect whose signals said
+ * "strongest is a 71%+ signal".
  *
- * Three come from the sessions in the Activity tab itself — the pages the buyer
- * opened, matched on their own paths — so what this section claims is visible
- * in the timeline beneath it. The other two are the company-level research
- * signals the Signals page counts and the Prospects filter selects on, which
- * is where "looked at your profile" and "compared you against someone" are
- * recorded. Pricing is either: the page, or the signal.
+ * First: did the activity produce this signal at all? Four of the six are
+ * read off the sessions in the Activity tab — the pages the buyer opened,
+ * matched on their own paths — so what this section claims is visible in the
+ * timeline beneath it. The other two, "looked at your profile" and "compared
+ * you against someone", have no page of their own and come from the
+ * company-level research flags the Signals page counts.
+ *
+ * Pricing used to be either: the page, or the flag. That OR was the bug.
+ * Ironclad Construction carries `pricing: true` and has never opened a
+ * pricing page — its whole timeline is alternatives, a demo and the category
+ * — so the flag alone lit the one signal in the top band and dragged the
+ * summary up with it. Pricing has a page of its own, unlike the other two, so
+ * the page is the better evidence and now the only evidence.
+ *
+ * Second: could this signal have contributed to the score the prospect
+ * actually carries? A band is what a signal is worth when it fires. If a
+ * 71%+ signal had counted, the score would not be 50 — so at 50 it did not
+ * count, whatever the activity shows, and a signal the score cannot account
+ * for is not reported as triggered. The score is the source of truth, and
+ * this is the line that makes it one.
  */
 export function getTriggeredSignals(company: string): ReadonlySet<string> {
   const paths = new Set<string>();
@@ -66,14 +81,26 @@ export function getTriggeredSignals(company: string): ReadonlySet<string> {
   const visited = (leaf: string) => [...paths].some(p => p.endsWith(`/${leaf}`));
 
   const lead = LEADS.find(l => l.name === company);
-  const triggered = new Set<string>();
 
-  if (visitedCategory) triggered.add("Viewed Category Page");
-  if (lead?.signals.profile) triggered.add("Viewed Product Profile");
-  if (visited("pricing") || lead?.signals.pricing) triggered.add("Viewed Pricing");
-  if (visited("alternatives")) triggered.add("Viewed Alternatives");
-  if (lead?.signals.competitor) triggered.add("Compared Products");
-  if (visited("reviews")) triggered.add("Viewed Reviews");
+  /* 1 — what the activity produced. */
+  const observed = new Set<string>();
+  if (visitedCategory) observed.add("Viewed Category Page");
+  if (lead?.signals.profile) observed.add("Viewed Product Profile");
+  if (visited("pricing")) observed.add("Viewed Pricing");
+  if (visited("alternatives")) observed.add("Viewed Alternatives");
+  if (lead?.signals.competitor) observed.add("Compared Products");
+  if (visited("reviews")) observed.add("Viewed Reviews");
+
+  /* 2 — of those, the ones the score can account for. A signal whose band
+     starts above the prospect's score cannot have contributed to it: the
+     score would be at least that high if it had. Missing profile, or a score
+     of 0, admits nothing above the bottom band, which is the honest reading
+     of having no score to attribute anything to. */
+  const score = getCompanyProfile(company)?.intentPct ?? 0;
+  const triggered = new Set<string>();
+  for (const signal of INTENT_SIGNALS) {
+    if (observed.has(signal.label) && signal.min <= score) triggered.add(signal.label);
+  }
 
   return triggered;
 }
