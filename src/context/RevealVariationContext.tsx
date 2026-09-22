@@ -14,6 +14,8 @@ import { createContext, useContext } from "react";
  * still counts reveals per contact; every other one counts them per company.
  */
 export type RevealVariation =
+  /** The signed-off design, and what both pages render by default. */
+  | "final"
   | "current"
   | "v1"
   | "v2"
@@ -35,7 +37,12 @@ export const REVEAL_VARIATIONS: ReadonlyArray<{
   /** The one-line description under the switch. */
   description: string;
 }> = [
-  { key: "current", label: "Current", description: "Shipped today — one reveal per contact" },
+  {
+    key: "final",
+    label: "Final — Figma",
+    description: "The signed-off stack: 1:50, 3:52, 0:1817, 3:53",
+  },
+  { key: "current", label: "Current", description: "Shipped before the model changed" },
   { key: "v1", label: "1 · Company unlock", description: "Primary contact, one company action" },
   { key: "v2", label: "2 · Grouped", description: "All contacts as one group card" },
   { key: "v3", label: "3 · Stacked deck", description: "Contacts stack, then fan out" },
@@ -70,7 +77,7 @@ export const REVEAL_VARIATIONS: ReadonlyArray<{
   },
 ];
 
-export const DEFAULT_REVEAL_VARIATION: RevealVariation = "v1";
+export const DEFAULT_REVEAL_VARIATION: RevealVariation = "final";
 
 const RevealVariationContext = createContext<RevealVariation>(DEFAULT_REVEAL_VARIATION);
 

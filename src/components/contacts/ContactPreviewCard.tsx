@@ -213,6 +213,7 @@ export default function ContactPreviewCard({
   onRevealRequest,
   layout = "prospect",
   tag,
+  frame = false,
   className = "",
 }: {
   variant: ContactVariant;
@@ -264,6 +265,12 @@ export default function ContactPreviewCard({
    * prospect card has always carried, so nothing moves by default.
    */
   tag?: { size?: number; labelSize?: number; medium?: boolean; className?: string };
+  /**
+   * Draw a disclosed contact on Figma 3:53's rim — white card, ash tint inset
+   * 2px at radius 10. The finalised prospect stack asks for it; every other
+   * surface leaves it off and keeps the flat tinted card.
+   */
+  frame?: boolean;
   className?: string;
 }) {
   const modal = layout === "modal";
@@ -273,6 +280,26 @@ export default function ContactPreviewCard({
      frame is the card rather than a state of it: revealing a contact lifts the
      frost and moves nothing. */
   const framed = modal;
+
+  /**
+   * The disclosed card's rim — Figma 3:53.
+   *
+   * The finalised stack draws a revealed contact as a white card with the ash
+   * tint inset two pixels inside it: outer 310 x 59 at radius 12 filled white,
+   * inner 306 x 55 at radius 10 filled rgba(244,242,240,0.6), and the contact
+   * laid out in the inner's own padding — 12 from its left, 8 from its right,
+   * which is 14 and 10 from the card's.
+   *
+   * It is the same rim the veil already draws while the card is sealed, with
+   * the colours the other way round: sealed, the card is tinted and the frost
+   * is inset, so the rim shows tint; disclosed, the card is white and the tint
+   * is inset, so the rim shows white. Revealing therefore swaps what fills the
+   * rim rather than moving anything, which is why the two states line up.
+   *
+   * Only while disclosed: a sealed card is the tinted one the node draws, and
+   * its frost is already inset by the stylesheet.
+   */
+  const rim = frame && !modal && !locked;
 
   /**
    * A click anywhere on a withheld card reveals it.
@@ -325,9 +352,16 @@ export default function ContactPreviewCard({
       /* 75px in the modal — 237:3560's own height, a 71px inner card inside the
          2px frame; 59px on the prospect card, which is the height Figma
          219:1015 gives it. */
-      className={`lead-contact-card bg-white bg-[linear-gradient(rgba(244,242,240,0.6),rgba(244,242,240,0.6))] content-stretch flex items-center relative rounded-[12px] shrink-0 ${
-        modal ? "h-[75px]" : "h-[59px]"
-      } ${framed ? "lead-card-framed p-[2px]" : "px-[12px] py-[8px]"} ${className} ${
+      className={`lead-contact-card bg-white content-stretch flex items-center relative rounded-[12px] shrink-0 ${
+        /* The rim's card is plain white; the tint is the inner panel below. */
+        rim ? "" : "bg-[linear-gradient(rgba(244,242,240,0.6),rgba(244,242,240,0.6))]"
+      } ${modal ? "h-[75px]" : "h-[59px]"} ${
+        framed
+          ? "lead-card-framed p-[2px]"
+          : rim
+            ? "pl-[14px] pr-[10px] py-[8px]"
+            : "px-[12px] py-[8px]"
+      } ${className} ${
         locked
           ? /* The pointer is on the same condition as the click handler above,
                not written alongside it: a card says it can be pressed exactly
@@ -342,6 +376,16 @@ export default function ContactPreviewCard({
           element is unmounted the moment the contact is revealed, so a revealed
           card is static on hover. */}
       {locked && <span aria-hidden className="lead-glow-stroke" />}
+
+      {/* Figma 3:53's inner card. Drawn rather than filled so the rim around it
+          is the card's own white, and placed behind the contact — every element
+          of which is `relative` and so paints over it. */}
+      {rim && (
+        <span
+          aria-hidden
+          className="absolute bg-[rgba(244,242,240,0.6)] inset-[2px] pointer-events-none rounded-[10px]"
+        />
+      )}
 
       {modal ? (
         /* Figma 237:3484 — the modal's Contacts section: the contact set out on

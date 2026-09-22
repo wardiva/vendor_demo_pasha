@@ -1,3 +1,4 @@
+import ContactStack from "@/components/reveal/ContactStack";
 import { useRevealVariation } from "@/context/RevealVariationContext";
 import VariationCurrent from "./VariationCurrent";
 import Variation1CompanyUnlock from "./Variation1CompanyUnlock";
@@ -30,6 +31,17 @@ export default function CompanyContactsReveal(props: RevealPanelProps) {
   const variation = useRevealVariation();
   /* A company with nobody identified has no panel at all, as before. */
   if (!props.contacts.length) return null;
+
+  /* The finalised design. On a prospect row it is ContactStack — the four
+     signed-off nodes — and in the modal it is Variation 3's panel, which the
+     nodes do not cover and which is left exactly as it was. */
+  if (variation === "final") {
+    return props.layout === "card" ? (
+      <ContactStack company={props.company} contacts={props.contacts} />
+    ) : (
+      <Variation3Deck {...props} />
+    );
+  }
 
   switch (variation) {
     case "current":
