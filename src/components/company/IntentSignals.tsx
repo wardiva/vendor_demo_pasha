@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { INTENT_BANDS, INTENT_SIGNALS, getTriggeredSignals, type IntentSignal } from "@/data/intentSignals";
 import { getCompanyProfile } from "@/data/companies";
 import { IS_LOCAL } from "@/lib/environment";
@@ -708,6 +709,176 @@ const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: 
   { label: "11 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
 ];
 
+/* ── the concepts panel ─────────────────────────────────────────────
+   A review control, and deliberately not part of the modal.
+
+   It rides the modal's right edge rather than sitting inside the Activity
+   tab, for two reasons. The list has outgrown the tab — eleven concepts is
+   four wrapped rows of buttons pushing the timeline down the panel — and a
+   picker that lives inside the thing it is changing makes it harder to see
+   what changed. Out here it covers none of the modal: the dialog is a fixed
+   754 centred in the window, so the panel is anchored half of that plus a
+   gap from the middle and cannot overlap it.
+
+   Portalled to the body because the modal clips its own overflow, and above
+   it in the stack so a press lands on the panel rather than on the scrim that
+   would close the dialog. */
+
+const PANEL_KEY = "intent-signals-concepts";
+
+function ConceptsPanel({
+  concept,
+  onPick,
+}: {
+  concept: number;
+  onPick: (i: number) => void;
+}) {
+  const [open, setOpen] = useState(() => {
+    try {
+      return sessionStorage.getItem(PANEL_KEY) !== "closed";
+    } catch {
+      return true;
+    }
+  });
+
+  const setOpenPersisted = (next: boolean) => {
+    setOpen(next);
+    try {
+      sessionStorage.setItem(PANEL_KEY, next ? "open" : "closed");
+    } catch {
+      /* Storage unavailable — the choice still holds for this render. */
+    }
+  };
+
+  /* Half the dialog's own width, plus a gap, from the centre of the window. */
+  const anchor = { left: "calc(50% + 389px)", top: "50%", transform: "translateY(-50%)" } as const;
+  const shell = "fixed z-[10000] rounded-[10px] bg-white font-['Inter',sans-serif]";
+  const shellStyle = {
+    border: "1px solid rgba(47,43,61,0.18)",
+    boxShadow: "0px 4px 18px 0px rgba(47,43,61,0.16)",
+  };
+
+  if (!open) {
+    return createPortal(
+      <button
+        type="button"
+        onClick={e => {
+          e.stopPropagation();
+          setOpenPersisted(true);
+        }}
+        className={`${shell} cursor-pointer px-[10px] py-[6px] text-[11px]`}
+        style={{ ...anchor, ...shellStyle, color: INK }}
+        data-intent-concepts
+        title="Intent Signals concepts"
+      >
+        {`Concepts · ${concept + 1}`}
+      </button>,
+      document.body,
+    );
+  }
+
+  return createPortal(
+    <div
+      className={`${shell} flex flex-col gap-[8px] p-[10px] w-[208px]`}
+      style={{
+        ...anchor,
+        ...shellStyle,
+        /* Held to the dialog's own height at most, so it can never run off
+           the window however many concepts the list grows to. */
+        maxHeight: "min(420px, calc(100vh - 48px))",
+      }}
+      onClick={e => e.stopPropagation()}
+      data-intent-concepts
+      role="group"
+      aria-label="Intent Signals concept"
+    >
+      {/* Fixed: the list scrolls under it. */}
+      <div className="flex items-center justify-between shrink-0">
+        <p
+          className="font-medium text-[10px] tracking-[0.04em] uppercase"
+          style={{ color: MUTED }}
+        >
+          Intent signals · concepts
+        </p>
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            setOpenPersisted(false);
+          }}
+          className="-mr-[2px] cursor-pointer flex h-[20px] items-center justify-center rounded-[6px] transition-colors w-[20px] hover:bg-[rgba(7,41,41,0.06)]"
+          style={{ color: MUTED }}
+          aria-label="Close concepts"
+          title="Close — the concept stays as it is"
+        >
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden>
+            <path d="M3 3L9 9M9 3L3 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      {/* The only part that scrolls, and it is a fixed height rather than a
+          cap: the panel is the same size at eleven concepts as it will be at
+          twenty, and the bar is there from the first one that does not fit
+          rather than appearing the day the list crosses some threshold. The
+          bar is the module's own — 6px, no track, thumb in the muted ink. */}
+      <div
+        role="tablist"
+        aria-label="Intent Signals concept"
+        className="filter-option-scroll -mr-[4px] flex flex-col gap-[2px] min-h-0 pr-[4px] shrink-0"
+        style={{ height: 232 }}
+      >
+        {CONCEPTS.map((c, i) => {
+          const active = i === concept;
+          return (
+            <button
+              key={c.label}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={e => {
+                e.stopPropagation();
+                onPick(i);
+              }}
+              className="cursor-pointer rounded-[7px] px-[8px] py-[5px] shrink-0 text-left transition-colors"
+              style={{
+                background: active ? LIVE : "transparent",
+                color: active ? "#ffffff" : INK,
+              }}
+            >
+              <span className="block text-[11.5px] leading-[16px]" style={{ fontWeight: active ? 500 : 400 }}>
+                {c.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Fixed: what is selected, and the way back to the first. */}
+      <div
+        className="flex items-center gap-[6px] shrink-0 pt-[8px]"
+        style={{ borderTop: `1px solid ${HAIR}` }}
+      >
+        <p className="flex-1 text-[10.5px]" style={{ color: MUTED }}>
+          {`${CONCEPTS.length} concepts`}
+        </p>
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            onPick(0);
+          }}
+          className="cursor-pointer rounded-[6px] px-[8px] py-[3px] text-[10.5px] hover:bg-[rgba(7,41,41,0.06)]"
+          style={{ border: "1px solid rgba(47,43,61,0.18)", color: INK }}
+        >
+          Reset
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export default function IntentSignals({ company }: { company: string }) {
   const [concept, setConcept] = useState(0);
   const triggered = getTriggeredSignals(company);
@@ -724,35 +895,10 @@ export default function IntentSignals({ company }: { company: string }) {
         </p>
       </div>
 
-      {/* The concepts switch — a review control, local hosts only. */}
-      {IS_LOCAL && (
-        <div className="flex flex-wrap gap-[4px] w-full">
-          {CONCEPTS.map((c, i) => (
-            <button
-              key={c.label}
-              type="button"
-              onClick={e => {
-                e.stopPropagation();
-                setConcept(i);
-              }}
-              className="cursor-pointer px-[7px] py-[2px] rounded-[5px] shrink-0 transition-colors"
-              style={{
-                background: i === concept ? LIVE : "transparent",
-                border: `1px solid ${i === concept ? LIVE : "rgba(47,43,61,0.14)"}`,
-              }}
-            >
-              <span
-                className="font-['Inter',sans-serif] leading-[15px] text-[10px] whitespace-nowrap"
-                style={{ color: i === concept ? "#ffffff" : MUTED }}
-              >
-                {c.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
       {CONCEPTS[concept].render(views, company)}
+
+      {/* Beside the modal, not inside it — see ConceptsPanel. */}
+      {IS_LOCAL && <ConceptsPanel concept={concept} onPick={setConcept} />}
     </div>
   );
 }
