@@ -365,6 +365,10 @@ function TableRow({
     <div
       className="border-[rgba(0,0,0,0.08)] border-b border-solid content-stretch flex h-[66px] items-center relative shrink-0 w-full"
       data-name="Row"
+      /* A prospect row, like the card list's. The marker is what keeps the
+         selectable-row tint off it — a prospect is hovered without its
+         background changing — while leaving every other row's hover alone. */
+      data-prospect-row
       style={hidden ? { display: "none" } : undefined}
       onClick={onSelect}
     >

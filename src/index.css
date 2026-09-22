@@ -121,8 +121,15 @@ body,
 }
 
 /* Selectable leads-table rows. The summary cards and the Leads page toolbar
-   carry the same data-name but are not selectable, so they opt out. */
-[data-name="Row"]:not([data-summary-cards]):not([data-toolbar-row]):not([data-no-row-hover]):hover {
+   carry the same data-name but are not selectable, so they opt out.
+
+   Prospect rows opt out too, and of the fill alone. A prospect — the card on
+   the Signals list, the row in either page's table — is hovered without its
+   background changing: the tint used to wash the whole row, the card inside
+   it and the contact panel on it, and the design does not ask for any of
+   that. What a prospect keeps is the pointer, below, so it still reads as
+   something that can be opened. */
+[data-name="Row"]:not([data-summary-cards]):not([data-toolbar-row]):not([data-no-row-hover]):not([data-prospect-row]):hover {
   background-color: rgba(177, 250, 99, 0.06);
   cursor: pointer;
   transition: background-color 0.12s ease;
@@ -132,29 +139,16 @@ body,
    row hover behind it would not show through. Repeating the tint as an overlay
    keeps that fill and lands the same colour on top, so a hovered row reads as
    one continuous band across the join. */
-[data-name="Row"]:not([data-summary-cards]):not([data-toolbar-row]):not([data-no-row-hover]):hover
+[data-name="Row"]:not([data-summary-cards]):not([data-toolbar-row]):not([data-no-row-hover]):not([data-prospect-row]):hover
   .table-sticky-cell {
   background-image: linear-gradient(rgba(177, 250, 99, 0.06), rgba(177, 250, 99, 0.06));
   transition: background-color 0.12s ease;
 }
 
-/* The Signals page's prospect cards are selectable rows of the same kind, and
-   each paints an opaque white card of its own, so the row hover behind it
-   would not show through either. Same treatment as the sticky cell above: the
-   tint is repeated as an overlay, in the same colour and over the same
-   transition, so a hovered card reads exactly as a hovered table row did. */
-[data-prospect-row]:hover > [data-name="Card"] {
-  background-image: linear-gradient(rgba(177, 250, 99, 0.06), rgba(177, 250, 99, 0.06));
-  transition: background-color 0.12s ease;
-}
-
-/* The contact panel carries its own ash tint as a background image, so the
-   wash is stacked above it rather than replacing it — the panel keeps its
-   fill and the band stays continuous across the whole card. */
-[data-prospect-row]:hover .lead-contact-card {
-  background-image:
-    linear-gradient(rgba(177, 250, 99, 0.06), rgba(177, 250, 99, 0.06)),
-    linear-gradient(rgba(244, 242, 240, 0.6), rgba(244, 242, 240, 0.6));
+/* The affordance without the wash: a prospect row is still a thing you open,
+   so the pointer stays even though nothing about it is repainted. */
+[data-prospect-row]:hover {
+  cursor: pointer;
 }
 
 /* The four summary cards stay visually static — no hover background, border,
