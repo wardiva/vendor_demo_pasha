@@ -405,7 +405,9 @@ export default function ContactPreviewCard({
                 its size and position never change and nothing beside it moves.
                 `settled` is the host's own signal that the reveal has finished,
                 so it is what retires the placeholder. */}
-            <div className="h-[54px] relative rounded-[8px] shrink-0 w-[50px]" data-name="Image">
+            {/* Figma 5:133 draws the portrait square at 54; the earlier node it
+                was built from cropped it to 50 wide. */}
+            <div className="h-[54px] relative rounded-[8px] shrink-0 w-[54px]" data-name="Image">
               {(locked || !settled) ? (
                 /* Figma 289:1192 — a withheld contact in the modal shows the
                    placeholder rather than their photograph. The node draws it
@@ -480,7 +482,8 @@ export default function ContactPreviewCard({
                   the difference. Both copy through the same delegate and both
                   are held behind the same veil until the contact is
                   disclosed. */}
-              <div className="content-stretch flex gap-[12px] items-center min-w-px relative w-full">
+              {/* 5:133 sets the number and the address 24 apart. */}
+              <div className="content-stretch flex gap-[24px] items-center min-w-px relative w-full">
                 {/* 237:3575. The number takes exactly the width it needs and is
                     never cut: a half-shown phone number is no use to anybody. */}
                 {(phone ?? value) && (

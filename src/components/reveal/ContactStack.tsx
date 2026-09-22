@@ -2,7 +2,7 @@ import { useEffect, useState, type KeyboardEvent, type MouseEvent } from "react"
 import ContactPreviewCard from "@/components/contacts/ContactPreviewCard";
 import { useCompanyRevealFlow } from "@/components/reveal/useCompanyRevealFlow";
 import type { ProspectContact } from "@/data/prospects";
-import { RevealCta, revealCountLabel } from "./variations/parts";
+import { GroupHeading, RevealCta, RevealedBadge, revealCountLabel } from "./variations/parts";
 
 /**
  * The company's contacts on a prospect row — the finalised design.
@@ -259,6 +259,100 @@ export default function ContactStack({
           />
         );
       })}
+    </div>
+  );
+}
+
+/* ── the modal ──────────────────────────────────────────────────────
+   Figma 5:133 — the same company's contacts in the Prospect Details modal,
+   where the panel has the width to set a contact out in full.
+
+   The stack is drawn differently there, and the difference is the point. On
+   the row it steps sideways, because the row has width to spare and no height
+   to give. In the modal it steps down and narrows — the front card at the
+   panel's full width, each card behind 11 narrower and 7 lower:
+
+     front   left  0   top  0   452 wide
+     middle  left  5   top  7   441 wide
+     back    left 11   top 14   430 wide
+
+   Every card keeps its own 75px height, so the cards behind show as edges at
+   the foot of the one in front rather than as shorter cards. Nothing is
+   scaled, dimmed or shadowed; each carries its own veil, and the tint of one
+   card against the white of the next is what separates them. */
+
+const MODAL_CARD_H = 75;
+const MODAL_DROP = 7;
+/** Narrower by 11 a card, which the node centres — 5.5 a side. */
+const MODAL_NARROW = 11;
+
+export function ContactStackModal({
+  company,
+  contacts,
+}: {
+  company: string;
+  contacts: ProspectContact[];
+}) {
+  const flow = useCompanyRevealFlow(company, contacts.length);
+  const count = contacts.length;
+  if (!count) return null;
+
+  return (
+    <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full" data-name="Contact Deck">
+      <div className="content-stretch flex gap-[12px] items-center justify-between relative shrink-0 w-full">
+        <GroupHeading company={company} count={count} revealed={flow.revealed} />
+        {flow.revealed && <RevealedBadge count={count} />}
+      </div>
+
+      {/* Sealed, the node's stack. Opened, the modal has the room to show every
+          contact at once and does — the cards fall into an ordinary list, which
+          is what the panel is for. The margins are what animate, so the stack
+          opens into the list rather than being replaced by it. */}
+      <div className="flex flex-col items-start relative shrink-0 w-full">
+        {contacts.map((contact, i) => {
+          const behind = i > 0;
+          const stacked = flow.locked;
+          return (
+            <div
+              key={contact.name}
+              className="relative w-full"
+              style={{
+                width: stacked && behind ? `calc(100% - ${i * MODAL_NARROW}px)` : "100%",
+                marginLeft: stacked && behind ? (i * MODAL_NARROW) / 2 : 0,
+                marginTop: !behind ? 0 : stacked ? -(MODAL_CARD_H - MODAL_DROP) : 12,
+                zIndex: count - i,
+                transition: `margin-top ${DUR}ms ${EASE}, margin-left ${DUR}ms ${EASE}, width ${DUR}ms ${EASE}`,
+              }}
+            >
+              <ContactPreviewCard
+                variant={contact.variant}
+                avatar={contact.avatar}
+                name={contact.name}
+                jobTitle={contact.jobTitle}
+                phone={contact.phone}
+                email={contact.email}
+                locked={flow.locked}
+                settled={flow.settled}
+                onRevealRequest={flow.reveal}
+                layout="modal"
+                className="w-full"
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {flow.locked && (
+        <div className="content-stretch flex gap-[10px] items-center justify-center relative shrink-0 w-full">
+          <RevealCta
+            flow={flow}
+            count={count}
+            label={count === 1 ? "Reveal contact" : `Reveal all ${count} contacts`}
+            tone="primary"
+            size="md"
+          />
+        </div>
+      )}
     </div>
   );
 }
