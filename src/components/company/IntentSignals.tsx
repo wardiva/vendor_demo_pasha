@@ -78,6 +78,15 @@ function Panel({ children }: { children: ReactNode }) {
  */
 function Summary({ views }: { views: View[] }) {
   const live = views.filter(v => v.live);
+  /* The strongest of the signals that actually fired — which is what it was
+     always computing. What it said about it was the problem: "strongest:
+     71%+", sitting a line above a bar reading 32%, is read as a second
+     opinion on the score rather than as a fact about a signal. A band is
+     what a signal is worth when it fires, not where the prospect landed, and
+     the two are independent — a prospect can open the pricing page, firing a
+     71%+ signal, and still score 32 on everything else they did. So the
+     sentence now says "a 71%+ signal", naming the thing the band belongs to.
+     The number is unchanged; only the claim it makes is. */
   const strongest = live.reduce<IntentSignal | null>((best, v) => (!best || v.signal.min > best.min ? v.signal : best), null);
   return (
     /* 12 on 20 in the 70% ink — the Activity tab's secondary text exactly, so
@@ -89,8 +98,9 @@ function Summary({ views }: { views: View[] }) {
       {" signals triggered"}
       {strongest && (
         <>
-          {" · strongest: "}
+          {" · strongest is a "}
           <span style={{ color: LIVE, fontWeight: 500 }}>{strongest.range}</span>
+          {" signal"}
         </>
       )}
     </p>
@@ -732,7 +742,20 @@ function ScoreBar({ score, height = 16 }: { score: number; height?: number }) {
   /* Kept inside its own track at either extreme rather than hanging off it. */
   const shift = x < 12 ? "0%" : x > 88 ? "-100%" : "-50%";
   return (
-    <div className="relative shrink-0 w-full" style={{ height }}>
+    /* Labelled, and in the same 48px column the band rows put their ranges
+       in. Two kinds of percentage live in this section — what this prospect
+       scored, and the band a signal is worth when it fires — and unlabelled
+       they are the same glyph twice. The label says which this one is, and
+       putting it where the band labels sit makes the bar read as one more
+       row of the same table: "Score" is 32, "71%+" is these signals. */
+    <div className="content-stretch flex gap-[12px] items-center w-full">
+      <span
+        className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px] w-[48px] whitespace-nowrap"
+        style={{ color: INK }}
+      >
+        Score
+      </span>
+      <div className="relative flex-1 min-w-px" style={{ height }}>
       <span className="absolute inset-0 rounded-[100px]" style={{ background: "rgba(47,43,61,0.06)" }} />
       <span
         className="absolute bottom-0 left-0 rounded-[100px] top-0"
@@ -760,6 +783,7 @@ function ScoreBar({ score, height = 16 }: { score: number; height?: number }) {
           {score}%
         </span>
       </span>
+      </div>
     </div>
   );
 }
@@ -989,7 +1013,10 @@ function OneScale({ views, company }: { views: View[]; company: string }) {
             color: LIVE,
           }}
         >
-          {score}%
+          {/* Named, because the column down the right of this one is full of
+              band ranges and an unlabelled percentage among them is just a
+              fourth kind of number. */}
+          {`Score ${score}%`}
         </span>
 
         <div className="flex flex-col w-full" style={{ marginTop: 15 }}>
