@@ -699,20 +699,317 @@ function SixOnTheScale({ views, company }: { views: View[]; company: string }) {
   );
 }
 
+/* ══ 1 – 3 ════════════════════════════════════════════════════════════
+   The three that came out of the eleven.
+
+   All of them carry the same four things, because those are the four the
+   section exists to say: how much evidence there is, where the prospect sits
+   on the scale, what all six signals are worth, and which of them fired. What
+   differs is the structure that holds them — banded rows under the bar, the
+   six as chips, or the six as tracks on one axis.
+
+   A note that shaped all three: four of the six signals share the 51–70 band,
+   so there is no single "strongest signal" to lead with, only a strongest
+   band. Nothing here names one, which would be picking arbitrarily between
+   four equals and telling the reader it meant something. */
+
+/**
+ * The prospect's score on the 30-to-100 the bands divide, with the number
+ * riding the mark.
+ *
+ * The number is on the bar rather than beside it: a value floating next to a
+ * track is two things to line up, and the whole point of the bar is that
+ * where it sits is the answer. The band boundaries are cut into the track in
+ * white, so the bar is visibly three bands rather than one continuous ramp —
+ * which is what lets a reader match it to the rows underneath.
+ */
+function ScoreBar({ score, height = 16 }: { score: number; height?: number }) {
+  const x = at(score);
+  /* Kept inside its own track at either extreme rather than hanging off it. */
+  const shift = x < 12 ? "0%" : x > 88 ? "-100%" : "-50%";
+  return (
+    <div className="relative shrink-0 w-full" style={{ height }}>
+      <span className="absolute inset-0 rounded-[100px]" style={{ background: "rgba(47,43,61,0.06)" }} />
+      <span
+        className="absolute bottom-0 left-0 rounded-[100px] top-0"
+        style={{ width: `${x}%`, background: "rgba(7,41,41,0.16)" }}
+      />
+      {INTENT_BANDS.filter(b => b.min > 30).map(b => (
+        <span
+          key={b.range}
+          aria-hidden
+          className="absolute bottom-0 top-0"
+          style={{ left: `${at(b.min)}%`, width: 1, background: "#ffffff" }}
+        />
+      ))}
+      <span
+        className="absolute bg-white flex items-center justify-center rounded-[100px] top-0"
+        style={{
+          left: `${x}%`,
+          transform: `translateX(${shift})`,
+          height,
+          padding: "0 7px",
+          boxShadow: "0 1px 3px 0 rgba(47,43,61,0.22)",
+        }}
+      >
+        <span className="font-['Inter',sans-serif] font-medium leading-[14px] text-[10px]" style={{ color: LIVE }}>
+          {score}%
+        </span>
+      </span>
+    </div>
+  );
+}
+
+/* ── 1 · Score and bands ────────────────────────────────────────────
+   The three parts that earned their place, in the order they answer the
+   question.
+
+   The sentence says how much evidence there is and what the best of it is
+   worth. The bar says where that landed, with the number on the mark and the
+   band boundaries cut into the track. Then the six, grouped by the band they
+   evidence — three rows instead of six, which is what keeps the section
+   shorter than the session card below it.
+
+   The one addition is the tie between the middle two: the band row the score
+   actually falls in is tinted, and its range is set in the product's live
+   ink. So "strongest: 51–70%" at the top, the mark sitting in the second
+   segment of the bar, and the highlighted row are three statements of one
+   fact, and the eye joins them without being asked to.
+
+   Triggered signals are set in ink at medium against a tick; the ones that
+   did not fire are faint against a hollow ring. Two differences, weight and
+   mark, so the state survives being read quickly. */
+function ScoreAndBands({ views, company }: { views: View[]; company: string }) {
+  const score = scoreOf(company);
+  const here = bandOfScore(score);
+  const rows = bandRows(views);
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div style={{ marginTop: 8, width: "100%" }}>
+        <ScoreBar score={score} />
+      </div>
+      <div className="flex flex-col w-full" style={{ marginTop: 8 }}>
+        {rows.map((band, i) => {
+          const items = views.filter(v => v.signal.range === band.range);
+          const anyLive = items.some(v => v.live);
+          const holds = band.range === here;
+          return (
+            <div
+              key={band.range}
+              className="content-stretch flex gap-[10px] items-start relative rounded-[6px] shrink-0 w-full"
+              style={{
+                paddingTop: i ? 6 : 0,
+                paddingBottom: i < rows.length - 1 ? 6 : 0,
+                boxShadow: i < rows.length - 1 ? `inset 0 -1px 0 0 ${HAIR}` : undefined,
+              }}
+            >
+              {/* The band the score is in, marked behind the row rather than
+                  in it: it is a place, not another value to read. Inset so it
+                  does not sit on the rule between rows. */}
+              {holds && (
+                <span
+                  aria-hidden
+                  className="absolute rounded-[6px]"
+                  style={{ left: -6, right: -6, top: i ? 2 : -4, bottom: i < rows.length - 1 ? 2 : -4, background: "rgba(7,41,41,0.05)" }}
+                />
+              )}
+              <span
+                className="font-['Inter',sans-serif] font-medium leading-[17px] relative shrink-0 text-[11px] w-[44px] whitespace-nowrap"
+                style={{ color: anyLive ? LIVE : FAINT }}
+              >
+                {band.range}
+              </span>
+              <div className="min-w-px relative">
+                <BandSignals items={items} size={11.5} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 2 · Six chips ──────────────────────────────────────────────────
+   The six as objects rather than as a list.
+
+   A row in a table is read across — mark, name, range — and six of them is
+   six crossings. A chip is read as one thing: it is filled or it is not, and
+   it carries its own range, so the state and the worth arrive together and
+   the reader never has to hold a column heading in mind to know what they
+   are looking at. Filled against outlined is also the difference that
+   survives the smallest glance, which is the one this section usually gets.
+
+   They are laid out strongest band first and wrap into two lines, so the top
+   line is the evidence that counts and the bottom is the rest. No row
+   structure, no rules, no gutters to align — the section is a sentence, a
+   bar, and six things.
+
+   What it gives up is the band grouping: the ranges repeat across chips
+   rather than being stated once. That is the trade, and it buys the shortest
+   of the three. */
+function SixChips({ views, company }: { views: View[]; company: string }) {
+  const score = scoreOf(company);
+  /* What fired first, strongest band first inside that, and what did not
+     fire last. Sorting by band alone put the one signal this prospect has
+     not produced — Viewed Pricing, the only thing in the top band — at the
+     head of the section, so the first thing read was an empty outline. The
+     evidence leads and the gap trails, which is also the order the reader
+     wants it in: what they did, then what they have not done yet. */
+  const ordered = [...views].sort(
+    (a, b) => Number(b.live) - Number(a.live) || b.signal.min - a.signal.min,
+  );
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div style={{ marginTop: 8, width: "100%" }}>
+        <ScoreBar score={score} />
+      </div>
+      <div className="flex flex-wrap gap-[5px] w-full" style={{ marginTop: 8 }}>
+        {ordered.map(v => (
+          <span
+            key={v.signal.label}
+            className="content-stretch flex gap-[5px] items-center rounded-[6px] shrink-0"
+            style={{
+              padding: "3px 8px",
+              background: v.live ? "rgba(7,41,41,0.08)" : undefined,
+              border: v.live ? "1px solid transparent" : `1px solid ${HAIR}`,
+            }}
+          >
+            {v.live ? <Tick size={9} /> : <Hollow size={9} />}
+            <span
+              className="font-['Inter',sans-serif] leading-[16px] text-[11px] whitespace-nowrap"
+              style={{ color: v.live ? INK : FAINT, fontWeight: v.live ? 500 : 400 }}
+            >
+              {v.signal.label}
+            </span>
+            <span
+              className="font-['Inter',sans-serif] font-normal leading-[16px] text-[10px] whitespace-nowrap"
+              style={{ color: v.live ? MUTED : FAINT }}
+            >
+              {v.signal.range}
+            </span>
+          </span>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 3 · One scale ──────────────────────────────────────────────────
+   Every signal measured against the same axis, with the score drawn through
+   all six.
+
+   The other two put the score in one place and the signals in another, and
+   leave the reader to carry the number down the list. Here there is one
+   horizontal scale, 30 to 100, and six short tracks stacked on it: each
+   signal's track occupies exactly the span of its own band, so the six form
+   a staircase and a signal's worth is its position rather than a number to
+   look up. The prospect's score is a single rule drawn down the whole stack.
+
+   That rule does the work. Anything whose track ends left of it is ground the
+   prospect has already made, and the one track that starts to the right of it
+   — Viewed Pricing, at 71%+ — is the thing that has not happened and would
+   move them if it did. "Why is the score here, and what would change it" is
+   the picture rather than a second paragraph.
+
+   Fired tracks are solid in the live ink; the rest are the same span drawn in
+   a hairline, so the shape of the staircase is the same either way and only
+   the weight changes. */
+function OneScale({ views, company }: { views: View[]; company: string }) {
+  const score = scoreOf(company);
+  /* Up the scale, so the tracks step rightward as the list goes down. */
+  const ordered = [...views].sort((a, b) => a.signal.min - b.signal.min || a.signal.label.localeCompare(b.signal.label));
+  const NAME_W = 132;
+  const RANGE_W = 42;
+  return (
+    <Panel>
+      <Summary views={views} />
+
+      <div className="relative w-full" style={{ marginTop: 8 }}>
+        {/* The rule, drawn once behind all six rather than per row: it is one
+            score, and six separate marks would read as six. It stops short of
+            the last row's baseline so it does not collide with the rules. */}
+        <span
+          aria-hidden
+          className="absolute"
+          style={{
+            left: `calc(${NAME_W}px + (100% - ${NAME_W + RANGE_W + 16}px) * ${at(score) / 100})`,
+            top: 13,
+            bottom: 2,
+            width: 1,
+            background: "rgba(7,41,41,0.30)",
+          }}
+        />
+        <span
+          className="absolute font-['Inter',sans-serif] font-medium leading-[13px] text-[10px] whitespace-nowrap"
+          style={{
+            left: `calc(${NAME_W}px + (100% - ${NAME_W + RANGE_W + 16}px) * ${at(score) / 100})`,
+            top: 0,
+            transform: at(score) > 82 ? "translateX(-100%)" : "translateX(-50%)",
+            color: LIVE,
+          }}
+        >
+          {score}%
+        </span>
+
+        <div className="flex flex-col w-full" style={{ marginTop: 15 }}>
+          {ordered.map(v => (
+            <div key={v.signal.label} className="flex gap-[8px] items-center w-full" style={{ height: 17 }}>
+              <span
+                className="font-['Inter',sans-serif] leading-[16px] overflow-hidden shrink-0 text-[11px] text-ellipsis whitespace-nowrap"
+                style={{ width: NAME_W, color: v.live ? INK : FAINT, fontWeight: v.live ? 500 : 400 }}
+              >
+                {v.signal.label}
+              </span>
+              <span className="relative block flex-1 min-w-px" style={{ height: 6 }}>
+                <span
+                  className="absolute rounded-[100px]"
+                  style={{
+                    left: `${at(v.signal.min)}%`,
+                    width: `${Math.max(at(v.signal.max) - at(v.signal.min), 2)}%`,
+                    top: 1,
+                    height: 4,
+                    background: v.live ? LIVE : "rgba(47,43,61,0.13)",
+                  }}
+                />
+              </span>
+              <span
+                className="font-['Inter',sans-serif] font-normal leading-[16px] shrink-0 text-[10px] text-right whitespace-nowrap"
+                style={{ width: RANGE_W, color: v.live ? MUTED : FAINT }}
+              >
+                {v.signal.range}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
 /* ── the section ───────────────────────────────────────────────────── */
 
 const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: string) => ReactNode }> = [
-  { label: "1 · Banded rows", render: v => <BandedRows views={v} /> },
-  { label: "2 · Two columns", render: v => <TwoColumns views={v} /> },
-  { label: "3 · Band strength", render: v => <BandStrength views={v} /> },
-  { label: "4 · Strongest first", render: v => <StrongestFirst views={v} /> },
-  { label: "5 · Against the score", render: (v, c) => <AgainstTheScore views={v} company={c} /> },
-  { label: "6 · Band columns", render: v => <BandColumns views={v} /> },
-  { label: "7 · Score gutter", render: (v, c) => <ScoreGutter views={v} company={c} /> },
-  { label: "8 · Band tracks", render: (v, c) => <BandTracks views={v} company={c} /> },
-  { label: "9 · Score first", render: (v, c) => <ScoreFirst views={v} company={c} /> },
-  { label: "10 · Reached / not yet", render: (v, c) => <ReachedAndNotYet views={v} company={c} /> },
-  { label: "11 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
+  /* The three that came out of the eleven, first because they are the ones
+     being chosen between. The eleven keep their names and follow, renumbered
+     — they are the working, and worth being able to go back to. */
+  { label: "1 · Score and bands", render: (v, c) => <ScoreAndBands views={v} company={c} /> },
+  { label: "2 · Six chips", render: (v, c) => <SixChips views={v} company={c} /> },
+  { label: "3 · One scale", render: (v, c) => <OneScale views={v} company={c} /> },
+
+  { label: "4 · Banded rows", render: v => <BandedRows views={v} /> },
+  { label: "5 · Two columns", render: v => <TwoColumns views={v} /> },
+  { label: "6 · Band strength", render: v => <BandStrength views={v} /> },
+  { label: "7 · Strongest first", render: v => <StrongestFirst views={v} /> },
+  { label: "8 · Against the score", render: (v, c) => <AgainstTheScore views={v} company={c} /> },
+  { label: "9 · Band columns", render: v => <BandColumns views={v} /> },
+  { label: "10 · Score gutter", render: (v, c) => <ScoreGutter views={v} company={c} /> },
+  { label: "11 · Band tracks", render: (v, c) => <BandTracks views={v} company={c} /> },
+  { label: "12 · Score first", render: (v, c) => <ScoreFirst views={v} company={c} /> },
+  { label: "13 · Reached / not yet", render: (v, c) => <ReachedAndNotYet views={v} company={c} /> },
+  { label: "14 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
 ];
 
 /* ── the concepts panel ─────────────────────────────────────────────
@@ -1064,9 +1361,11 @@ function IndexPanel({ concept, onStep, onPick, onClose }: SkinProps) {
    so the two you are deciding between are one click apart, both ways. */
 
 const GROUPS: ReadonlyArray<{ title: string; items: number[] }> = [
-  { title: "By band", items: [0, 1, 2, 5] },
-  { title: "By order", items: [3, 9] },
-  { title: "Against the score", items: [4, 6, 7, 8, 10] },
+  /* Indices into CONCEPTS, so this list moves whenever that one does. */
+  { title: "Current three", items: [0, 1, 2] },
+  { title: "By band", items: [3, 4, 5, 8] },
+  { title: "By order", items: [6, 12] },
+  { title: "Against the score", items: [7, 9, 10, 11, 13] },
 ];
 
 function GroupedPanel({ concept, onPick, onClose }: SkinProps) {
