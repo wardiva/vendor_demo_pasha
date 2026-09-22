@@ -9,6 +9,9 @@ import Variation6Banner from "./Variation6Banner";
 import Variation7Browse from "./Variation7Browse";
 import Variation8Selector from "./Variation8Selector";
 import Variation10DeckInteractive from "./Variation10DeckInteractive";
+import Variation11LeftStack from "./Variation11LeftStack";
+import Variation12Fan from "./Variation12Fan";
+import Variation13Rail from "./Variation13Rail";
 import type { RevealPanelProps } from "./parts";
 
 /**
@@ -47,6 +50,12 @@ export default function CompanyContactsReveal(props: RevealPanelProps) {
       return <Variation8Selector {...props} />;
     case "v10":
       return <Variation10DeckInteractive {...props} />;
+    case "v11":
+      return <Variation11LeftStack {...props} />;
+    case "v12":
+      return <Variation12Fan {...props} />;
+    case "v13":
+      return <Variation13Rail {...props} />;
     case "v1":
     default:
       return <Variation1CompanyUnlock {...props} />;

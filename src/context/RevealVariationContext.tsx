@@ -23,7 +23,10 @@ export type RevealVariation =
   | "v6"
   | "v7"
   | "v8"
-  | "v10";
+  | "v10"
+  | "v11"
+  | "v12"
+  | "v13";
 
 export const REVEAL_VARIATIONS: ReadonlyArray<{
   key: RevealVariation;
@@ -49,6 +52,21 @@ export const REVEAL_VARIATIONS: ReadonlyArray<{
     key: "v10",
     label: "10 · Stacked deck + Interactive Contacts",
     description: "Deck sealed, deck opened — shuffle the faces",
+  },
+  {
+    key: "v11",
+    label: "11 · Left stack",
+    description: "Cards step out to the left, one row tall",
+  },
+  {
+    key: "v12",
+    label: "12 · Fanned left",
+    description: "The same stack, held rather than filed",
+  },
+  {
+    key: "v13",
+    label: "13 · Left rail",
+    description: "One whole card, the others a rail of faces",
   },
 ];
 
