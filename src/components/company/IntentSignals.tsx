@@ -1065,18 +1065,20 @@ const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: 
    it in the stack so a press lands on the panel rather than on the scrim that
    would close the dialog.
 
-   Three designs of the same panel, switched by the small control beneath it.
-   All three are built out of the product's own parts rather than invented
-   ones — the filter menu's card (white, radius 12, one soft shadow, no
-   border, 4px of padding, radius-8 rows two apart), the modal rail's selected
-   state (a 16% tint of the product's ink, never a solid black pill), the lime
-   count chip from the Filters button, the filter card's search field and the
-   module's own 6px scrollbar. That is what "part of the product" means here:
-   not a floating tool that borrowed the palette, but the same menu the rest
-   of the app opens, holding concepts instead of industries. */
+   One design, chosen out of three that were drawn: the stepping one. It is
+   built out of the product's own parts rather than invented ones — the
+   filter menu's card (white, radius 12, one soft shadow, no border, 4px of
+   padding), the modal rail's selected state (a 16% tint of the product's
+   ink, never a solid black pill) and the module's own 6px scrollbar. That is
+   what "part of the product" means here: not a floating tool that borrowed
+   the palette, but the same menu the rest of the app opens, holding concepts
+   instead of industries.
+
+   The other two and the control that switched between them are gone rather
+   than hidden behind a flag: a picker with one option is chrome, and a dead
+   branch kept "in case" is the thing that rots. */
 
 const PANEL_KEY = "intent-signals-concepts";
-const SKIN_KEY = "intent-signals-panel-skin";
 
 /** The filter menu's card: one shadow, no border. A border under a shadow is
     the same edge drawn twice, and it is what made the old panel read as a
@@ -1114,126 +1116,24 @@ function splitLabel(label: string) {
   return { num, name: rest.join(" · ") };
 }
 
-/** Keeps the selected row in view when it is picked from outside the list. */
-function useScrollSelectedIntoView(concept: number, deps: unknown[] = []) {
+/** Keeps the selected row in view when it is stepped to rather than clicked. */
+function useScrollSelectedIntoView(concept: number) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current
       ?.querySelector<HTMLElement>('[data-selected="true"]')
       ?.scrollIntoView({ block: "nearest" });
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  }, [concept, ...deps]);
+  }, [concept]);
   return ref;
 }
 
-type SkinProps = {
+type PanelProps = {
   concept: number;
   onPick: (i: number) => void;
   /** Relative move, wrapping — resolved against the concept at the moment it runs. */
   onStep: (delta: number) => void;
   onClose: () => void;
 };
-
-/* ── design 1 · refined ──────────────────────────────────────────────
-   The panel that was here, done properly.
-
-   Everything it said is still said, in half the chrome. The uppercase micro
-   label and the footer's "11 concepts" were two ways of counting the same
-   list, so the count is now the lime chip the Filters button already uses and
-   the label is a plain title. Reset was a bordered button sitting in a
-   bordered panel below a rule; it is now the same quiet text link the filter
-   card puts beside "All", and it appears only when there is something to
-   reset. The numbers moved into a gutter of their own, so eleven names start
-   at one x rather than at three. */
-function RefinedPanel({ concept, onPick, onClose }: SkinProps) {
-  const listRef = useScrollSelectedIntoView(concept);
-
-  return (
-    <div className="flex flex-col p-[4px] w-[216px]" data-panel-skin="refined">
-      {/* Fixed: the list scrolls under it. */}
-      <div className="flex gap-[6px] h-[30px] items-center pl-[8px] pr-[4px] shrink-0">
-        <p className="font-medium text-[12.5px]" style={{ color: INK }}>
-          Concepts
-        </p>
-        <div
-          className="flex items-center justify-center rounded-[6px] shrink-0 size-[18px]"
-          style={{ background: "rgba(177,250,99,0.32)" }}
-        >
-          <span className="font-semibold leading-[16px] text-[11px]" style={{ color: LIVE }}>
-            {CONCEPTS.length}
-          </span>
-        </div>
-        <span className="flex-1" />
-        {concept !== 0 && (
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation();
-              onPick(0);
-            }}
-            className="cursor-pointer shrink-0 text-[11px] transition-colors hover:text-[#072929]"
-            style={{ color: "rgba(7,41,41,0.5)" }}
-            title="Back to the first concept"
-          >
-            Reset
-          </button>
-        )}
-        <CloseButton onClose={onClose} />
-      </div>
-
-      {/* A fixed six rows, not a cap: the panel is the same size at eleven
-          concepts as at twenty, and the bar is there from the first row that
-          does not fit rather than appearing the day the list crosses some
-          threshold. 30px rows, 2px apart — the filter menu's own geometry. */}
-      <div
-        ref={listRef}
-        role="tablist"
-        aria-label="Intent Signals concept"
-        className="filter-option-scroll flex flex-col gap-[2px] shrink-0"
-        style={{ height: 6 * 30 + 5 * 2 }}
-      >
-        {CONCEPTS.map((c, i) => {
-          const active = i === concept;
-          const { num, name } = splitLabel(c.label);
-          return (
-            <button
-              key={c.label}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              data-selected={active}
-              onClick={e => {
-                e.stopPropagation();
-                onPick(i);
-              }}
-              className="cursor-pointer flex gap-[8px] h-[30px] items-center px-[8px] rounded-[8px] shrink-0 text-left transition-colors"
-              style={{ background: active ? SELECTED_BG : undefined }}
-              onMouseEnter={e => {
-                if (!active) e.currentTarget.style.background = HOVER_BG;
-              }}
-              onMouseLeave={e => {
-                if (!active) e.currentTarget.style.background = "";
-              }}
-            >
-              <span
-                className="shrink-0 tabular-nums text-[11px] text-right w-[13px]"
-                style={{ color: active ? LIVE : FAINT }}
-              >
-                {num}
-              </span>
-              <span
-                className="flex-1 leading-[19px] overflow-hidden text-[13px] text-ellipsis whitespace-nowrap"
-                style={{ color: active ? LIVE : INK, fontWeight: active ? 500 : 400 }}
-              >
-                {name}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 /* ── design 2 · index ────────────────────────────────────────────────
    Built for the way concepts are actually compared: one after another, fast.
@@ -1249,7 +1149,7 @@ function RefinedPanel({ concept, onPick, onClose }: SkinProps) {
    because it is now the map rather than the vehicle, and the selected row
    carries a rule down its left edge — position in a sequence, which is what
    you need when you are stepping through one. */
-function IndexPanel({ concept, onStep, onPick, onClose }: SkinProps) {
+function IndexPanel({ concept, onStep, onPick, onClose }: PanelProps) {
   const listRef = useScrollSelectedIntoView(concept);
 
   /* On the window, not the panel: stepping should not depend on having
@@ -1381,178 +1281,6 @@ function IndexPanel({ concept, onStep, onPick, onClose }: SkinProps) {
   );
 }
 
-/* ── design 3 · grouped ──────────────────────────────────────────────
-   For finding one of eleven, and for holding two of them against each other.
-
-   Eleven flat rows is a list you read; grouped, it is a list you aim at,
-   because the names stop being eleven near-synonyms and become three
-   questions — is it organised by band, by order, or against the score. The
-   group headings stay put while their own rows scroll past, so you always
-   know which of the three you are inside. The field narrows the list for the
-   case the groups do not cover: knowing a word of the name and not where it
-   sits.
-
-   And the button by the title is the comparison. Concepts are chosen in
-   pairs — you get down to two and then flip between them — which a list
-   cannot do, because by the time you have found the other one you have
-   stopped seeing the first. It swaps to whichever concept you were on last,
-   so the two you are deciding between are one click apart, both ways. */
-
-const GROUPS: ReadonlyArray<{ title: string; items: number[] }> = [
-  /* Indices into CONCEPTS, so this list moves whenever that one does. */
-  { title: "Current three", items: [0, 1, 2] },
-  { title: "By band", items: [3, 4, 5, 8] },
-  { title: "By order", items: [6, 12] },
-  { title: "Against the score", items: [7, 9, 10, 11, 13] },
-];
-
-function GroupedPanel({ concept, onPick, onClose }: SkinProps) {
-  const [query, setQuery] = useState("");
-  /* The concept before this one, which is the other half of the pair being
-     decided between. State rather than a ref: the swap button's own enabled
-     state is what it drives, so recording it has to bring the button back
-     with it. A ref records it and leaves the button reading the value from
-     the render before — disabled forever, because nothing here re-renders on
-     its own. `last` stays a ref: it is only ever read by this effect. */
-  const [previous, setPrevious] = useState<number | null>(null);
-  const last = useRef(concept);
-  useEffect(() => {
-    if (last.current !== concept) {
-      setPrevious(last.current);
-      last.current = concept;
-    }
-  }, [concept]);
-
-  const needle = query.trim().toLowerCase();
-  const groups = GROUPS.map(g => ({
-    ...g,
-    items: needle ? g.items.filter(i => CONCEPTS[i].label.toLowerCase().includes(needle)) : g.items,
-  })).filter(g => g.items.length > 0);
-
-  const listRef = useScrollSelectedIntoView(concept, [needle]);
-  const back = previous;
-
-  return (
-    <div className="flex flex-col p-[4px] w-[228px]" data-panel-skin="grouped">
-      {/* The title is the concept itself — at eleven designs, which one is on
-          screen is the thing worth saying, and the count is one line down in
-          the list anyway. */}
-      <div className="flex gap-[4px] h-[30px] items-center pl-[8px] pr-[4px] shrink-0">
-        <p
-          className="flex-1 font-medium overflow-hidden text-[12.5px] text-ellipsis whitespace-nowrap"
-          style={{ color: INK }}
-          title={CONCEPTS[concept].label}
-        >
-          {CONCEPTS[concept].label}
-        </p>
-        <button
-          type="button"
-          disabled={back === null}
-          onClick={e => {
-            e.stopPropagation();
-            if (back !== null) onPick(back);
-          }}
-          className="cursor-pointer flex items-center justify-center rounded-[6px] shrink-0 size-[22px] transition-colors hover:bg-[rgba(7,41,41,0.06)] disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent"
-          style={{ color: INK }}
-          aria-label="Swap to the previous concept"
-          title={back === null ? "Pick a second concept to compare" : `Back to ${CONCEPTS[back].label}`}
-        >
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
-            <path d="M2 4.5H11M11 4.5L8.5 2M11 4.5L8.5 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12 9.5H3M3 9.5L5.5 7M3 9.5L5.5 12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <CloseButton onClose={onClose} />
-      </div>
-
-      {/* The filter card's own field, at the filter card's own size. */}
-      <input
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        onClick={e => e.stopPropagation()}
-        placeholder="Search concepts"
-        aria-label="Search concepts"
-        className="bg-white border border-[rgba(47,43,61,0.18)] border-solid font-['Inter',sans-serif] h-[30px] leading-[19px] mb-[2px] outline-none px-[9px] rounded-[8px] shrink-0 text-[#2f2b3d] text-[12.5px] transition-colors w-full focus:border-[rgba(47,43,61,0.35)] placeholder:text-[rgba(47,43,61,0.4)]"
-      />
-
-      <div
-        ref={listRef}
-        role="tablist"
-        aria-label="Intent Signals concept"
-        className="filter-option-scroll flex flex-col shrink-0"
-        style={{ height: 196 }}
-      >
-        {groups.length === 0 && (
-          <p className="flex h-[30px] items-center px-[8px] text-[12.5px]" style={{ color: FAINT }}>
-            No concepts match
-          </p>
-        )}
-        {groups.map(g => (
-          <div key={g.title} className="flex flex-col shrink-0">
-            {/* Sticky, so the heading of whatever you are scrolling through
-                is always the one on screen. White behind it, or the rows
-                would read through as it passes. */}
-            <p
-              className="bg-white font-medium px-[8px] py-[5px] shrink-0 sticky text-[10px] top-0 tracking-[0.05em] uppercase z-[1]"
-              style={{ color: FAINT }}
-            >
-              {g.title}
-            </p>
-            {g.items.map(i => {
-              const active = i === concept;
-              const { num, name } = splitLabel(CONCEPTS[i].label);
-              return (
-                <button
-                  key={CONCEPTS[i].label}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  data-selected={active}
-                  onClick={e => {
-                    e.stopPropagation();
-                    onPick(i);
-                  }}
-                  className="cursor-pointer flex gap-[8px] h-[28px] items-center mb-[1px] px-[8px] rounded-[8px] shrink-0 text-left transition-colors"
-                  /* Scrolled to, a row stops a heading's height down rather
-                     than at the very top, where the sticky heading would be
-                     sitting on it — a pinned group label with its own row
-                     hidden behind it reads as an empty group. */
-                  style={{ background: active ? SELECTED_BG : undefined, scrollMarginTop: 26 }}
-                  onMouseEnter={e => {
-                    if (!active) e.currentTarget.style.background = HOVER_BG;
-                  }}
-                  onMouseLeave={e => {
-                    if (!active) e.currentTarget.style.background = "";
-                  }}
-                >
-                  <span
-                    className="shrink-0 tabular-nums text-[11px] text-right w-[13px]"
-                    style={{ color: active ? LIVE : FAINT }}
-                  >
-                    {num}
-                  </span>
-                  <span
-                    className="flex-1 leading-[18px] overflow-hidden text-[12.5px] text-ellipsis whitespace-nowrap"
-                    style={{ color: active ? LIVE : INK, fontWeight: active ? 500 : 400 }}
-                  >
-                    {name}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-const SKINS: ReadonlyArray<{ label: string; render: (p: SkinProps) => ReactNode }> = [
-  { label: "1 · Refined", render: p => <RefinedPanel {...p} /> },
-  { label: "2 · Index", render: p => <IndexPanel {...p} /> },
-  { label: "3 · Grouped", render: p => <GroupedPanel {...p} /> },
-];
-
 function ConceptsPanel({
   concept,
   onPick,
@@ -1569,30 +1297,13 @@ function ConceptsPanel({
       return true;
     }
   });
-  const [skin, setSkin] = useState(() => {
+  const setOpenPersisted = (next: boolean) => {
+    setOpen(next);
     try {
-      const n = Number(sessionStorage.getItem(SKIN_KEY));
-      return Number.isInteger(n) && n >= 0 && n < SKINS.length ? n : 0;
-    } catch {
-      return 0;
-    }
-  });
-
-  const remember = (key: string, value: string) => {
-    try {
-      sessionStorage.setItem(key, value);
+      sessionStorage.setItem(PANEL_KEY, next ? "open" : "closed");
     } catch {
       /* Storage unavailable — the choice still holds for this render. */
     }
-  };
-
-  const setOpenPersisted = (next: boolean) => {
-    setOpen(next);
-    remember(PANEL_KEY, next ? "open" : "closed");
-  };
-  const setSkinPersisted = (next: number) => {
-    setSkin(next);
-    remember(SKIN_KEY, String(next));
   };
 
   /* Half the dialog's own width, plus a gap, from the centre of the window. */
@@ -1627,60 +1338,33 @@ function ConceptsPanel({
 
   return createPortal(
     <div
-      className="fixed z-[10000] flex flex-col gap-[6px] items-start"
-      style={anchor}
-      onClick={e => e.stopPropagation()}
-      data-intent-concepts
-    >
-      <div
-        className={CARD_SURFACE}
-        role="group"
-        aria-label="Intent Signals concept"
+      className={`${CARD_SURFACE} fixed z-[10000]`}
+      style={{
+        ...anchor,
         /* Held to the dialog's own height at most, so it can never run off
            the window however many concepts the list grows to. */
-        style={{ maxHeight: "calc(100vh - 80px)" }}
-      >
-        {SKINS[skin].render({ concept, onPick, onStep, onClose: () => setOpenPersisted(false) })}
-      </div>
-
-      {/* The harness, outside every design rather than inside one of them:
-          three panels are being judged here, and chrome belonging to the
-          comparison would be chrome on whichever design was hosting it. */}
-      <div className={`${CARD_SURFACE} flex gap-[2px] items-center p-[3px] pl-[8px]`}>
-        <span className="pr-[3px] text-[10px]" style={{ color: FAINT }}>
-          Panel design
-        </span>
-        {SKINS.map((s, i) => {
-          const active = i === skin;
-          return (
-            <button
-              key={s.label}
-              type="button"
-              onClick={e => {
-                e.stopPropagation();
-                setSkinPersisted(i);
-              }}
-              aria-pressed={active}
-              className="cursor-pointer flex h-[20px] items-center justify-center rounded-[6px] shrink-0 text-[11px] transition-colors w-[20px]"
-              style={{
-                background: active ? SELECTED_BG : undefined,
-                color: active ? LIVE : MUTED,
-                fontWeight: active ? 500 : 400,
-              }}
-              title={s.label}
-            >
-              {i + 1}
-            </button>
-          );
-        })}
-      </div>
+        maxHeight: "calc(100vh - 80px)",
+      }}
+      onClick={e => e.stopPropagation()}
+      data-intent-concepts
+      role="group"
+      aria-label="Intent Signals concept"
+    >
+      <IndexPanel
+        concept={concept}
+        onPick={onPick}
+        onStep={onStep}
+        onClose={() => setOpenPersisted(false)}
+      />
     </div>,
     document.body,
   );
 }
 
 export default function IntentSignals({ company }: { company: string }) {
-  const [concept, setConcept] = useState(0);
+  /* Six chips — the one chosen out of the fourteen. Named by index, and the
+     index is the list's own order, so adding a concept cannot move it. */
+  const [concept, setConcept] = useState(1);
   const triggered = getTriggeredSignals(company);
   const views: View[] = INTENT_SIGNALS.map(signal => ({ signal, live: triggered.has(signal.label) }));
 
