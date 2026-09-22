@@ -264,7 +264,7 @@ export default function ContactPreviewCard({
    * differently. Omitted — which is every surface but one — it is the tag the
    * prospect card has always carried, so nothing moves by default.
    */
-  tag?: { size?: number; labelSize?: number; medium?: boolean; className?: string };
+  tag?: { size?: number; labelSize?: number; medium?: boolean; durationMs?: number; className?: string };
   /**
    * Draw a disclosed contact on Figma 3:53's rim — white card, ash tint inset
    * 2px at radius 10. The finalised prospect stack asks for it; every other
@@ -680,6 +680,7 @@ export default function ContactPreviewCard({
           size={tag?.size ?? 11}
           labelSize={tag?.labelSize}
           medium={tag?.medium ?? false}
+          durationMs={tag?.durationMs ?? 200}
           className={tag?.className ?? "absolute right-[8px] top-[2.5px]"}
         />
       )}

@@ -54,19 +54,38 @@ const DROP = 3;
  * from the card's edge (3:53). The top offsets put each mark on the centre
  * line its node puts it on; see the note on the sealed one in leftStack.
  */
-const TAG_SEALED = { size: 8.5, labelSize: 9.5, medium: true, className: "absolute right-[8px] top-[3px]" };
-const TAG_OPEN = { size: 9.5, className: "absolute right-[10px] top-[3px]" };
+const TAG_SEALED = {
+  size: 8.5,
+  labelSize: 9.5,
+  medium: true,
+  durationMs: 300,
+  /* The tag is pinned by its right edge, and that edge moves by two between
+     the two states. Transitioning it is what carries the mark across rather
+     than teleporting it there while the word is still closing. */
+  className: "absolute right-[8px] top-[3px] transition-[right] duration-[300ms] ease-[cubic-bezier(0.4,0.05,0.2,1)]",
+};
+const TAG_OPEN = {
+  size: 9.5,
+  durationMs: 300,
+  className: "absolute right-[10px] top-[3px] transition-[right] duration-[300ms] ease-[cubic-bezier(0.4,0.05,0.2,1)]",
+};
 
 /**
  * The motion.
  *
  * One curve, no overshoot: the brief asks for polished and subtle rather than
  * playful, and a card that passes its mark and comes back is the opposite of
- * that on a row being scanned. Fast out and long on the settle is what keeps
- * it from reading as mechanical without anything bouncing.
+ * that on a row being scanned.
+ *
+ * The curve matters more than the number. An ease-out whose control points
+ * both sit at 1 puts nearly the whole move into the first quarter of its
+ * duration — measured frame by frame, the card was at its mark inside 80ms
+ * of a 280ms transition, which is a jump with a long tail rather than a
+ * movement. This one eases in as well as out and keeps its middle, so the
+ * 300ms is 300ms of card actually travelling.
  */
-const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-const DUR = 280;
+const EASE = "cubic-bezier(0.4, 0.05, 0.2, 1)";
+const DUR = 300;
 
 const slotStyle = (slot: number, open: boolean) => ({
   width: PANEL_W,
@@ -77,7 +96,13 @@ const slotStyle = (slot: number, open: boolean) => ({
   /* Cut to the slot's height rather than scaled into it, so the corner showing
      at the left keeps the node's 12px round and the contact is never squashed. */
   overflow: "hidden",
-  transition: `transform ${DUR}ms ${EASE}, height ${DUR}ms ${EASE}, top ${DUR}ms ${EASE}`,
+  /* z-index is in the list on purpose. A card sent to the back of the deck
+     whose depth changed on the first frame would vanish behind the others
+     while still standing at the front — the pop this interaction is meant to
+     avoid. Animated, the browser steps it at the midpoint, so the card travels
+     halfway back before it slips under, which is what a hand does with a card
+     it is pushing into a deck. */
+  transition: `transform ${DUR}ms ${EASE}, height ${DUR}ms ${EASE}, top ${DUR}ms ${EASE}, z-index ${DUR}ms ${EASE}`,
 });
 
 /** One card in the stack, and the press that brings it to the front. */
@@ -88,6 +113,7 @@ function StackedCard({
   count,
   open,
   onSelect,
+  label,
 }: {
   contact: ProspectContact;
   flow: ReturnType<typeof useCompanyRevealFlow>;
@@ -95,6 +121,8 @@ function StackedCard({
   count: number;
   open: boolean;
   onSelect: () => void;
+  /** What the press does, for anyone not reading the deck with their eyes. */
+  label: string;
 }) {
   const front = slot === 0;
   const select = (e: MouseEvent<HTMLDivElement>) => {
@@ -109,9 +137,12 @@ function StackedCard({
   return (
     <div
       role={open ? "button" : undefined}
-      tabIndex={open && !front ? 0 : undefined}
+      /* Every disclosed card is a control now, the one in front included —
+         pressing it deals the next contact — so every one of them can be
+         reached from the keyboard. */
+      tabIndex={open ? 0 : undefined}
       aria-pressed={open ? front : undefined}
-      aria-label={open ? `Show ${contact.name}` : undefined}
+      aria-label={open ? label : undefined}
       onClick={open ? select : undefined}
       onKeyDown={
         open
@@ -126,7 +157,7 @@ function StackedCard({
       /* The page's click delegate runs on the capture phase and would open the
          Prospect Details modal before this card's own handler ran. */
       data-contact-select={open ? "" : undefined}
-      className={`absolute rounded-[12px] ${open && !front ? "cursor-pointer" : ""}`}
+      className={`absolute rounded-[12px] ${open ? "cursor-pointer" : ""}`}
       style={{ ...slotStyle(slot, open), zIndex: count - slot }}
     >
       <ContactPreviewCard
@@ -170,20 +201,32 @@ export default function ContactStack({
   const flow = useCompanyRevealFlow(company, contacts.length);
   const count = contacts.length;
   const open = flow.revealed;
-  const [frontName, setFrontName] = useState(contacts[0]?.name ?? "");
+
+  /**
+   * How far the deck has been cut, rather than who is in front.
+   *
+   * A deck is cycled, not addressed: pressing the card on top sends it to the
+   * bottom and brings the next one up, and pressing any card takes the cut to
+   * it. Holding the cut instead of a name is what makes that a rotation — the
+   * order behind the front is always the dataset's own, continuing from
+   * whoever is showing, so no card ever jumps a place it did not need to.
+   */
+  const [cut, setCut] = useState(0);
 
   /* A row can be re-used for another company as the list filters or sorts, so
-     the front follows whoever this company's first contact now is. */
+     the deck goes back to its own top whenever the company changes. */
   useEffect(() => {
-    if (!contacts.some(c => c.name === frontName)) setFrontName(contacts[0]?.name ?? "");
-  }, [contacts, frontName]);
+    setCut(0);
+  }, [company, count]);
 
   if (!count) return null;
 
-  /* Sealed there is nothing to choose between, so the dataset's order stands
-     and a press means "reveal". Disclosed, the front is whoever was pressed. */
-  const frontIndex = open ? Math.max(0, contacts.findIndex(c => c.name === frontName)) : 0;
-  const order = [frontIndex, ...contacts.map((_, i) => i).filter(i => i !== frontIndex)];
+  /* Sealed there is nothing to choose between: the dataset's order stands and
+     a press means "reveal". Disclosed, the cut decides where the order starts
+     and the rest follow it round. */
+  const start = open ? cut % count : 0;
+  /** A contact's place in the deck, counting from whoever is showing. */
+  const slotOf = (i: number) => (i - start + count) % count;
 
   return (
     <div
@@ -191,17 +234,31 @@ export default function ContactStack({
       style={{ width: PANEL_W, height: CARD_H }}
       data-name="Contact Stack"
     >
-      {contacts.map((contact, i) => (
-        <StackedCard
-          key={contact.name}
-          contact={contact}
-          flow={flow}
-          slot={order.indexOf(i)}
-          count={count}
-          open={open}
-          onSelect={() => setFrontName(contact.name)}
-        />
-      ))}
+      {contacts.map((contact, i) => {
+        const slot = slotOf(i);
+        return (
+          <StackedCard
+            key={contact.name}
+            contact={contact}
+            flow={flow}
+            slot={slot}
+            count={count}
+            open={open}
+            /* The card on top deals the next one; any card behind it takes the
+               cut to itself. Both are the same move — the deck turns by however
+               many places the press asked for — so a press on the front and a
+               press on the back card animate identically. */
+            onSelect={() => setCut(c => (c + (slot === 0 ? 1 : slot)) % count)}
+            label={
+              slot === 0
+                ? count > 1
+                  ? "Show the next contact"
+                  : contact.name
+                : `Show ${contact.name}`
+            }
+          />
+        );
+      })}
     </div>
   );
 }

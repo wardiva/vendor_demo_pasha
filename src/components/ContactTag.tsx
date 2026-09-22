@@ -16,6 +16,7 @@ export default function ContactTag({
   labelSize,
   medium = false,
   showLabel = true,
+  durationMs = 200,
   className = "",
 }: {
   variant: ContactVariant;
@@ -25,6 +26,12 @@ export default function ContactTag({
   labelSize?: number;
   /** The Prospects card sets it in medium; elsewhere it is regular. */
   medium?: boolean;
+  /**
+   * How long the word takes to close and the mark to grow into its place.
+   * A host that moves the card at the same moment passes its own duration, so
+   * the two read as one gesture rather than two that happen to overlap.
+   */
+  durationMs?: number;
   /**
    * Figma 219:1037 pins the mark alone to the prospect card's contact panel —
    * the word is dropped and the badge carries the meaning. Every other surface
@@ -50,7 +57,17 @@ export default function ContactTag({
       <div className="content-stretch flex items-center justify-center py-px relative shrink-0">
         <div className="content-stretch flex items-center relative shrink-0">
           {verified ? (
-            <div className="relative shrink-0" data-name="image 667" style={{ width: size, height: size }}>
+            <div
+              className="relative shrink-0"
+              data-name="image 667"
+              /* The mark is a point and a half bigger once the word beside it
+                 has gone, and it grows into that rather than snapping. */
+              style={{
+                width: size,
+                height: size,
+                transition: `width ${durationMs}ms cubic-bezier(0.4, 0.05, 0.2, 1), height ${durationMs}ms cubic-bezier(0.4, 0.05, 0.2, 1)`,
+              }}
+            >
               <img
                 alt=""
                 /* contain, not cover: the mark is drawn whole at whatever
@@ -76,10 +93,14 @@ export default function ContactTag({
               from, so it simply starts there. */}
           <div
             aria-hidden={!showLabel}
-            className={`lead-tag-label [word-break:break-word] flex flex-col font-['Inter',sans-serif] justify-center leading-[0] not-italic overflow-hidden relative shrink-0 text-[#2f2b3d] transition-[max-width,opacity,margin-left] duration-200 ease-out whitespace-nowrap ${
+            className={`lead-tag-label [word-break:break-word] flex flex-col font-['Inter',sans-serif] justify-center leading-[0] not-italic overflow-hidden relative shrink-0 text-[#2f2b3d] transition-[max-width,opacity,margin-left] whitespace-nowrap ${
               medium ? "font-medium" : "font-normal"
             } ${showLabel ? "ml-[4px] max-w-[160px] opacity-100" : "ml-0 max-w-0 opacity-0"}`}
-            style={{ fontSize: labelSize ?? size }}
+            style={{
+              fontSize: labelSize ?? size,
+              transitionDuration: `${durationMs}ms`,
+              transitionTimingFunction: "cubic-bezier(0.4, 0.05, 0.2, 1)",
+            }}
           >
             <p className="leading-[20px]">{verified ? "Verified" : "Recommended"}</p>
           </div>
