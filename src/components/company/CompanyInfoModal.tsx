@@ -83,12 +83,13 @@ export default function CompanyInfoModal({
   company: CompanyProfile;
   onClose: () => void;
 }) {
-  /* Opens on Contacts, which is where it has always opened. Activity moving to
-     the top of the rail is an ordering change, not a change to what the modal
-     shows first, so the landing tab is named rather than taken from whatever
-     happens to be first. App keys the modal by company, so opening it for
-     another prospect mounts a fresh one and lands here again. */
-  const [activeTab, setActiveTab] = useState<string>("Contacts");
+  /* Opens on Activity — the top of the rail, and what a prospect is judged on
+     before anyone decides whether to spend a reveal on them. Named rather than
+     taken from whatever happens to be first in the list, so reordering the
+     rail can never move the landing tab by accident. App keys the modal by
+     company, so opening it for another prospect mounts a fresh one and lands
+     here again. */
+  const [activeTab, setActiveTab] = useState<string>("Activity");
   const details = getCompanyDetails(company.name);
   const tabs = details.verifiedContacts.length > 0 ? [...TABS, NOTES_TAB] : TABS;
 
