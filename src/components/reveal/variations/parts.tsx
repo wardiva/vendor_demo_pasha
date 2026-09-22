@@ -42,6 +42,17 @@ export const revealAllLabel = (n: number) => (n === 1 ? "Reveal contact" : "Reve
 /** The action with its count in it, for controls that stand on their own. */
 export const revealCountLabel = (n: number) => (n === 1 ? "Reveal contact" : `Reveal ${n} contacts`);
 
+/**
+ * The same thing said in full — "Reveal all 3 contacts".
+ *
+ * What the shipped surfaces use. The count on its own leaves open the question
+ * the whole model exists to answer: is that three contacts for one reveal, or
+ * three reveals? "All" settles it in the control itself, which is where the
+ * vendor is looking at the moment they ask.
+ */
+export const revealAllCountLabel = (n: number) =>
+  n === 1 ? "Reveal contact" : `Reveal all ${n} contacts`;
+
 /** The cost, stated in the unit the plan counts. */
 export const COST_NOTE = "Uses 1 contact reveal";
 

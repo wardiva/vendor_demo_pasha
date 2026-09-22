@@ -2,7 +2,7 @@ import { useEffect, useState, type KeyboardEvent, type MouseEvent } from "react"
 import ContactPreviewCard from "@/components/contacts/ContactPreviewCard";
 import { useCompanyRevealFlow } from "@/components/reveal/useCompanyRevealFlow";
 import type { ProspectContact } from "@/data/prospects";
-import { GroupHeading, RevealCta, RevealedBadge, revealCountLabel } from "./variations/parts";
+import { GroupHeading, RevealCta, RevealedBadge, revealAllCountLabel } from "./variations/parts";
 
 /**
  * The company's contacts on a prospect row — the finalised design.
@@ -180,7 +180,7 @@ function StackedCard({
             <RevealCta
               flow={flow}
               count={count}
-              label={revealCountLabel(count)}
+              label={revealAllCountLabel(count)}
               size="sm"
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[3]"
             />
@@ -347,7 +347,7 @@ export function ContactStackModal({
           <RevealCta
             flow={flow}
             count={count}
-            label={count === 1 ? "Reveal contact" : `Reveal all ${count} contacts`}
+            label={revealAllCountLabel(count)}
             tone="primary"
             size="md"
           />

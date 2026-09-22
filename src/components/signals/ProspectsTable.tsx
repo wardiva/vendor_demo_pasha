@@ -12,7 +12,7 @@ import { REVEAL_DELAY, showButtonLoader } from "@/components/reveal/revealMechan
 import { contactId, useProspectReveal } from "@/context/ProspectRevealContext";
 import { useIsLegacyReveal } from "@/context/RevealVariationContext";
 import { useCompanyRevealFlow } from "@/components/reveal/useCompanyRevealFlow";
-import { RevealCta, revealCountLabel } from "@/components/reveal/variations/parts";
+import { RevealCta, revealAllCountLabel } from "@/components/reveal/variations/parts";
 import { getCompanyContacts } from "@/data/prospects";
 import { SIGNAL_ROWS, type SignalRow } from "@/data/signalsRows";
 
@@ -437,7 +437,7 @@ function TableRow({
             <RevealCta
               flow={companyFlow}
               count={contactCount}
-              label={revealCountLabel(contactCount)}
+              label={revealAllCountLabel(contactCount)}
               size="md"
               className="pointer-events-auto"
             />
