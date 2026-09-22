@@ -1,9 +1,6 @@
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from "react";
-import ContactTag from "@/components/ContactTag";
 import ContactPreviewCard from "@/components/contacts/ContactPreviewCard";
-import avatarUnrevealed from "@/components/contacts/assets/avatar-unrevealed.svg";
 import { useCompanyRevealFlow } from "@/components/reveal/useCompanyRevealFlow";
-import type { ProspectContact } from "@/data/prospects";
 import Variation3Deck from "./Variation3Deck";
 import { RevealCta, revealCountLabel, type RevealPanelProps } from "./parts";
 
@@ -58,72 +55,6 @@ const PEEK = 7;
 
 /** Constant for a given company: the state it is in has no say in it. */
 const stackHeight = (n: number) => CARD_H + Math.max(0, n - 1) * PEEK;
-
-/**
- * A company with one contact, before the reveal.
- *
- * A stack of one is not a stack. Drawn as a deck it is a single card with the
- * deck's frost on it, which promises depth the company does not have and makes
- * the one contact look like the top of something — so a company with one
- * contact gets a card, plainly, and the stack is kept for the companies that
- * have one.
- *
- * The treatment is the modal's disclosed card rather than the list's veiled
- * one: the 2px tint showing around a white inner, which is the module's own
- * card and reads as an ordinary record rather than as something being withheld.
- * Nothing here is frosted.
- *
- * Nothing here gives the contact away either. The frost is not what was
- * protecting them — it was only covering text that was rendered anyway — so
- * with it gone the name and the title are not drawn at all. What stands in
- * their place is the shape of the record the reveal will fill in, in the
- * skeleton the module already uses for exactly this, over the placeholder
- * portrait every withheld contact in the product shows. The status tag is kept:
- * it is a fact about the record rather than about the person, and it is the one
- * thing worth knowing before spending a reveal.
- */
-function SingleSealedCard({
-  contact,
-  flow,
-}: {
-  contact: ProspectContact;
-  flow: ReturnType<typeof useCompanyRevealFlow>;
-}) {
-  return (
-    <div className="relative shrink-0 w-full" style={{ height: CARD_H }}>
-      <div
-        /* The module's framed card — Figma 237:3560's 2px frame around a white
-           inner, which is what the modal draws a disclosed contact on. */
-        className="bg-[rgba(244,242,240,0.6)] content-stretch cursor-pointer flex h-full items-start p-[2px] relative rounded-[12px] w-full"
-        onClick={() => flow.reveal()}
-        data-name="Sealed Contact"
-      >
-        <div className="bg-white content-stretch flex flex-[1_0_0] gap-[10px] h-full items-center min-w-px px-[10px] relative rounded-[10px]">
-          <span className="relative block rounded-[100px] shrink-0 size-[35px]">
-            <img
-              alt=""
-              className="absolute block inset-0 max-w-none pointer-events-none size-full"
-              src={avatarUnrevealed}
-            />
-          </span>
-
-          {/* The record's shape: the line the name will take, then the line the
-              title will. Both are the skeleton, not the value. */}
-          <div className="content-stretch flex flex-[1_0_0] flex-col gap-[6px] items-start min-w-px relative">
-            <span className="reveal-skeleton block max-w-full" style={{ width: 104, height: 9 }} />
-            <span className="reveal-skeleton block max-w-full" style={{ width: 72, height: 7 }} />
-          </div>
-
-          <RevealCta flow={flow} count={1} label="Reveal contact" size="sm" className="ml-auto shrink-0" />
-        </div>
-      </div>
-
-      {/* Pinned exactly where the veiled card pins it, so the tag holds its
-          position whichever treatment the card has. */}
-      <ContactTag variant={contact.variant} showLabel className="absolute right-[8px] top-[2.5px]" />
-    </div>
-  );
-}
 
 /**
  * The deck, in whichever state the company is in.
@@ -272,15 +203,13 @@ export default function Variation10DeckInteractive(props: RevealPanelProps) {
       className="content-stretch flex flex-col items-end relative shrink-0 w-[310px]"
       data-name="Contact Deck"
     >
-      {/* One contact and still sealed: a card, not a deck of one. Opened, it
-          falls through to the deck like any other company — a single disclosed
-          contact is the same card there, at the same 59px, so the row does not
-          move when the reveal lands. */}
-      {contacts.length === 1 && flow.locked ? (
-        <SingleSealedCard contact={contacts[0]} flow={flow} />
-      ) : (
-        <Deck company={company} contacts={contacts} flow={flow} />
-      )}
+      {/* One contact is a deck of one, and that is the point: it draws the
+          module's own veiled contact card — the light card, its subtle shadow,
+          the frost over the portrait and the details, the status tag and the
+          control — which is what every other surface in the product shows a
+          withheld contact as. There is no special case here, so there is
+          nothing about a one-contact company that can drift from it. */}
+      <Deck company={company} contacts={contacts} flow={flow} />
     </div>
   );
 }
