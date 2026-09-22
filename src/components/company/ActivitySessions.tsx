@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import IntentSignals from "@/components/company/IntentSignals";
 import {
   getActivitySessions,
   summarise,
@@ -300,6 +301,12 @@ export default function ActivitySessionsPanel({ company }: { company: string }) 
         <SummaryCard label="Last Seen" value={`${withoutYear(summary.lastSeen.date)}, ${clockLabel(summary.lastSeen.time)}`} />
         <SummaryCard label="Total Time" value={summary.total} />
       </div>
+
+      {/* The key to the timeline below it: which of the six signals this
+          company has produced, and what band each one evidences. It sits
+          under the summary rather than at the foot of the tab because it
+          explains the score the modal's header is already showing. */}
+      <IntentSignals company={company} />
 
       {sessions.map((session, i) => (
         <Card key={`${session.visitor}-${i}`}>
