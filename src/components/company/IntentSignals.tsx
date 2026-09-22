@@ -371,6 +371,327 @@ function BandColumns({ views }: { views: View[] }) {
   );
 }
 
+/* ══ 7 – 11 ═══════════════════════════════════════════════════════════
+   The five that came after, all built on the two things that worked:
+   Banded rows' arrangement, and the prospect's own score shown against the
+   ranges rather than stated beside them. What differs is where the scale
+   lives and what the hierarchy leads with. */
+
+/** Where a number sits on the 30-to-100 the signals are scored against. */
+const at = (n: number) => Math.max(0, Math.min(100, ((n - 30) / 70) * 100));
+
+/** The score this company carries — the one the modal's header shows. */
+const scoreOf = (company: string) => getCompanyProfile(company)?.intentPct ?? 0;
+
+/** The band a score falls in, so a row can say "this is where they are". */
+const bandOfScore = (score: number) =>
+  INTENT_BANDS.find(b => score >= b.min && score <= b.max)?.range ?? null;
+
+/** The bands that actually hold signals, in the order they are listed. */
+const bandRows = (views: View[]) => INTENT_BANDS.filter(b => views.some(v => v.signal.range === b.range));
+
+/** A band's signals, as every one of these draws them. */
+function BandSignals({ items, size = 11 }: { items: View[]; size?: number }) {
+  return (
+    <div className="flex flex-wrap gap-x-[11px] gap-y-[2px] min-w-px">
+      {items.map(v => (
+        <span key={v.signal.label} className="content-stretch flex gap-[5px] items-center shrink-0">
+          {v.live ? <Tick size={9} /> : <Hollow size={9} />}
+          <Name view={v} size={size} />
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/* ── 7 · Score in the gutter ────────────────────────────────────────
+   Banded rows as it stands, with the scale stood on its end beside it. The
+   bands already run in order down the panel, so the left gutter is a scale
+   whether or not it is drawn — this draws it, and puts the prospect's mark on
+   it beside the band they are in. The score is read off which row it sits
+   against, which is the question the section is answering, and it costs the
+   section no height at all. */
+function ScoreGutter({ views, company }: { views: View[]; company: string }) {
+  const score = scoreOf(company);
+  const here = bandOfScore(score);
+  const rows = bandRows(views);
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div className="flex gap-[10px] w-full" style={{ marginTop: 6 }}>
+        <div className="flex flex-col relative shrink-0" style={{ width: 36 }}>
+          <span className="absolute rounded-[100px]" style={{ left: 29, top: 5, bottom: 5, width: 3, background: "rgba(47,43,61,0.08)" }} />
+          {rows.map(band => (
+            <div key={band.range} className="flex flex-1 items-center justify-end relative" style={{ minHeight: 28 }}>
+              {band.range === here && (
+                <>
+                  <span className="font-['Inter',sans-serif] font-medium leading-[15px] text-[10px]" style={{ color: LIVE, marginRight: 6 }}>
+                    {score}%
+                  </span>
+                  <span className="absolute rounded-[100px]" style={{ left: 27, width: 7, height: 7, background: LIVE, boxShadow: "0 0 0 2px #ffffff" }} />
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col min-w-px w-full">
+          {rows.map((band, i) => {
+            const items = views.filter(v => v.signal.range === band.range);
+            return (
+              <div
+                key={band.range}
+                className="content-stretch flex gap-[10px] items-center relative shrink-0 w-full"
+                style={{
+                  minHeight: 28,
+                  boxShadow: i < rows.length - 1 ? `inset 0 -1px 0 0 ${HAIR}` : undefined,
+                }}
+              >
+                <span
+                  className="font-['Inter',sans-serif] font-medium leading-[17px] shrink-0 text-[11px] w-[44px] whitespace-nowrap"
+                  style={{ color: items.some(v => v.live) ? LIVE : FAINT }}
+                >
+                  {band.range}
+                </span>
+                <BandSignals items={items} size={11.5} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 8 · Bands as tracks ────────────────────────────────────────────
+   The scale is not a bar above the rows; it is the rows. Each band draws its
+   own share of the 30-to-100 at the width that share is worth, so 70%+ is
+   visibly the far end of the scale and 30–50 the near one, and the mark lands
+   in whichever row holds the score. "Where are they" and "what did they do"
+   become one glance rather than two. */
+function BandTracks({ views, company }: { views: View[]; company: string }) {
+  const score = scoreOf(company);
+  const rows = bandRows(views);
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div className="flex flex-col gap-[7px] w-full" style={{ marginTop: 7 }}>
+        {rows.map(band => {
+          const items = views.filter(v => v.signal.range === band.range);
+          const anyLive = items.some(v => v.live);
+          const holds = band.range === bandOfScore(score);
+          return (
+            <div key={band.range} className="flex flex-col gap-[3px] w-full">
+              <div className="flex items-center gap-[8px] w-full">
+                <span
+                  className="font-['Inter',sans-serif] font-medium leading-[15px] shrink-0 text-[10.5px] w-[44px] whitespace-nowrap"
+                  style={{ color: anyLive ? LIVE : FAINT }}
+                >
+                  {band.range}
+                </span>
+                <span className="relative block flex-1" style={{ height: 8 }}>
+                  <span className="absolute rounded-[100px]" style={{ left: 0, right: 0, top: 3, height: 2, background: "rgba(47,43,61,0.06)" }} />
+                  <span
+                    className="absolute rounded-[100px]"
+                    style={{
+                      left: `${at(band.min)}%`,
+                      width: `${at(band.max) - at(band.min)}%`,
+                      top: 3,
+                      height: 2,
+                      background: anyLive ? "rgba(7,41,41,0.45)" : "rgba(47,43,61,0.16)",
+                    }}
+                  />
+                  {holds && (
+                    <span
+                      className="absolute rounded-[100px]"
+                      style={{ left: `${at(score)}%`, marginLeft: -4, top: 0, width: 8, height: 8, background: LIVE, boxShadow: "0 0 0 2px #ffffff" }}
+                    />
+                  )}
+                </span>
+                {holds && (
+                  <span className="font-['Inter',sans-serif] font-medium leading-[15px] shrink-0 text-[10px]" style={{ color: LIVE }}>
+                    {score}%
+                  </span>
+                )}
+              </div>
+              <div style={{ paddingLeft: 52 }}>
+                <BandSignals items={items} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 9 · Score first ────────────────────────────────────────────────
+   Leads with the number, because on a prospect opened deliberately that is
+   what the reader came to understand. The scale sits under it at full width
+   with the band boundaries ticked, and each band below is a single line — its
+   count and its signals — so the section is the score, the scale, and three
+   lines of evidence. */
+function ScoreFirst({ views, company }: { views: View[]; company: string }) {
+  const score = scoreOf(company);
+  const live = views.filter(v => v.live);
+  const strongest = live.reduce<IntentSignal | null>((b, v) => (!b || v.signal.min > b.min ? v.signal : b), null);
+  const rows = bandRows(views);
+  return (
+    <Panel>
+      <div className="flex items-baseline gap-[7px] w-full">
+        <span className="font-['Inter',sans-serif] font-medium leading-[24px] text-[19px]" style={{ color: LIVE }}>
+          {score}%
+        </span>
+        <span className="font-['Inter',sans-serif] leading-[18px] text-[11.5px]" style={{ color: MUTED }}>
+          {`${live.length} of ${views.length} signals`}
+          {strongest ? ` · strongest ${strongest.range}` : ""}
+        </span>
+      </div>
+
+      <div className="relative w-full" style={{ marginTop: 5, height: 6 }}>
+        <span className="absolute rounded-[100px]" style={{ left: 0, right: 0, top: 2, height: 2, background: "rgba(47,43,61,0.08)" }} />
+        {INTENT_BANDS.map(b => (
+          <span key={b.range} className="absolute" style={{ left: `${at(b.min)}%`, top: 0, width: 1, height: 6, background: HAIR }} />
+        ))}
+        <span
+          className="absolute rounded-[100px]"
+          style={{ left: `${at(score)}%`, marginLeft: -3, top: 0, width: 6, height: 6, background: LIVE, boxShadow: "0 0 0 2px #ffffff" }}
+        />
+      </div>
+
+      <div className="flex flex-col w-full" style={{ marginTop: 7 }}>
+        {rows.map((band, i) => {
+          const items = views.filter(v => v.signal.range === band.range);
+          const n = items.filter(v => v.live).length;
+          return (
+            <div
+              key={band.range}
+              className="flex items-center gap-[8px] w-full"
+              style={{
+                paddingTop: i ? 5 : 0,
+                paddingBottom: i < rows.length - 1 ? 5 : 0,
+                boxShadow: i < rows.length - 1 ? `inset 0 -1px 0 0 ${HAIR}` : undefined,
+              }}
+            >
+              <span
+                className="font-['Inter',sans-serif] font-medium leading-[17px] shrink-0 text-[10.5px] w-[62px] whitespace-nowrap"
+                style={{ color: n ? LIVE : FAINT }}
+              >
+                {`${band.range} · ${n}/${items.length}`}
+              </span>
+              <BandSignals items={items} />
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 10 · Reached, and not yet ──────────────────────────────────────
+   Splits the six by where the score already is rather than by what fired. A
+   band at or under the prospect's score is ground they have reached; a band
+   above it is what they have not, and the signals in that band are the
+   specific things that would take them there. It turns the section from a
+   record into a next step, which is what a vendor reading a prospect wants
+   out of it — and the tick still says which fired, so nothing is lost. */
+function ReachedAndNotYet({ views, company }: { views: View[]; company: string }) {
+  const score = scoreOf(company);
+  const groups = [
+    { label: `Reached · ${score}%`, bands: INTENT_BANDS.filter(b => score >= b.min), live: true },
+    { label: "Not yet", bands: INTENT_BANDS.filter(b => score < b.min), live: false },
+  ].filter(g => g.bands.length);
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div className="relative w-full" style={{ marginTop: 6, height: 6 }}>
+        <span className="absolute rounded-[100px]" style={{ left: 0, right: 0, top: 2, height: 2, background: "rgba(47,43,61,0.08)" }} />
+        <span className="absolute rounded-[100px]" style={{ left: 0, width: `${at(score)}%`, top: 2, height: 2, background: "rgba(7,41,41,0.45)" }} />
+        <span
+          className="absolute rounded-[100px]"
+          style={{ left: `${at(score)}%`, marginLeft: -3, top: 0, width: 6, height: 6, background: LIVE, boxShadow: "0 0 0 2px #ffffff" }}
+        />
+      </div>
+      <div className="flex flex-col w-full" style={{ marginTop: 7 }}>
+        {groups.map((g, gi) => (
+          <div key={g.label} className="w-full" style={{ marginTop: gi ? 7 : 0 }}>
+            <p
+              className="font-['Inter',sans-serif] font-medium leading-[15px] text-[10px] tracking-[0.04em] uppercase"
+              style={{ color: g.live ? LIVE : FAINT }}
+            >
+              {g.label}
+            </p>
+            {g.bands.map(band => {
+              const items = views.filter(v => v.signal.range === band.range);
+              if (!items.length) return null;
+              return (
+                <div key={band.range} className="flex items-center gap-[8px] w-full" style={{ marginTop: 3 }}>
+                  <span
+                    className="font-['Inter',sans-serif] font-medium leading-[17px] shrink-0 text-[10.5px] w-[44px] whitespace-nowrap"
+                    style={{ color: g.live ? MUTED : FAINT }}
+                  >
+                    {band.range}
+                  </span>
+                  <BandSignals items={items} />
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 11 · Six on the scale ──────────────────────────────────────────
+   One strip, six cells, in band order: each cell is a signal, filled where it
+   fired. The strip runs left to right up the scale, so the count is the
+   number of filled cells and the strongest is the rightmost filled one, and
+   the prospect's mark rides above it at their real position. The names are
+   underneath in the same order — the picture and the list are the same object
+   twice rather than two things to reconcile. */
+function SixOnTheScale({ views, company }: { views: View[]; company: string }) {
+  const score = scoreOf(company);
+  const ordered = [...views].sort((a, b) => a.signal.min - b.signal.min);
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div className="relative w-full" style={{ marginTop: 8, height: 13 }}>
+        <span
+          className="absolute font-['Inter',sans-serif] font-medium leading-[12px] text-[10px] whitespace-nowrap"
+          style={{ left: `${at(score)}%`, top: 0, transform: "translateX(-50%)", color: LIVE }}
+        >
+          {score}%
+        </span>
+        <span className="absolute" style={{ left: `${at(score)}%`, marginLeft: -0.5, top: 13, width: 1, height: 4, background: LIVE }} />
+      </div>
+      <div className="flex gap-[3px] w-full" style={{ marginTop: 4 }}>
+        {ordered.map(v => (
+          <span
+            key={v.signal.label}
+            className="flex-1 rounded-[2px]"
+            title={`${v.signal.label} · ${v.signal.range}`}
+            style={{ height: 6, background: v.live ? LIVE : "rgba(47,43,61,0.10)" }}
+          />
+        ))}
+      </div>
+      <div className="grid w-full" style={{ marginTop: 6, gridTemplateColumns: "1fr 1fr", columnGap: 12, rowGap: 3 }}>
+        {ordered.map(v => (
+          <span key={v.signal.label} className="content-stretch flex gap-[5px] items-center min-w-px">
+            <span className="block shrink-0 rounded-[2px]" style={{ width: 6, height: 6, background: v.live ? LIVE : "rgba(47,43,61,0.14)" }} />
+            <span className="min-w-px overflow-hidden">
+              <Name view={v} size={11} />
+            </span>
+            <span className="ml-auto">
+              <RangeText view={v} size={10} />
+            </span>
+          </span>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
 /* ── the section ───────────────────────────────────────────────────── */
 
 const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: string) => ReactNode }> = [
@@ -380,6 +701,11 @@ const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: 
   { label: "4 · Strongest first", render: v => <StrongestFirst views={v} /> },
   { label: "5 · Against the score", render: (v, c) => <AgainstTheScore views={v} company={c} /> },
   { label: "6 · Band columns", render: v => <BandColumns views={v} /> },
+  { label: "7 · Score gutter", render: (v, c) => <ScoreGutter views={v} company={c} /> },
+  { label: "8 · Band tracks", render: (v, c) => <BandTracks views={v} company={c} /> },
+  { label: "9 · Score first", render: (v, c) => <ScoreFirst views={v} company={c} /> },
+  { label: "10 · Reached / not yet", render: (v, c) => <ReachedAndNotYet views={v} company={c} /> },
+  { label: "11 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
 ];
 
 export default function IntentSignals({ company }: { company: string }) {
