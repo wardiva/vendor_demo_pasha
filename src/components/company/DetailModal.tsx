@@ -170,13 +170,15 @@ export default function DetailModal({
                   title rather than each panel deciding for itself. */}
               <div className="[word-break:break-word] flex flex-[1_0_0] flex-col gap-[20px] h-full items-start min-w-px not-italic px-[24px] py-[16px] relative whitespace-nowrap overflow-y-auto">
                 {/* Figma 5:130 — the heading and the module's info mark, 6px
-                    apart, the mark at 14. It is the same glyph every other
-                    heading in Buyer Intent carries, a size down. */}
+                    apart, the mark at 14. The node draws it on Contacts, and
+                    Contacts is where it stays: the other four panels say what
+                    they are plainly enough that a mark offering to explain
+                    them is just something else to look at. */}
                 <div className="content-stretch flex gap-[6px] items-center relative shrink-0">
                   <p className="font-['Inter',sans-serif] font-medium leading-[22px] shrink-0 text-[#2f2b3d] text-[16px]">
                     {activeTab}
                   </p>
-                  <InfoIcon size={14} />
+                  {activeTab === "Contacts" && <InfoIcon size={14} />}
                 </div>
                 {children}
               </div>
