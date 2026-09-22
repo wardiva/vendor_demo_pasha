@@ -885,16 +885,10 @@ export default function IntentSignals({ company }: { company: string }) {
   const views: View[] = INTENT_SIGNALS.map(signal => ({ signal, live: triggered.has(signal.label) }));
 
   return (
+    /* No heading. The panel is read directly off the summary cards above it
+       and the timeline below, and its own first line already says what it is
+       — a title and a subtitle over three rows was label on label. */
     <div className="content-stretch flex flex-col gap-[6px] items-start relative shrink-0 w-full" data-name="Intent Signals">
-      <div className="content-stretch flex gap-[8px] items-baseline relative shrink-0 w-full">
-        <p className="font-['Inter',sans-serif] font-medium leading-[18px] shrink-0 text-[13px]" style={{ color: INK }}>
-          Intent Signals
-        </p>
-        <p className="font-['Inter',sans-serif] font-normal leading-[18px] shrink-0 text-[11.5px]" style={{ color: MUTED }}>
-          what this score is built from
-        </p>
-      </div>
-
       {CONCEPTS[concept].render(views, company)}
 
       {/* Beside the modal, not inside it — see ConceptsPanel. */}
