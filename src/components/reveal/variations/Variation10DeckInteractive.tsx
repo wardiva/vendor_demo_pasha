@@ -73,18 +73,14 @@ const stackHeight = (n: number) => CARD_H + Math.max(0, n - 1) * PEEK;
  * card and reads as an ordinary record rather than as something being withheld.
  * Nothing here is frosted.
  *
- * Nothing here gives the contact away either, and nothing stands in for them.
- * The frost was never what protected the contact — it was covering text that
- * was rendered anyway — and a skeleton in its place is the same mistake in a
- * quieter register: another layer over the card, drawn to be looked past. So
- * the name and the title are simply not there. The card carries the
- * placeholder portrait every withheld contact in the product shows, the status
- * tag, and the control; the space the contact will occupy is left as the plain
- * surface it will still be once they are in it.
- *
- * That is what makes the two states one card. Revealing does not lift
- * anything or replace anything — it fills a card that was already the right
- * card, which is the only difference the brief asks for.
+ * Nothing here gives the contact away either. The frost is not what was
+ * protecting them — it was only covering text that was rendered anyway — so
+ * with it gone the name and the title are not drawn at all. What stands in
+ * their place is the shape of the record the reveal will fill in, in the
+ * skeleton the module already uses for exactly this, over the placeholder
+ * portrait every withheld contact in the product shows. The status tag is kept:
+ * it is a fact about the record rather than about the person, and it is the one
+ * thing worth knowing before spending a reveal.
  */
 function SingleSealedCard({
   contact,
@@ -96,16 +92,13 @@ function SingleSealedCard({
   return (
     <div className="relative shrink-0 w-full" style={{ height: CARD_H }}>
       <div
-        /* The contact card's own fill and nothing else: the design's 60% ash
-           tint painted over an opaque white, which is the treatment every
-           contact card in this module carries. No frame around it and no
-           stroke on it — the card is told apart from the row by its fill, the
-           way a disclosed contact is. */
-        className="bg-white bg-[linear-gradient(rgba(244,242,240,0.6),rgba(244,242,240,0.6))] content-stretch cursor-pointer flex h-full items-center px-[12px] py-[8px] relative rounded-[12px] w-full"
+        /* The module's framed card — Figma 237:3560's 2px frame around a white
+           inner, which is what the modal draws a disclosed contact on. */
+        className="bg-[rgba(244,242,240,0.6)] content-stretch cursor-pointer flex h-full items-start p-[2px] relative rounded-[12px] w-full"
         onClick={() => flow.reveal()}
         data-name="Sealed Contact"
       >
-        <div className="content-stretch flex flex-[1_0_0] gap-[10px] h-full items-center min-w-px relative">
+        <div className="bg-white content-stretch flex flex-[1_0_0] gap-[10px] h-full items-center min-w-px px-[10px] relative rounded-[10px]">
           <span className="relative block rounded-[100px] shrink-0 size-[35px]">
             <img
               alt=""
@@ -114,15 +107,14 @@ function SingleSealedCard({
             />
           </span>
 
-          {/* Where the contact will go, and until then nothing at all.
-              Skeleton lines were standing in for the name and the title, and a
-              stand-in is still a treatment laid over the card — the thing this
-              state is defined by not having. Withheld now means absent: the
-              card is the same clean surface it will be afterwards, and the
-              reveal fills it rather than un-obscuring it. */}
-          <div className="flex-[1_0_0] min-w-px" />
+          {/* The record's shape: the line the name will take, then the line the
+              title will. Both are the skeleton, not the value. */}
+          <div className="content-stretch flex flex-[1_0_0] flex-col gap-[6px] items-start min-w-px relative">
+            <span className="reveal-skeleton block max-w-full" style={{ width: 104, height: 9 }} />
+            <span className="reveal-skeleton block max-w-full" style={{ width: 72, height: 7 }} />
+          </div>
 
-          <RevealCta flow={flow} count={1} label="Reveal contact" size="sm" className="shrink-0" />
+          <RevealCta flow={flow} count={1} label="Reveal contact" size="sm" className="ml-auto shrink-0" />
         </div>
       </div>
 
