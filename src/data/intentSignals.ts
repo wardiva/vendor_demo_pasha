@@ -22,7 +22,7 @@ export type IntentSignal = {
 export const INTENT_SIGNALS: readonly IntentSignal[] = [
   { label: "Viewed Category Page", range: "30–50%", min: 30, max: 50 },
   { label: "Viewed Product Profile", range: "51–70%", min: 51, max: 70 },
-  { label: "Viewed Pricing", range: "70%+", min: 70, max: 100 },
+  { label: "Viewed Pricing", range: "71%+", min: 71, max: 100 },
   { label: "Viewed Alternatives", range: "51–70%", min: 51, max: 70 },
   { label: "Compared Products", range: "51–70%", min: 51, max: 70 },
   { label: "Viewed Reviews", range: "51–70%", min: 51, max: 70 },
@@ -30,7 +30,7 @@ export const INTENT_SIGNALS: readonly IntentSignal[] = [
 
 /** The three bands the six signals fall into, strongest first. */
 export const INTENT_BANDS: ReadonlyArray<{ range: string; min: number; max: number }> = [
-  { range: "70%+", min: 70, max: 100 },
+  { range: "71%+", min: 71, max: 100 },
   { range: "51–70%", min: 51, max: 70 },
   { range: "30–50%", min: 30, max: 50 },
 ];

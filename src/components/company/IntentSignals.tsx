@@ -466,7 +466,7 @@ function ScoreGutter({ views, company }: { views: View[]; company: string }) {
 
 /* ── 8 · Bands as tracks ────────────────────────────────────────────
    The scale is not a bar above the rows; it is the rows. Each band draws its
-   own share of the 30-to-100 at the width that share is worth, so 70%+ is
+   own share of the 30-to-100 at the width that share is worth, so 71%+ is
    visibly the far end of the scale and 30–50 the near one, and the mark lands
    in whichever row holds the score. "Where are they" and "what did they do"
    become one glance rather than two. */
