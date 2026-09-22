@@ -1,7 +1,6 @@
 import ContactPreviewCard from "@/components/contacts/ContactPreviewCard";
 import { useCompanyRevealFlow } from "@/components/reveal/useCompanyRevealFlow";
 import {
-  CostNote,
   GroupHeading,
   RevealCta,
   RevealedBadge,
@@ -130,7 +129,6 @@ export default function Variation3Deck({ company, contacts, layout }: RevealPane
               tone="primary"
               size="md"
             />
-            <CostNote flow={flow} showRemaining />
           </div>
         )}
       </div>
@@ -139,11 +137,10 @@ export default function Variation3Deck({ company, contacts, layout }: RevealPane
 
   return (
     <div
-      className="content-stretch flex flex-col gap-[4px] items-end relative shrink-0 w-[310px]"
+      className="content-stretch flex flex-col items-end relative shrink-0 w-[310px]"
       data-name="Contact Deck"
     >
       <div className="flex flex-col items-start relative shrink-0 w-full">{deck}</div>
-      <CostNote flow={flow} className="pr-[2px]" />
     </div>
   );
 }
