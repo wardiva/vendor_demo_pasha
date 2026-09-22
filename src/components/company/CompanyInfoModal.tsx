@@ -19,12 +19,12 @@ import iconNotes from "./assets/icon-notes.svg";
  */
 
 const TABS: DetailTab[] = [
+  { label: "Activity", icon: iconActivity },
   /* This glyph is a 14x14 leaf inset inside its 18x18 frame (node 23:1516),
      rather than filling it like the other three. */
   { label: "Contacts", icon: iconContacts, inset: true },
   { label: "Company Information", icon: iconCompanyInfo },
   { label: "Company Tech Stack", icon: iconTechStack },
-  { label: "Activity", icon: iconActivity },
 ];
 
 /* Figma 181:6779 — last in the rail, and only for a prospect we hold a
@@ -83,9 +83,12 @@ export default function CompanyInfoModal({
   company: CompanyProfile;
   onClose: () => void;
 }) {
-  /* Opens on the first nav item — Contacts. App keys the modal by company, so
-     opening it for another prospect mounts a fresh one and lands there again. */
-  const [activeTab, setActiveTab] = useState<string>(TABS[0].label);
+  /* Opens on Contacts, which is where it has always opened. Activity moving to
+     the top of the rail is an ordering change, not a change to what the modal
+     shows first, so the landing tab is named rather than taken from whatever
+     happens to be first. App keys the modal by company, so opening it for
+     another prospect mounts a fresh one and lands here again. */
+  const [activeTab, setActiveTab] = useState<string>("Contacts");
   const details = getCompanyDetails(company.name);
   const tabs = details.verifiedContacts.length > 0 ? [...TABS, NOTES_TAB] : TABS;
 
