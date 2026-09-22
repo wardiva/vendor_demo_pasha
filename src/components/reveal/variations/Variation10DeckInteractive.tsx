@@ -73,14 +73,18 @@ const stackHeight = (n: number) => CARD_H + Math.max(0, n - 1) * PEEK;
  * card and reads as an ordinary record rather than as something being withheld.
  * Nothing here is frosted.
  *
- * Nothing here gives the contact away either. The frost is not what was
- * protecting them — it was only covering text that was rendered anyway — so
- * with it gone the name and the title are not drawn at all. What stands in
- * their place is the shape of the record the reveal will fill in, in the
- * skeleton the module already uses for exactly this, over the placeholder
- * portrait every withheld contact in the product shows. The status tag is kept:
- * it is a fact about the record rather than about the person, and it is the one
- * thing worth knowing before spending a reveal.
+ * Nothing here gives the contact away either, and nothing stands in for them.
+ * The frost was never what protected the contact — it was covering text that
+ * was rendered anyway — and a skeleton in its place is the same mistake in a
+ * quieter register: another layer over the card, drawn to be looked past. So
+ * the name and the title are simply not there. The card carries the
+ * placeholder portrait every withheld contact in the product shows, the status
+ * tag, and the control; the space the contact will occupy is left as the plain
+ * surface it will still be once they are in it.
+ *
+ * That is what makes the two states one card. Revealing does not lift
+ * anything or replace anything — it fills a card that was already the right
+ * card, which is the only difference the brief asks for.
  */
 function SingleSealedCard({
   contact,
@@ -110,14 +114,15 @@ function SingleSealedCard({
             />
           </span>
 
-          {/* The record's shape: the line the name will take, then the line the
-              title will. Both are the skeleton, not the value. */}
-          <div className="content-stretch flex flex-[1_0_0] flex-col gap-[6px] items-start min-w-px relative">
-            <span className="reveal-skeleton block max-w-full" style={{ width: 104, height: 9 }} />
-            <span className="reveal-skeleton block max-w-full" style={{ width: 72, height: 7 }} />
-          </div>
+          {/* Where the contact will go, and until then nothing at all.
+              Skeleton lines were standing in for the name and the title, and a
+              stand-in is still a treatment laid over the card — the thing this
+              state is defined by not having. Withheld now means absent: the
+              card is the same clean surface it will be afterwards, and the
+              reveal fills it rather than un-obscuring it. */}
+          <div className="flex-[1_0_0] min-w-px" />
 
-          <RevealCta flow={flow} count={1} label="Reveal contact" size="sm" className="ml-auto shrink-0" />
+          <RevealCta flow={flow} count={1} label="Reveal contact" size="sm" className="shrink-0" />
         </div>
       </div>
 
