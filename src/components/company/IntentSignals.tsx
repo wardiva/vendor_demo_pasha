@@ -80,7 +80,11 @@ function Summary({ views }: { views: View[] }) {
   const live = views.filter(v => v.live);
   const strongest = live.reduce<IntentSignal | null>((best, v) => (!best || v.signal.min > best.min ? v.signal : best), null);
   return (
-    <p className="font-['Inter',sans-serif] leading-[18px] shrink-0 text-[12px] w-full" style={{ color: MUTED }}>
+    /* 12 on 20 in the 70% ink — the Activity tab's secondary text exactly, so
+       the first line of the key sits on the same line as the value under
+       every card heading around it. It was on 18, which is a leading nothing
+       else in the tab uses. */
+    <p className="font-['Inter',sans-serif] leading-[20px] shrink-0 text-[12px] w-full" style={{ color: MUTED }}>
       <span style={{ color: INK, fontWeight: 500 }}>{`${live.length} of ${views.length}`}</span>
       {" signals triggered"}
       {strongest && (
@@ -786,42 +790,76 @@ function ScoreAndBands({ views, company }: { views: View[]; company: string }) {
   return (
     <Panel>
       <Summary views={views} />
+      {/* The sentence and its picture are one pair, 8 apart, and the rows are
+          the next block, 12 — the tab's own two intervals. Nothing here is at
+          5, 6, 7 or 10 any more: the Activity tab is built on 2, 8 and 12,
+          and a key sitting between its cards on a scale of its own is the
+          kind of difference that reads as sloppiness rather than as
+          hierarchy. */}
       <div style={{ marginTop: 8, width: "100%" }}>
         <ScoreBar score={score} />
       </div>
-      <div className="flex flex-col w-full" style={{ marginTop: 8 }}>
+      <div className="flex flex-col w-full" style={{ marginTop: 12 }}>
         {rows.map((band, i) => {
           const items = views.filter(v => v.signal.range === band.range);
           const anyLive = items.some(v => v.live);
           const holds = band.range === here;
+          const first = i === 0;
+          const last = i === rows.length - 1;
           return (
             <div
               key={band.range}
-              className="content-stretch flex gap-[10px] items-start relative rounded-[6px] shrink-0 w-full"
+              /* 8 above and below every rule, so a row is the same distance
+                 from the one over it as from the one under it. 12 between the
+                 band and its signals, the same interval the tab puts between
+                 a card's blocks. */
+              className="content-stretch flex gap-[12px] items-start relative shrink-0 w-full"
               style={{
-                paddingTop: i ? 6 : 0,
-                paddingBottom: i < rows.length - 1 ? 6 : 0,
-                boxShadow: i < rows.length - 1 ? `inset 0 -1px 0 0 ${HAIR}` : undefined,
+                paddingTop: first ? 0 : 8,
+                paddingBottom: last ? 0 : 8,
+                boxShadow: last ? undefined : `inset 0 -1px 0 0 ${HAIR}`,
               }}
             >
               {/* The band the score is in, marked behind the row rather than
-                  in it: it is a place, not another value to read. Inset so it
-                  does not sit on the rule between rows. */}
+                  in it: it is a place, not another value to read. Held 2 off
+                  the rules so it never sits on one, and carried 8 out into
+                  the card's padding so the tint clears the text on both
+                  sides. */}
               {holds && (
                 <span
                   aria-hidden
-                  className="absolute rounded-[6px]"
-                  style={{ left: -6, right: -6, top: i ? 2 : -4, bottom: i < rows.length - 1 ? 2 : -4, background: "rgba(7,41,41,0.05)" }}
+                  className="absolute rounded-[8px]"
+                  style={{
+                    left: -8,
+                    right: -8,
+                    top: first ? -4 : 2,
+                    bottom: last ? -4 : 2,
+                    background: "rgba(7,41,41,0.05)",
+                  }}
                 />
               )}
+              {/* 12 on 20, the size and leading the tab's own secondary text
+                  is set in, so the band, its signals and the summary above
+                  them all sit on one 20px line. 48 holds "51–70%" with the
+                  ragged edge of the three ranges still aligned left. */}
               <span
-                className="font-['Inter',sans-serif] font-medium leading-[17px] relative shrink-0 text-[11px] w-[44px] whitespace-nowrap"
+                className="font-['Inter',sans-serif] font-medium leading-[20px] relative shrink-0 text-[12px] w-[48px] whitespace-nowrap"
                 style={{ color: anyLive ? LIVE : FAINT }}
               >
                 {band.range}
               </span>
-              <div className="min-w-px relative">
-                <BandSignals items={items} size={11.5} />
+              <div className="flex flex-wrap gap-x-[12px] min-w-px relative">
+                {items.map(v => (
+                  <span key={v.signal.label} className="content-stretch flex gap-[8px] items-center shrink-0">
+                    {v.live ? <Tick /> : <Hollow />}
+                    <span
+                      className="font-['Inter',sans-serif] leading-[20px] text-[12px] whitespace-nowrap"
+                      style={{ color: v.live ? INK : FAINT, fontWeight: v.live ? 500 : 400 }}
+                    >
+                      {v.signal.label}
+                    </span>
+                  </span>
+                ))}
               </div>
             </div>
           );
