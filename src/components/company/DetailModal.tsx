@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import InfoIcon from "@/components/InfoIcon";
 import IntentTag from "@/components/IntentTag";
 import iconClose from "./assets/icon-close.svg";
 
@@ -168,9 +169,15 @@ export default function DetailModal({
                   with, so every tab sits the same distance under its own
                   title rather than each panel deciding for itself. */}
               <div className="[word-break:break-word] flex flex-[1_0_0] flex-col gap-[20px] h-full items-start min-w-px not-italic px-[24px] py-[16px] relative whitespace-nowrap overflow-y-auto">
-                <p className="font-['Inter',sans-serif] font-medium leading-[22px] shrink-0 text-[#2f2b3d] text-[16px]">
-                  {activeTab}
-                </p>
+                {/* Figma 5:130 — the heading and the module's info mark, 6px
+                    apart, the mark at 14. It is the same glyph every other
+                    heading in Buyer Intent carries, a size down. */}
+                <div className="content-stretch flex gap-[6px] items-center relative shrink-0">
+                  <p className="font-['Inter',sans-serif] font-medium leading-[22px] shrink-0 text-[#2f2b3d] text-[16px]">
+                    {activeTab}
+                  </p>
+                  <InfoIcon size={14} />
+                </div>
                 {children}
               </div>
             </div>

@@ -9,9 +9,12 @@ import infoGlyph from "./assets/icon-info.svg";
  * instance renders identically and at the same size it always did. Anywhere an
  * info icon appears in Buyer Intent should use this rather than its own copy.
  */
-export default function InfoIcon() {
+export default function InfoIcon({ size = 16 }: { size?: number }) {
   return (
-    <div className="relative shrink-0 size-[16px]" data-name="Infro-circle">
+    /* 16 everywhere it has always been; the Prospect Details modal's panel
+       headings draw it at 14 (Figma 5:130), so the box is a prop rather than a
+       second copy of the same glyph. */
+    <div className="relative shrink-0" data-name="Infro-circle" style={{ width: size, height: size }}>
       <img alt="" className="absolute block inset-0 max-w-none size-full" src={infoGlyph} />
     </div>
   );
