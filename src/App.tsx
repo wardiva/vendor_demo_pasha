@@ -437,6 +437,15 @@ export default function App() {
         return;
       }
 
+      /* ── Picking which revealed contact a card features ──
+         A concept that lets the vendor switch between a company's disclosed
+         contacts inside the card needs that press to mean "show me this one"
+         and nothing else. The press is on the capture phase before the row's
+         own handler, so without this it would open the Prospect Details modal
+         underneath and the selection would never be seen. Marked rather than
+         inferred, so only a control that asks for this gets it. */
+      if (target.closest("[data-contact-select]")) return;
+
       /* ── Reveal Contact ──
          Every reveal control runs its own React handler — the prospect cards
          through the reveal context, the modal's Recommended Contacts on their

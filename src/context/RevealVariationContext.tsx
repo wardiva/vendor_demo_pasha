@@ -21,7 +21,8 @@ export type RevealVariation =
   | "v4"
   | "v5"
   | "v6"
-  | "v7";
+  | "v7"
+  | "v8";
 
 export const REVEAL_VARIATIONS: ReadonlyArray<{
   key: RevealVariation;
@@ -38,6 +39,11 @@ export const REVEAL_VARIATIONS: ReadonlyArray<{
   { key: "v5", label: "5 · Roles first", description: "Titles readable, identities sealed" },
   { key: "v6", label: "6 · Unlock banner", description: "Company CTA over skeleton previews" },
   { key: "v7", label: "7 · Browse & unlock", description: "Flip through contacts, unlock once" },
+  {
+    key: "v8",
+    label: "8 · Grouped + Contact Selector",
+    description: "Three seats, one unlock, then pick a contact",
+  },
 ];
 
 export const DEFAULT_REVEAL_VARIATION: RevealVariation = "v1";

@@ -7,6 +7,7 @@ import Variation4Expandable from "./Variation4Expandable";
 import Variation5RolesFirst from "./Variation5RolesFirst";
 import Variation6Banner from "./Variation6Banner";
 import Variation7Browse from "./Variation7Browse";
+import Variation8Selector from "./Variation8Selector";
 import type { RevealPanelProps } from "./parts";
 
 /**
@@ -41,6 +42,8 @@ export default function CompanyContactsReveal(props: RevealPanelProps) {
       return <Variation6Banner {...props} />;
     case "v7":
       return <Variation7Browse {...props} />;
+    case "v8":
+      return <Variation8Selector {...props} />;
     case "v1":
     default:
       return <Variation1CompanyUnlock {...props} />;

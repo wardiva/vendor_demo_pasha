@@ -7,9 +7,9 @@ import {
 /**
  * The contact-reveal design switch — a review control, not product UI.
  *
- * Eight tabs pinned to the bottom-left of the window: the implementation that
- * shipped before reveals were counted per company, and the seven concepts for
- * counting them per company. Choosing one swaps the panel on the Signals cards,
+ * A tab per concept, pinned to the bottom-left of the window: the
+ * implementation that shipped before reveals were counted per company, and the
+ * concepts for counting them per company. Choosing one swaps the panel on the Signals cards,
  * the Prospects cards and the Prospect Details modal together, so each concept
  * is judged as a whole experience rather than as a card in isolation.
  *
