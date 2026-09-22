@@ -55,6 +55,29 @@ export const SHADOW_FRONT =
 export const SHADOW_BACK = "drop-shadow(0 1px 1.5px rgba(47,43,61,0.05))";
 
 /**
+ * The status tag as Figma 0:1536 draws it on this card.
+ *
+ * An 8.5px mark beside a 9.5px label in medium, 8px in from the right —
+ * smaller than the tag the contact card carries elsewhere in the product. The
+ * design is deciding that the word sits quietly beside the contact rather than
+ * competing with it, which is what lets it stay sharp above the veil without
+ * reading as the loudest thing on a sealed card.
+ *
+ * The top offset is 3 rather than the node's 6 because the two boxes are not
+ * the same height. The node's tag is 16 tall and starts at 6, which puts the
+ * mark's centre at 14; the tag here is 22 — the label's line box, which the
+ * component sets and the node leaves at normal — and centres its contents, so
+ * it has to start at 3 to land that same 14. The mark is what should read as
+ * 8px in from the corner, so the mark is what is matched.
+ */
+export const NODE_TAG = {
+  size: 8.5,
+  labelSize: 9.5,
+  medium: true,
+  className: "absolute right-[8px] top-[3px]",
+};
+
+/**
  * Which contact is in front, and the order the rest sit in behind them.
  *
  * Sealed, the question does not arise: there is nothing to choose between yet,
@@ -97,6 +120,7 @@ export function StackCard({
   count,
   onSelect,
   style,
+  tag,
   children,
 }: {
   contact: ProspectContact;
@@ -106,6 +130,8 @@ export function StackCard({
   count: number;
   onSelect: () => void;
   style: CSSProperties;
+  /** The status tag's scale, for a concept whose design sets its own. */
+  tag?: { size?: number; labelSize?: number; medium?: boolean; className?: string };
   /** Anything the concept draws over the card — a scrim, a grip, a label. */
   children?: ReactNode;
 }) {
@@ -152,6 +178,7 @@ export function StackCard({
         settled={flow.settled}
         onRevealRequest={flow.reveal}
         layout="prospect"
+        tag={tag}
         className="w-full"
         reveal={
           /* One control, on the face of the stack, while the company is sealed. */
@@ -179,7 +206,16 @@ export function StackCard({
  * the product shows. Shared by all three concepts so they cannot disagree
  * about it.
  */
-export function LoneCard({ contact, flow }: { contact: ProspectContact; flow: CompanyRevealFlow }) {
+export function LoneCard({
+  contact,
+  flow,
+  tag,
+}: {
+  contact: ProspectContact;
+  flow: CompanyRevealFlow;
+  /** The status tag's scale, so a lone card matches the concept's stack. */
+  tag?: { size?: number; labelSize?: number; medium?: boolean; className?: string };
+}) {
   return (
     /* The panel's own width, stated here rather than inherited: this is
        rendered straight into the prospect row, where `w-full` would let the
@@ -196,6 +232,7 @@ export function LoneCard({ contact, flow }: { contact: ProspectContact; flow: Co
         settled={flow.settled}
         onRevealRequest={flow.reveal}
         layout="prospect"
+        tag={tag}
         className="w-full"
         reveal={
           flow.locked ? (

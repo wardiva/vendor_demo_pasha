@@ -212,6 +212,7 @@ export default function ContactPreviewCard({
   reveal,
   onRevealRequest,
   layout = "prospect",
+  tag,
   className = "",
 }: {
   variant: ContactVariant;
@@ -257,6 +258,12 @@ export default function ContactPreviewCard({
    * same in both.
    */
   layout?: "prospect" | "modal";
+  /**
+   * The status tag's scale and placement, for a surface whose design draws it
+   * differently. Omitted — which is every surface but one — it is the tag the
+   * prospect card has always carried, so nothing moves by default.
+   */
+  tag?: { size?: number; labelSize?: number; medium?: boolean; className?: string };
   className?: string;
 }) {
   const modal = layout === "modal";
@@ -626,7 +633,10 @@ export default function ContactPreviewCard({
         <ContactTag
           variant={variant}
           showLabel={locked}
-          className="absolute right-[8px] top-[2.5px]"
+          size={tag?.size ?? 11}
+          labelSize={tag?.labelSize}
+          medium={tag?.medium ?? false}
+          className={tag?.className ?? "absolute right-[8px] top-[2.5px]"}
         />
       )}
 

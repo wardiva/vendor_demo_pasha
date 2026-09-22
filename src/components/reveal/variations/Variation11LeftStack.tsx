@@ -6,6 +6,7 @@ import {
   EASE,
   EASE_BACK,
   LoneCard,
+  NODE_TAG,
   PANEL_W,
   SHADOW_BACK,
   SHADOW_FRONT,
@@ -58,7 +59,7 @@ export default function Variation11LeftStack(props: RevealPanelProps) {
   if (layout === "modal") return <Variation3Deck {...props} />;
   if (!count) return null;
   /* One contact is a plain card: nothing to stack, so nothing stacked. */
-  if (count === 1) return <LoneCard contact={contacts[0]} flow={flow} />;
+  if (count === 1) return <LoneCard contact={contacts[0]} flow={flow} tag={NODE_TAG} />;
 
   return (
     <StackFrame>
@@ -74,6 +75,7 @@ export default function Variation11LeftStack(props: RevealPanelProps) {
             open={open}
             count={count}
             onSelect={() => setFront(contact.name)}
+            tag={NODE_TAG}
             style={{
               /* The node's own width, on every card in the stack. */
               width: PANEL_W,
