@@ -16,29 +16,36 @@ import {
 import type { RevealPanelProps } from "./parts";
 
 /**
- * Variation 11 — the minimal left stack.
+ * Variation 11 — the left stack, as drawn.
  *
- * The quietest of the three. Each card behind the front one is inset from the
- * left by a fixed step and nothing else happens to it: no rotation, no
- * separate rail, no chrome. What the vendor sees is one contact card with a
- * couple of edges showing at its left shoulder, which is the least a stack can
- * be and still be read as one.
+ * The geometry is Figma node 1:50 ("Stack") measured off the file rather than
+ * judged by eye. The node draws three cards at the same 310 width, stepped six
+ * pixels left of each other and shortened five pixels each as they go back:
  *
- * The restraint is the argument. A prospect row is scanned, not studied — the
- * eye is going down a list of companies — so the panel's first duty is to
- * present one contact cleanly, and its second is to admit there are others.
- * Anything more expressive than an edge competes with the row itself.
+ *   front   left 12   top 0   310 x 59
+ *   middle  left  6   top 3   310 x 54
+ *   back    left  0   top 6   310 x 49
  *
- * The geometry is chosen so the front card is always the same size: every card
- * is drawn at the width the deepest one leaves, and the stack's total footprint
- * is the panel, whether the company holds one contact or three. Bringing a card
- * forward slides it right onto the mark with a few pixels of overshoot; the one
- * it displaces takes the plain curve back into the stack, so the two read as a
- * promotion rather than as a swap.
+ * Two things fall out of that, and both are the design's point. The front card
+ * keeps the panel's full 310 — it is the same card the revealed row and every
+ * other concept shows, not a narrowed version of it — and the cards behind
+ * earn their depth by being shorter rather than by being scaled, so the edge
+ * that shows at the left keeps a true 12px corner instead of a squashed one.
+ *
+ * The step is small on purpose. A prospect row is scanned, not studied, so the
+ * panel's first duty is to present one contact cleanly and its second is to
+ * admit there are others; six pixels of edge says "there are more of these"
+ * without asking to be read.
+ *
+ * A card behind is drawn at its own height and clipped to it, so promoting one
+ * grows it into the front card's box rather than un-squashing it — the card
+ * opens to its full size as it arrives, which is the motion the stack implies.
  */
 
-/** How much of each card behind shows at the left. */
-const STEP = 11;
+/* Figma 1:50 — the step left, the height lost and the drop down, per card. */
+const STEP = 6;
+const SHRINK = 5;
+const DROP = 3;
 
 export default function Variation11LeftStack(props: RevealPanelProps) {
   const { company, contacts, layout } = props;
@@ -52,10 +59,6 @@ export default function Variation11LeftStack(props: RevealPanelProps) {
   if (!count) return null;
   /* One contact is a plain card: nothing to stack, so nothing stacked. */
   if (count === 1) return <LoneCard contact={contacts[0]} flow={flow} />;
-
-  /* Every card is the width the deepest edge leaves, so the front card neither
-     grows nor shrinks as the stack is shuffled. */
-  const cardW = PANEL_W - (count - 1) * STEP;
 
   return (
     <StackFrame>
@@ -72,22 +75,26 @@ export default function Variation11LeftStack(props: RevealPanelProps) {
             count={count}
             onSelect={() => setFront(contact.name)}
             style={{
-              width: cardW,
-              height: CARD_H,
-              /* Laid out from the right edge: the front card sits flush with
-                 the panel and each card behind steps out to its left. */
+              /* The node's own width, on every card in the stack. */
+              width: PANEL_W,
+              height: CARD_H - slot * SHRINK,
+              /* Laid out from the right edge, which is where the panel is
+                 anchored: the front card sits flush with it and each card
+                 behind steps out to its left. */
               right: 0,
-              transform: `translateX(${-slot * STEP}px) scale(${1 - slot * 0.018})`,
-              /* The cards shrink toward the edge that is showing, so the sliver
-                 a vendor aims at keeps its position and its height. */
-              transformOrigin: "left center",
+              top: slot * DROP,
+              transform: `translateX(${-slot * STEP}px)`,
+              /* The card is cut to its slot's height rather than scaled into
+                 it, so the corner showing at the left stays a true 12px round
+                 and the type on the card is never squashed. */
+              overflow: "hidden",
               zIndex: count - slot,
-              opacity: front ? 1 : open ? 0.96 : 0.82,
+              opacity: front ? 1 : open ? 0.96 : 0.9,
               filter: front ? SHADOW_FRONT : SHADOW_BACK,
-              /* The card coming forward overshoots its mark by a hair; the
-                 ones yielding do not, so the move reads as one card arriving
-                 rather than three cards negotiating. */
-              transition: `transform ${DUR}ms ${front ? EASE_BACK : EASE}, opacity ${DUR}ms ${EASE}, filter ${DUR}ms ${EASE}`,
+              /* The card coming forward overshoots its mark by a hair as it
+                 grows to full height; the ones yielding do not, so the move
+                 reads as one card arriving rather than three negotiating. */
+              transition: `transform ${DUR}ms ${front ? EASE_BACK : EASE}, height ${DUR}ms ${front ? EASE_BACK : EASE}, top ${DUR}ms ${EASE}, opacity ${DUR}ms ${EASE}, filter ${DUR}ms ${EASE}`,
             }}
           />
         );
