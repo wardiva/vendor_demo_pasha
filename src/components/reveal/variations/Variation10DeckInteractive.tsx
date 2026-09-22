@@ -92,13 +92,16 @@ function SingleSealedCard({
   return (
     <div className="relative shrink-0 w-full" style={{ height: CARD_H }}>
       <div
-        /* The module's framed card — Figma 237:3560's 2px frame around a white
-           inner, which is what the modal draws a disclosed contact on. */
-        className="bg-[rgba(244,242,240,0.6)] content-stretch cursor-pointer flex h-full items-start p-[2px] relative rounded-[12px] w-full"
+        /* The contact card's own fill and nothing else: the design's 60% ash
+           tint painted over an opaque white, which is the treatment every
+           contact card in this module carries. No frame around it and no
+           stroke on it — the card is told apart from the row by its fill, the
+           way a disclosed contact is. */
+        className="bg-white bg-[linear-gradient(rgba(244,242,240,0.6),rgba(244,242,240,0.6))] content-stretch cursor-pointer flex h-full items-center px-[12px] py-[8px] relative rounded-[12px] w-full"
         onClick={() => flow.reveal()}
         data-name="Sealed Contact"
       >
-        <div className="bg-white content-stretch flex flex-[1_0_0] gap-[10px] h-full items-center min-w-px px-[10px] relative rounded-[10px]">
+        <div className="content-stretch flex flex-[1_0_0] gap-[10px] h-full items-center min-w-px relative">
           <span className="relative block rounded-[100px] shrink-0 size-[35px]">
             <img
               alt=""
@@ -198,7 +201,7 @@ function Deck({
                open the Prospect Details modal before this card's own handler
                ran. This is what tells it the press belongs here. */
             data-contact-select={open ? "" : undefined}
-            className={`absolute left-0 rounded-[12px] transition-[transform,opacity,box-shadow] duration-[300ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] w-full ${
+            className={`absolute left-0 rounded-[12px] transition-[transform,opacity,filter] duration-[300ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] w-full ${
               open && !front ? "cursor-pointer" : ""
             }`}
             style={{
@@ -213,11 +216,16 @@ function Deck({
               opacity: front ? 1 : open ? 0.92 : 0.75,
               /* Drawn on the card's own shape rather than on its box, so the
                  edge between one card and the next follows the 12px corners
-                 instead of squaring them off. */
-              filter: "drop-shadow(0 1px 2px rgba(47,43,61,0.16))",
-              /* The one on top says so with a hairline in the product's ink —
-                 enough to find, not enough to compete with the contact. */
-              boxShadow: open && front ? "0 0 0 1.5px rgba(7,41,41,0.4)" : undefined,
+                 instead of squaring them off.
+
+                 It is also how the card on top says it is on top. A stroke
+                 around it read as a different kind of card rather than as the
+                 same card lifted, so the one in front is simply raised further
+                 off the stack — the difference a card has when it is the one
+                 being held. Nothing about its fill or its edge changes. */
+              filter: front
+                ? "drop-shadow(0 2px 6px rgba(47,43,61,0.18))"
+                : "drop-shadow(0 1px 2px rgba(47,43,61,0.16))",
             }}
           >
             <ContactPreviewCard
