@@ -14,6 +14,7 @@ import linkedinGlyph from "./assets/contact-linkedin.svg";
 import ContactTag, { type ContactVariant } from "@/components/ContactTag";
 import CopyableValue from "@/components/CopyableValue";
 import { contactId, useProspectReveal } from "@/context/ProspectRevealContext";
+import { useIsCompanyRevealExperience, CompanyRevealModal } from "@/components/reveal/company/CompanyReveal";
 import ContactPreviewCard from "@/components/contacts/ContactPreviewCard";
 import RevealContactButton from "@/components/reveal/RevealContactButton";
 import { REVEAL_DELAY, showButtonLoader } from "@/components/reveal/revealMechanics";
@@ -330,6 +331,18 @@ export function ContactsPanel({
   verified: ContactEntry[];
   recommended: ContactEntry[];
 }) {
+  /* One of the seven company-based reveal concepts is active — the tab shows
+     that experience's single group instead of the two per-contact sections
+     below, on the same up-to-three contacts the card above already offers. */
+  const companyExperience = useIsCompanyRevealExperience();
+  if (companyExperience) {
+    return (
+      <div className="content-stretch flex flex-col items-start relative shrink-0 w-full">
+        <CompanyRevealModal companyName={company} />
+      </div>
+    );
+  }
+
   return (
     /* 266:966 — 20px between the disclosed contacts and the recommended group
        below them, which is what sets that group apart from the cards above it

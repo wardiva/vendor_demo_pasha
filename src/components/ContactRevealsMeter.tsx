@@ -1,5 +1,7 @@
 import { createContext, useContext } from "react";
 import { REVEAL_ALLOWANCE } from "@/data/contactLeads";
+import { useCompanyRevealAllowance } from "@/context/CompanyRevealContext";
+import { useRevealExperience } from "@/context/RevealExperienceContext";
 
 /**
  * Contact Reveals usage indicator in the page header — Figma node 37:3914.
@@ -89,12 +91,24 @@ export function RevealProgressRing({ used, total }: RevealAllowance) {
   );
 }
 
+/**
+ * The header meter itself branches on the active reveal experience: the
+ * "Current" experience keeps reading `RevealAllowanceContext`, the original
+ * per-contact count, byte-identical to how it always rendered. Every other
+ * experience reads `CompanyRevealAllowanceContext` instead and relabels the
+ * meter "Company Reveals" — the plan limit a reveal is now spent against.
+ */
 export default function ContactRevealsMeter() {
-  const { used, total } = useRevealAllowance();
+  const { experience } = useRevealExperience();
+  const legacy = useRevealAllowance();
+  const company = useCompanyRevealAllowance();
+  const { used, total } = experience === "current" ? legacy : company;
+  const label = experience === "current" ? "Contact Reveals" : "Company Reveals";
+
   return (
     <>
       <p className="[word-break:break-word] font-['Inter',sans-serif] font-normal leading-[22px] not-italic relative shrink-0 text-[13px] text-[rgba(47,43,61,0.7)] text-center whitespace-nowrap">
-        Contact Reveals
+        {label}
       </p>
       <div className="content-stretch flex gap-[4px] items-center relative shrink-0">
         <RevealProgressRing used={used} total={total} />

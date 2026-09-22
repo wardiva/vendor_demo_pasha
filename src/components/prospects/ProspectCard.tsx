@@ -9,6 +9,7 @@ import LinkedInMark from "@/components/LinkedInMark";
 
 import visitedGlyph from "./assets/icon-visited.svg";
 import { contactId, useProspectReveal } from "@/context/ProspectRevealContext";
+import { useIsCompanyRevealExperience, CompanyRevealCard } from "@/components/reveal/company/CompanyReveal";
 import { withoutYear } from "@/data/demoDates";
 import type { Prospect, ProspectContact } from "@/data/prospects";
 
@@ -173,6 +174,11 @@ function ContactRevealSection({ company, contact }: { company: string; contact: 
 /* ─────────────────────────── the card ─────────────────────────── */
 
 export default function ProspectCard({ prospect }: { prospect: Prospect }) {
+  /* One of the seven company-based reveal concepts is active — every prospect
+     with a contact renders its group through that experience instead, so the
+     card and the modal it opens stay on the same reveal model. */
+  const companyExperience = useIsCompanyRevealExperience();
+
   return (
     <div
       className="bg-white content-stretch cursor-pointer flex items-center justify-between pl-[8px] pr-[4px] py-[4px] relative rounded-[16px] shrink-0 w-full"
@@ -222,7 +228,13 @@ export default function ProspectCard({ prospect }: { prospect: Prospect }) {
         </div>
       </div>
 
-      {prospect.contact && <ContactRevealSection company={prospect.name} contact={prospect.contact} />}
+      {prospect.contact && (
+        companyExperience ? (
+          <CompanyRevealCard companyName={prospect.name} />
+        ) : (
+          <ContactRevealSection company={prospect.name} contact={prospect.contact} />
+        )
+      )}
     </div>
   );
 }

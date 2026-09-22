@@ -56,6 +56,20 @@ import {
   type ProspectRevealState,
 } from "@/context/ProspectRevealContext";
 import {
+  CompanyRevealProvider,
+  CompanyRevealAllowanceProvider,
+  COMPANY_REVEAL_PLANS,
+  type CompanyRevealState,
+} from "@/context/CompanyRevealContext";
+import {
+  RevealExperienceProvider,
+  type RevealExperience,
+  type RevealExperienceState,
+} from "@/context/RevealExperienceContext";
+import RevealExperienceSwitcher from "@/components/reveal/RevealExperienceSwitcher";
+import { IS_LOCAL } from "@/lib/environment";
+import type { CompanyRevealPlan } from "@/context/CompanyRevealContext";
+import {
   EMPTY_FILTERS,
   aggregate,
   countActiveFilters,
@@ -155,6 +169,20 @@ export default function App() {
       ),
   );
   const [revealsUsed, setRevealsUsed] = useState(REVEAL_ALLOWANCE.used);
+
+  /* ── company-based contact reveal (the seven new experiences) ── */
+  /* A separate revealed set and counter from the legacy, per-contact ones
+     above — the "Current" experience must keep working exactly as it always
+     has, so its state is never touched by a company-level reveal, and
+     switching experiences never discloses or re-locks anything the other
+     model already decided. */
+  const [revealedCompanies, setRevealedCompanies] = useState<Set<string>>(new Set());
+  const [revealedByCompany, setRevealedByCompany] = useState<Set<string>>(new Set());
+  const [companyRevealsUsed, setCompanyRevealsUsed] = useState(6);
+  const [revealExperience, setRevealExperience] = useState<RevealExperience>("current");
+  const [revealPlan, setRevealPlan] = useState<CompanyRevealPlan>("Growth");
+  const [simulateNoReveals, setSimulateNoReveals] = useState(false);
+
   const [toast, setToast] = useState<string | null>(null);
 
   const showToast = useCallback((msg: string) => {
@@ -638,6 +666,59 @@ export default function App() {
     [revealedContacts, revealsUsed, showToast],
   );
 
+  /* ── company-based contact reveal (the seven new experiences) ── */
+  const companyRevealAllowance = useMemo(() => {
+    const total = COMPANY_REVEAL_PLANS[revealPlan];
+    /* The dev-only toggle previews the zero-balance state without having to
+       reveal every company on the page to reach it. */
+    return simulateNoReveals ? { used: total, total } : { used: companyRevealsUsed, total };
+  }, [revealPlan, simulateNoReveals, companyRevealsUsed]);
+
+  const companyReveal = useMemo<CompanyRevealState>(
+    () => ({
+      revealedContacts: revealedByCompany,
+      revealedCompanies,
+      requestReveal: companyKey => {
+        /* Already disclosed — no allowance to spend. */
+        if (revealedCompanies.has(companyKey)) return true;
+        /* Out of allowance — the same Buy More flow the legacy model uses. */
+        if (companyRevealAllowance.used >= companyRevealAllowance.total) {
+          setBuyMoreOpen(true);
+          return false;
+        }
+        return true;
+      },
+      completeReveal: (companyKey, contactIds) => {
+        if (revealedCompanies.has(companyKey)) return;
+        setRevealedCompanies(prev => new Set(prev).add(companyKey));
+        setRevealedByCompany(prev => {
+          const next = new Set(prev);
+          contactIds.forEach(id => next.add(id));
+          return next;
+        });
+        setCompanyRevealsUsed(n => n + 1);
+        showToast(
+          contactIds.length > 1
+            ? `${contactIds.length} contacts revealed — 1 company reveal used`
+            : "Contact revealed — 1 company reveal used",
+        );
+      },
+    }),
+    [revealedCompanies, revealedByCompany, companyRevealAllowance, showToast],
+  );
+
+  const revealExperienceState = useMemo<RevealExperienceState>(
+    () => ({
+      experience: revealExperience,
+      setExperience: setRevealExperience,
+      plan: revealPlan,
+      setPlan: setRevealPlan,
+      simulateNoReveals,
+      setSimulateNoReveals,
+    }),
+    [revealExperience, revealPlan, simulateNoReveals],
+  );
+
   /* Which prospect cards survive the applied filters and the toolbar search.
      One source for both the cards' visibility and the header's count, so the
      number beside "Prospects" can never disagree with the list below it. */
@@ -933,7 +1014,14 @@ export default function App() {
 
   return (
     /* Both the page and the Prospect Details modal below read reveals from
-       here, so a contact disclosed on a card is disclosed in the modal too. */
+       here, so a contact disclosed on a card is disclosed in the modal too.
+       The company-based providers sit alongside the legacy one rather than
+       replacing it: RevealExperienceProvider decides which model a surface
+       renders through, and the "Current" experience never touches — or is
+       touched by — CompanyRevealProvider's state at all. */
+    <RevealExperienceProvider value={revealExperienceState}>
+    <CompanyRevealProvider value={companyReveal}>
+    <CompanyRevealAllowanceProvider value={companyRevealAllowance}>
     <ProspectRevealProvider value={prospectReveal}>
     <div ref={containerRef} className="relative w-full min-h-screen overflow-auto bg-[#dde8e5]">
       {/* The design is authored on a 1440px canvas. Width tracks the viewport so
@@ -1039,7 +1127,16 @@ export default function App() {
           {toast}
         </div>
       )}
+
+      {/* The reveal-experience comparison switch, local hosts only — a test
+          control, not product UI. Mounted once at the app root rather than
+          per page, so the same selection follows a prospect from a Signals
+          card to a Prospects card to the modal it opens. */}
+      {IS_LOCAL && <RevealExperienceSwitcher />}
     </div>
     </ProspectRevealProvider>
+    </CompanyRevealAllowanceProvider>
+    </CompanyRevealProvider>
+    </RevealExperienceProvider>
   );
 }
