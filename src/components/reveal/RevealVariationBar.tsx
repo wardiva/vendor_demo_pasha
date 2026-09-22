@@ -83,26 +83,56 @@ export default function RevealVariationBar({
   return (
     <div
       className={`${shell} flex flex-col gap-[8px] p-[10px] w-[268px]`}
-      style={shellStyle}
+      style={{
+        ...shellStyle,
+        /* The list grew past the window as concepts were added. The panel is
+           held to whichever is smaller — a comfortable reading height, or
+           whatever the window leaves above its own 24px offset — so it can
+           never run off the top of the screen however long the list gets. */
+        maxHeight: "min(440px, calc(100vh - 48px))",
+      }}
       data-reveal-variation-bar
       role="group"
       aria-label="Contact reveal concept"
     >
-      <div className="flex items-center justify-between">
+      {/* Fixed: the list scrolls under it, not with it. */}
+      <div className="flex items-center justify-between shrink-0">
         <p className="text-[11px] font-medium text-[rgba(47,43,61,0.7)] uppercase tracking-[0.04em]">
           Contact reveal · concepts
         </p>
         <button
           type="button"
           onClick={() => setOpenPersisted(false)}
-          className="cursor-pointer text-[11px] text-[rgba(47,43,61,0.7)] hover:text-[#2f2b3d]"
-          aria-label="Collapse"
+          className="-mr-[2px] cursor-pointer flex h-[20px] items-center justify-center rounded-[6px] text-[rgba(47,43,61,0.7)] transition-colors w-[20px] hover:bg-[rgba(7,41,41,0.06)] hover:text-[#2f2b3d]"
+          aria-label="Close version history"
+          title="Close — the concept stays as it is"
         >
-          Hide
+          {/* The module has no × of its own, so it is drawn at the weight the
+              other controls here carry. */}
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden>
+            <path
+              d="M3 3L9 9M9 3L3 9"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
       </div>
 
-      <div role="tablist" aria-label="Contact reveal concept" className="flex flex-col gap-[2px]">
+      {/* The only part that scrolls. `min-h-0` is what lets a flex child be
+          shorter than its content; without it the list would size to its rows
+          and push the footer out of the panel instead of scrolling.
+
+          `filter-option-scroll` is the module's own bar — 6px, no track, no
+          buttons, the thumb in the same muted ink as the labels beside it —
+          so this reads as the filter menus do. The padding and the matching
+          negative margin keep the rows off the bar without insetting them. */}
+      <div
+        role="tablist"
+        aria-label="Contact reveal concept"
+        className="filter-option-scroll -mr-[4px] flex flex-1 flex-col gap-[2px] min-h-0 pr-[4px]"
+      >
         {REVEAL_VARIATIONS.map(o => {
           const active = o.key === variation;
           return (
@@ -112,7 +142,9 @@ export default function RevealVariationBar({
               role="tab"
               aria-selected={active}
               onClick={() => onChange(o.key)}
-              className={`cursor-pointer rounded-[7px] px-[10px] py-[5px] text-left transition-colors ${
+              /* shrink-0: the rows keep their own height in the scroller
+                 rather than being squeezed to fit it. */
+              className={`cursor-pointer rounded-[7px] px-[10px] py-[5px] shrink-0 text-left transition-colors ${
                 active
                   ? "bg-[#072929] text-white"
                   : "text-[#2f2b3d] hover:bg-[rgba(7,41,41,0.06)]"
@@ -135,7 +167,7 @@ export default function RevealVariationBar({
 
       {/* The allowance, so the exhausted state and the ordinary one are both a
           click away. Demo controls: they set the same counter a reveal spends. */}
-      <div className="flex items-center gap-[6px] border-t border-[rgba(47,43,61,0.12)] pt-[8px]">
+      <div className="flex items-center gap-[6px] border-t border-[rgba(47,43,61,0.12)] pt-[8px] shrink-0">
         <p className="flex-1 text-[11px] text-[rgba(47,43,61,0.7)]">
           {variation === "current"
             ? "Contact reveals"
