@@ -67,6 +67,12 @@ export type Prospect = {
   logo: string;
   domain: string;
   industry: string;
+  /**
+   * The company's headquarters, as Company Information states it —
+   * "Chicago, United States". Empty for a company whose profile holds no
+   * location, so the Location filter can tell "unknown" from a place.
+   */
+  location: string;
   /** The card derives its 7-pill meter from this score. */
   intentPct: number;
   date: string;
@@ -202,6 +208,9 @@ export const PROSPECTS: Prospect[] = SEEDS.map((seed, index) => {
     logo: profile?.logo ?? "",
     domain: profile?.website ?? "",
     industry: seed.industry,
+    /* The profile writes an unknown headquarters as "—" so its table row is
+       never blank; here that is no location at all. */
+    location: profile && profile.headquarters !== "—" ? profile.headquarters : "",
     intentPct: seed.intentPct,
     /* Counted back from today rather than the fixed string the seed carries,
        so every preset window the toolbar offers has prospects in it. The

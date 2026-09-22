@@ -37,6 +37,7 @@ function FilterGroup() {
     contactsCount,
     intentCount,
     industryCount,
+    locationCount,
     hasFilters,
     resetFilters,
     openFilter,
@@ -54,6 +55,7 @@ function FilterGroup() {
       <FilterChip label="Signals" count={signalsCount} legacyHook {...menu("signals")} />
       <FilterChip label="Intent Score" count={intentCount} marker={{ "data-intent-filter": "" }} {...menu("intent")} />
       <FilterChip label="Industry" count={industryCount} marker={{ "data-industry-filter": "" }} {...menu("industry")} />
+      <FilterChip label="Location" count={locationCount} marker={{ "data-location-filter": "" }} {...menu("location")} />
       <FilterChip label="Contacts" count={contactsCount} marker={{ "data-contacts-filter": "" }} {...menu("contacts")} />
       {hasFilters && (
         <button

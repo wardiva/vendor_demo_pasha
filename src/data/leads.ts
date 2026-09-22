@@ -102,6 +102,8 @@ export type LeadsFilters = {
   intent: string[];
   /** Industries, by the label the prospects data uses. */
   industries: string[];
+  /** Headquarters locations, by the label Company Information shows. */
+  locations: string[];
 };
 
 export const EMPTY_LEADS_FILTERS: LeadsFilters = {
@@ -110,6 +112,7 @@ export const EMPTY_LEADS_FILTERS: LeadsFilters = {
   contacts: [],
   intent: [],
   industries: [],
+  locations: [],
 };
 
 /**
@@ -118,6 +121,16 @@ export const EMPTY_LEADS_FILTERS: LeadsFilters = {
  * drift from it. Duplicates are collapsed and the dataset's order is kept.
  */
 export const INDUSTRY_FILTER_OPTIONS: string[] = [...new Set(PROSPECTS.map(p => p.industry))];
+
+/**
+ * The locations the Location filter offers — the same way, read off the
+ * prospects' own headquarters. A company whose profile holds no location
+ * contributes nothing: an option nothing can match is a dead end, and "—" is
+ * not a place.
+ */
+export const LOCATION_FILTER_OPTIONS: string[] = [
+  ...new Set(PROSPECTS.map(p => p.location).filter(Boolean)),
+];
 
 /**
  * The Intent Score bands, which are the ones the Intent tag already colours
@@ -141,7 +154,8 @@ export function countActiveLeadsFilters(f: LeadsFilters): number {
     (f.signals.length ? 1 : 0) +
     (f.contacts.length ? 1 : 0) +
     (f.intent.length ? 1 : 0) +
-    (f.industries.length ? 1 : 0)
+    (f.industries.length ? 1 : 0) +
+    (f.locations.length ? 1 : 0)
   );
 }
 
@@ -176,12 +190,17 @@ export function leadMatchesFilters(
   intentPct?: number,
   /** The prospect's industry. */
   industry?: string,
+  /** The prospect's headquarters, where its profile states one. */
+  location?: string,
 ): boolean {
   if (f.leads.length && !f.leads.includes(lead.type)) return false;
   /* A prospect with no identified contact cannot match a contact type, so it
      drops out as soon as this group is in play. */
   if (f.contacts.length && (!contact || !f.contacts.includes(contact))) return false;
   if (f.industries.length && (!industry || !f.industries.includes(industry))) return false;
+  /* Likewise a company with no known headquarters: it cannot be in any of
+     the places selected, so the group excludes it. */
+  if (f.locations.length && (!location || !f.locations.includes(location))) return false;
   if (f.intent.length) {
     const bands = INTENT_FILTER_OPTIONS.filter(o => f.intent.includes(o.label));
     const score = intentPct ?? -1;
@@ -207,6 +226,7 @@ export function leadVisibility(f: LeadsFilters): boolean[] {
       PROSPECTS[i]?.contact?.variant,
       PROSPECTS[i]?.intentPct,
       PROSPECTS[i]?.industry,
+      PROSPECTS[i]?.location,
     ),
   );
 }

@@ -8,6 +8,7 @@ import NotifyRecipientsModal from "@/components/NotifyRecipientsModal";
 import ContactsFilterPanel from "@/components/prospects/ContactsFilterPanel";
 import IntentFilterPanel from "@/components/prospects/IntentFilterPanel";
 import IndustryFilterPanel from "@/components/prospects/IndustryFilterPanel";
+import LocationFilterPanel from "@/components/prospects/LocationFilterPanel";
 import { sortProspects, type ProspectSortKey } from "@/data/prospectSort";
 import type { ContactVariant } from "@/components/ContactTag";
 import { RevealAllowanceProvider } from "@/components/ContactRevealsMeter";
@@ -127,6 +128,7 @@ export default function App() {
   const [contactsOpen, setContactsOpen] = useState(false);
   const [intentOpen, setIntentOpen] = useState(false);
   const [industryOpen, setIndustryOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
   /* Which Signals chip is open. */
   const [signalsChip, setSignalsChip] = useState<SignalsFilterKey | null>(null);
   /* The Sort control's order, applied to the cards and the table alike. */
@@ -201,6 +203,7 @@ export default function App() {
         if (!target.closest("[data-contacts-filter]")) setContactsOpen(false);
         if (!target.closest("[data-intent-filter]")) setIntentOpen(false);
         if (!target.closest("[data-industry-filter]")) setIndustryOpen(false);
+        if (!target.closest("[data-location-filter]")) setLocationOpen(false);
         if (!target.closest("[data-signals-filter]")) setSignalsChip(null);
       }
 
@@ -233,6 +236,7 @@ export default function App() {
             contacts: [],
             intent: [],
             industries: [],
+            locations: [],
           };
           setAppliedLeadsFilters(filters);
         }
@@ -286,7 +290,25 @@ export default function App() {
         setFilterOpen(false);
         setContactsOpen(false);
         setIntentOpen(false);
+        setLocationOpen(false);
         setIndustryOpen(prev => !prev);
+        e.stopPropagation();
+        return;
+      }
+
+      /* ── Location filter chip ── */
+      const locationField = target.closest("[data-location-filter]") as HTMLElement | null;
+      if (locationField) {
+        if (target.closest("[data-clear-filter]")) {
+          setAppliedLeadsFilters(prev => ({ ...prev, locations: [] }));
+          e.stopPropagation();
+          return;
+        }
+        setFilterOpen(false);
+        setContactsOpen(false);
+        setIntentOpen(false);
+        setIndustryOpen(false);
+        setLocationOpen(prev => !prev);
         e.stopPropagation();
         return;
       }
@@ -302,6 +324,7 @@ export default function App() {
         setFilterOpen(false);
         setContactsOpen(false);
         setIndustryOpen(false);
+        setLocationOpen(false);
         setIntentOpen(prev => !prev);
         e.stopPropagation();
         return;
@@ -320,6 +343,7 @@ export default function App() {
         setFilterOpen(false);
         setIntentOpen(false);
         setIndustryOpen(false);
+        setLocationOpen(false);
         setContactsOpen(prev => !prev);
         e.stopPropagation();
         return;
@@ -337,6 +361,7 @@ export default function App() {
         setContactsOpen(false);
         setIntentOpen(false);
         setIndustryOpen(false);
+        setLocationOpen(false);
         setFilterOpen(prev => !prev);
         e.stopPropagation();
         return;
@@ -689,9 +714,11 @@ export default function App() {
       contactsCount: appliedLeadsFilters.contacts.length,
       intentCount: appliedLeadsFilters.intent.length,
       industryCount: appliedLeadsFilters.industries.length,
+      locationCount: appliedLeadsFilters.locations.length,
       contacts: appliedLeadsFilters.contacts,
       intent: appliedLeadsFilters.intent,
       industries: appliedLeadsFilters.industries,
+      locations: appliedLeadsFilters.locations,
       hasFilters: hasActiveLeadsFilters(appliedLeadsFilters),
       clearSignals: () => {
         setAppliedLeadsFilters(prev => ({ ...prev, leads: [], signals: [] }));
@@ -699,6 +726,7 @@ export default function App() {
       clearContacts: () => setAppliedLeadsFilters(prev => ({ ...prev, contacts: [] })),
       clearIntent: () => setAppliedLeadsFilters(prev => ({ ...prev, intent: [] })),
       clearIndustry: () => setAppliedLeadsFilters(prev => ({ ...prev, industries: [] })),
+      clearLocation: () => setAppliedLeadsFilters(prev => ({ ...prev, locations: [] })),
       /* The chip that owns each menu renders it, anchored to itself. */
       openFilter: filterOpen
         ? "signals"
@@ -706,13 +734,16 @@ export default function App() {
           ? "intent"
           : industryOpen
             ? "industry"
-            : contactsOpen
-              ? "contacts"
-              : null,
+            : locationOpen
+              ? "location"
+              : contactsOpen
+                ? "contacts"
+                : null,
       closeFilter: () => {
         setFilterOpen(false);
         setIntentOpen(false);
         setIndustryOpen(false);
+        setLocationOpen(false);
         setContactsOpen(false);
       },
       renderFilterDropdown: (key: string) => {
@@ -742,6 +773,16 @@ export default function App() {
             />
           );
         }
+        if (key === "location" && locationOpen) {
+          return (
+            <LocationFilterPanel
+              applied={appliedLeadsFilters.locations}
+              onApply={(locations: string[]) =>
+                setAppliedLeadsFilters(prev => ({ ...prev, locations }))
+              }
+            />
+          );
+        }
         if (key === "contacts" && contactsOpen) {
           return (
             <ContactsFilterPanel
@@ -767,6 +808,7 @@ export default function App() {
       filterOpen,
       industryOpen,
       intentOpen,
+      locationOpen,
       prospectSearch,
       prospectSort,
       prospectView,

@@ -39,11 +39,13 @@ export type ProspectsPageState = {
   contactsCount: number;
   intentCount: number;
   industryCount: number;
+  locationCount: number;
   hasFilters: boolean;
   clearSignals: () => void;
   clearContacts: () => void;
   clearIntent: () => void;
   clearIndustry: () => void;
+  clearLocation: () => void;
   resetFilters: () => void;
   /** Applied contact types, so the panel reopens on the same selection. */
   contacts: ContactVariant[];
@@ -51,6 +53,8 @@ export type ProspectsPageState = {
   intent: string[];
   /** Applied industries. */
   industries: string[];
+  /** Applied headquarters locations. */
+  locations: string[];
   /** Which chip's menu is open, and the menu itself. */
   openFilter: string | null;
   renderFilterDropdown: (key: string) => ReactNode;
@@ -74,15 +78,18 @@ const ProspectsPageContext = createContext<ProspectsPageState>({
   contactsCount: 0,
   intentCount: 0,
   industryCount: 0,
+  locationCount: 0,
   hasFilters: false,
   clearSignals: () => {},
   clearContacts: () => {},
   clearIntent: () => {},
   clearIndustry: () => {},
+  clearLocation: () => {},
   resetFilters: () => {},
   contacts: [],
   intent: [],
   industries: [],
+  locations: [],
   openFilter: null,
   renderFilterDropdown: () => null,
   closeFilter: () => {},
