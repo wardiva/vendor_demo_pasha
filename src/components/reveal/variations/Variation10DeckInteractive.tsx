@@ -35,22 +35,26 @@ import { RevealCta, revealCountLabel, type RevealPanelProps } from "./parts";
 
 /* Variation 3's own numbers, so the sealed stack is its stack exactly. */
 const CARD_H = 59;
-const SEALED_PEEK = 7;
 const SCALE_STEP = 0.03;
 
 /**
- * How far the cards behind the front one peek out once the company is open.
+ * How far the cards behind the front one peek out — before the reveal and
+ * after it, because the deck is not allowed to change size.
  *
- * Sealed, seven pixels is plenty: the edges are there to be counted, and there
- * is nothing on the cards to read. Opened they are also the way to reach a
- * contact, and a seven-pixel strip is not something anyone can reliably press —
- * so the deck relaxes to a strip deep enough to aim at and to show the top of
- * the card underneath. It is the one measurement this concept does not take
- * from Variation 3, and it only applies after the reveal.
+ * The row is a fixed-height thing in a list of fixed-height things, and a
+ * reveal that pushed the card taller moved every prospect below it down the
+ * page. So the deck takes the same space in both states and the cards overlap
+ * inside it: the reveal lifts the frost and retires the control, and nothing
+ * on the row travels a pixel.
+ *
+ * What that costs is the size of the target on a card that is not in front —
+ * seven pixels of edge is what there is to press. The alternative was a deck
+ * that relaxed open and took the row with it, which is the thing being fixed.
  */
-const OPEN_PEEK = 20;
+const PEEK = 7;
 
-const stackHeight = (n: number, peek: number) => CARD_H + Math.max(0, n - 1) * peek;
+/** Constant for a given company: the state it is in has no say in it. */
+const stackHeight = (n: number) => CARD_H + Math.max(0, n - 1) * PEEK;
 
 /**
  * The deck, in whichever state the company is in.
@@ -80,7 +84,6 @@ function Deck({
   }, [contacts, frontName]);
 
   const open = flow.revealed;
-  const peek = open ? OPEN_PEEK : SEALED_PEEK;
   /* Sealed, the deck is in the dataset's order and the press means "reveal",
      not "choose" — there is nothing to choose between yet. */
   const frontIndex = open ? Math.max(0, contacts.findIndex(c => c.name === frontName)) : 0;
@@ -96,10 +99,8 @@ function Deck({
   };
 
   return (
-    <div
-      className="relative shrink-0 transition-[height] duration-[300ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] w-full"
-      style={{ height: stackHeight(count, peek) }}
-    >
+    /* No height transition, because the height never changes. */
+    <div className="relative shrink-0 w-full" style={{ height: stackHeight(count) }}>
       {contacts.map((contact, i) => {
         const slot = order.indexOf(i);
         const front = slot === 0;
@@ -133,7 +134,7 @@ function Deck({
             }`}
             style={{
               top: 0,
-              transform: `translateY(${slot * peek}px) scale(${1 - slot * SCALE_STEP})`,
+              transform: `translateY(${slot * PEEK}px) scale(${1 - slot * SCALE_STEP})`,
               transformOrigin: "top center",
               zIndex: count - slot,
               /* The cards behind are stepped back so the front one is plainly
