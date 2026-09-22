@@ -1,378 +1,385 @@
 import { useState, type ReactNode } from "react";
 import { INTENT_BANDS, INTENT_SIGNALS, getTriggeredSignals, type IntentSignal } from "@/data/intentSignals";
+import { getCompanyProfile } from "@/data/companies";
 import { IS_LOCAL } from "@/lib/environment";
 
 /**
  * Intent Signals — what the prospect's score is built from.
  *
- * A short section inside the Activity tab, under the sessions it is explaining.
- * It answers three questions and stops: what we watch for, which of those this
- * company has done, and what band each one evidences. It is deliberately not a
- * dashboard — the timeline above it is the detail, and this is the key to it.
+ * A short section inside the Activity tab, above the timeline it is the key
+ * to. Every arrangement below answers the same five questions and stops: how
+ * many of the six fired, which was the strongest, what all six are, what band
+ * each evidences, and which of them this company actually did.
  *
- * Six arrangements of the same six facts are implemented so they can be
- * compared in place. The switch between them is a review control and is shown
- * on local hosts only; a deployment renders whichever is chosen below and
- * nothing else.
+ * They differ in how they organise that, and the differences are real ones —
+ * banded, gridded, ranked, plotted, attributed, tabulated — rather than the
+ * same list in six colours. The switch between them is a review control shown
+ * on local hosts only; a deployment renders whichever is chosen and nothing
+ * else.
+ *
+ * Compactness is a requirement, not a nicety: a session card in the timeline
+ * below runs about 200px, and a key that is taller than the thing it explains
+ * has stopped being a key. Every one of these is shorter than that.
  */
-
-/* ── the vocabulary, shared by all six ── */
 
 const INK = "#2f2b3d";
 const MUTED = "rgba(47,43,61,0.7)";
 const FAINT = "rgba(47,43,61,0.45)";
+const HAIR = "rgba(47,43,61,0.10)";
 /** The product's own ink for something that has happened. */
 const LIVE = "#072929";
 
-/** The tick a triggered signal carries. */
-function Tick({ size = 11, color = LIVE }: { size?: number; color?: string }) {
+type View = { signal: IntentSignal; live: boolean };
+
+/* ── the pieces every arrangement is built from ── */
+
+function Tick({ size = 10, color = LIVE }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 12 12" fill="none" aria-hidden className="shrink-0 block">
-      <path d="M2.5 6.4L4.8 8.7L9.5 3.7" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2.5 6.4L4.8 8.7L9.5 3.7" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-/** A signal that has not fired: present, and plainly not ticked. */
-function Hollow({ size = 11 }: { size?: number }) {
+function Hollow({ size = 10 }: { size?: number }) {
   return (
     <span
       aria-hidden
       className="block shrink-0 rounded-[100px]"
-      style={{ width: size, height: size, border: `1px solid rgba(47,43,61,0.22)` }}
+      style={{ width: size, height: size, border: `1px solid rgba(47,43,61,0.20)` }}
     />
   );
 }
 
-/** The module's framed card, which every panel in this modal sits on. */
+/** The module's framed card, tightened — this panel is a key, not a card. */
 function Panel({ children }: { children: ReactNode }) {
   return (
     <div className="bg-[rgba(244,242,240,0.6)] content-stretch flex items-start p-[2px] relative rounded-[12px] shrink-0 w-full">
-      <div className="bg-white content-stretch flex flex-[1_0_0] flex-col items-start min-w-px px-[12px] py-[10px] relative rounded-[10px]">
+      <div className="bg-white content-stretch flex flex-[1_0_0] flex-col items-start min-w-px px-[10px] py-[8px] relative rounded-[10px]">
         {children}
       </div>
     </div>
   );
 }
 
-/** The band pill, at the weight a secondary fact takes here. */
-function Range({ signal, live }: { signal: IntentSignal; live: boolean }) {
+/**
+ * The sentence, above every arrangement.
+ *
+ * The count says how much evidence there is and the strongest band says what
+ * the best of it is worth — which together are the whole answer for a vendor
+ * who is triaging rather than studying. Everything under it is the working.
+ */
+function Summary({ views }: { views: View[] }) {
+  const live = views.filter(v => v.live);
+  const strongest = live.reduce<IntentSignal | null>((best, v) => (!best || v.signal.min > best.min ? v.signal : best), null);
+  return (
+    <p className="font-['Inter',sans-serif] leading-[18px] shrink-0 text-[12px] w-full" style={{ color: MUTED }}>
+      <span style={{ color: INK, fontWeight: 500 }}>{`${live.length} of ${views.length}`}</span>
+      {" signals triggered"}
+      {strongest && (
+        <>
+          {" · strongest: "}
+          <span style={{ color: LIVE, fontWeight: 500 }}>{strongest.range}</span>
+        </>
+      )}
+    </p>
+  );
+}
+
+/** A signal's name at the weight its state gives it. */
+function Name({ view, size = 11.5, wrap = false }: { view: View; size?: number; wrap?: boolean }) {
   return (
     <span
-      className="font-['Inter',sans-serif] font-normal leading-[16px] shrink-0 text-[11px] whitespace-nowrap"
-      style={{ color: live ? MUTED : FAINT }}
+      className={`font-['Inter',sans-serif] leading-[17px] ${wrap ? "" : "overflow-hidden text-ellipsis whitespace-nowrap"}`}
+      style={{ fontSize: size, color: view.live ? INK : FAINT, fontWeight: view.live ? 500 : 400 }}
     >
-      {signal.range}
+      {view.signal.label}
     </span>
   );
 }
 
-type View = { signal: IntentSignal; live: boolean };
-
-/* ── 1 · Signal rows ────────────────────────────────────────────────
-   The recommended one. Six rows in the order the product lists them, each
-   the signal, its band and whether it fired. Nothing is grouped, sorted or
-   re-ranked, so the list reads the same for every prospect and the only thing
-   that changes between two companies is which rows are lit — which is exactly
-   the comparison a vendor is making. */
-function SignalRows({ views }: { views: View[] }) {
+function RangeText({ view, size = 10.5 }: { view: View; size?: number }) {
   return (
-    <Panel>
-      {views.map((v, i) => (
-        <div
-          key={v.signal.label}
-          className={`content-stretch flex gap-[8px] items-center relative shrink-0 w-full ${i ? "pt-[7px]" : ""} ${
-            i < views.length - 1 ? "pb-[7px]" : ""
-          }`}
-          style={i < views.length - 1 ? { boxShadow: "inset 0 -1px 0 0 #f4f2f0" } : undefined}
-          data-no-row-hover
-        >
-          {v.live ? <Tick /> : <Hollow />}
-          <p
-            className="font-['Inter',sans-serif] leading-[18px] min-w-px overflow-hidden relative shrink text-[12px] text-ellipsis whitespace-nowrap"
-            style={{ color: v.live ? INK : FAINT, fontWeight: v.live ? 500 : 400 }}
-          >
-            {v.signal.label}
-          </p>
-          <span className="ml-auto shrink-0">
-            <Range signal={v.signal} live={v.live} />
-          </span>
-        </div>
-      ))}
-    </Panel>
+    <span
+      className="font-['Inter',sans-serif] font-normal leading-[16px] shrink-0 whitespace-nowrap"
+      style={{ fontSize: size, color: view.live ? MUTED : FAINT }}
+    >
+      {view.signal.range}
+    </span>
   );
 }
 
-/* ── 2 · Grouped by status ──────────────────────────────────────────
-   The same facts sorted by the answer the vendor came for. "Which of these did
-   they do?" is answered by a count and a short list rather than by reading six
-   rows and keeping score. What it gives up is the fixed order — the list is a
-   different shape for every prospect, so it cannot be scanned by position. */
-function Grouped({ views }: { views: View[] }) {
-  const groups = [
-    { label: "Triggered", items: views.filter(v => v.live), live: true },
-    { label: "Not seen", items: views.filter(v => !v.live), live: false },
-  ].filter(g => g.items.length);
-
+/* ── 1 · Banded rows ────────────────────────────────────────────────
+   The combination. The sentence at the top, then the six organised by the
+   band they evidence — one row per band rather than one per signal, which is
+   what takes the list from six rows to three without dropping anything. The
+   band is stated once at the left and its signals run along it, so the
+   relationship the section exists to explain is the row itself. */
+function BandedRows({ views }: { views: View[] }) {
   return (
     <Panel>
-      {groups.map((g, i) => (
-        <div key={g.label} className={`content-stretch flex flex-col gap-[6px] items-start w-full ${i ? "mt-[10px]" : ""}`}>
-          <p
-            className="font-['Inter',sans-serif] font-medium leading-[16px] text-[10px] tracking-[0.04em] uppercase"
-            style={{ color: g.live ? LIVE : FAINT }}
-          >
-            {g.label} · {g.items.length}
-          </p>
-          <div className="flex flex-wrap gap-[6px] w-full">
-            {g.items.map(v => (
-              <span
-                key={v.signal.label}
-                className="content-stretch flex gap-[6px] items-center px-[8px] py-[3px] rounded-[6px] shrink-0"
-                style={{
-                  background: g.live ? "rgba(7,41,41,0.08)" : "rgba(47,43,61,0.04)",
-                }}
-              >
-                <span
-                  className="font-['Inter',sans-serif] leading-[16px] text-[11px] whitespace-nowrap"
-                  style={{ color: g.live ? INK : FAINT, fontWeight: g.live ? 500 : 400 }}
-                >
-                  {v.signal.label}
-                </span>
-                <Range signal={v.signal} live={g.live} />
-              </span>
-            ))}
-          </div>
-        </div>
-      ))}
-    </Panel>
-  );
-}
-
-/* ── 3 · Score ladder ───────────────────────────────────────────────
-   Organised by what the evidence is worth rather than by what it was. The
-   bands are the rows, strongest at the top, and the signals sit inside the
-   band they belong to. It answers a question the other two do not: how high
-   does this prospect's behaviour reach, and what would have to happen for it
-   to reach higher. */
-function Ladder({ views }: { views: View[] }) {
-  return (
-    <Panel>
-      {INTENT_BANDS.map((band, i) => {
-        const items = views.filter(v => v.signal.range === band.range);
-        if (!items.length) return null;
-        const anyLive = items.some(v => v.live);
-        return (
-          <div
-            key={band.range}
-            className={`content-stretch flex gap-[10px] items-start relative shrink-0 w-full ${i ? "pt-[8px]" : ""} ${
-              i < INTENT_BANDS.length - 1 ? "pb-[8px]" : ""
-            }`}
-            style={i < INTENT_BANDS.length - 1 ? { boxShadow: "inset 0 -1px 0 0 #f4f2f0" } : undefined}
-          >
-            <span
-              className="font-['Inter',sans-serif] font-medium leading-[18px] shrink-0 text-[11px] w-[48px] whitespace-nowrap"
-              style={{ color: anyLive ? LIVE : FAINT }}
+      <Summary views={views} />
+      <div className="flex flex-col w-full" style={{ marginTop: 6 }}>
+        {INTENT_BANDS.map((band, i) => {
+          const items = views.filter(v => v.signal.range === band.range);
+          if (!items.length) return null;
+          const anyLive = items.some(v => v.live);
+          return (
+            <div
+              key={band.range}
+              className="content-stretch flex gap-[10px] items-start relative shrink-0 w-full"
+              style={{
+                paddingTop: i ? 6 : 0,
+                paddingBottom: i < INTENT_BANDS.length - 1 ? 6 : 0,
+                boxShadow: i < INTENT_BANDS.length - 1 ? `inset 0 -1px 0 0 ${HAIR}` : undefined,
+              }}
             >
-              {band.range}
+              <span
+                className="font-['Inter',sans-serif] font-medium leading-[17px] shrink-0 text-[11px] w-[44px] whitespace-nowrap"
+                style={{ color: anyLive ? LIVE : FAINT }}
+              >
+                {band.range}
+              </span>
+              <div className="flex flex-wrap gap-x-[12px] gap-y-[2px] min-w-px">
+                {items.map(v => (
+                  <span key={v.signal.label} className="content-stretch flex gap-[5px] items-center shrink-0">
+                    {v.live ? <Tick /> : <Hollow />}
+                    <Name view={v} />
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 2 · Two columns ────────────────────────────────────────────────
+   The six kept in their own fixed order — so a reader learns where each one
+   lives and finds it by position on every prospect — but set in two columns
+   so the list costs three lines instead of six. Density without grouping:
+   nothing is re-ordered, so two companies can be compared row for row. */
+function TwoColumns({ views }: { views: View[] }) {
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div
+        className="grid w-full"
+        style={{ marginTop: 6, gridTemplateColumns: "1fr 1fr", columnGap: 14, rowGap: 4 }}
+      >
+        {views.map(v => (
+          <span key={v.signal.label} className="content-stretch flex gap-[5px] items-center min-w-px">
+            {v.live ? <Tick /> : <Hollow />}
+            <span className="min-w-px overflow-hidden">
+              <Name view={v} />
             </span>
-            <div className="flex flex-col gap-[4px] min-w-px">
+            <span className="ml-auto">
+              <RangeText view={v} />
+            </span>
+          </span>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 3 · Band strength ──────────────────────────────────────────────
+   Leads with how far up the scale the evidence reaches. Three segments, one
+   per band, each filled by the share of its own signals that fired — so the
+   shape of the bar is the prospect's profile at a glance, and a company that
+   has only browsed looks different from one that has priced you before either
+   name is read. The six are named underneath, so nothing is hidden in the
+   picture. */
+function BandStrength({ views }: { views: View[] }) {
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div className="flex gap-[4px] w-full" style={{ marginTop: 7 }}>
+        {INTENT_BANDS.slice().reverse().map(band => {
+          const items = views.filter(v => v.signal.range === band.range);
+          const live = items.filter(v => v.live).length;
+          const share = items.length ? live / items.length : 0;
+          return (
+            <div key={band.range} className="flex flex-col gap-[3px]" style={{ flex: items.length || 1 }}>
+              <span className="relative block rounded-[100px] w-full" style={{ height: 4, background: "rgba(47,43,61,0.08)" }}>
+                <span
+                  className="absolute left-0 top-0 rounded-[100px]"
+                  style={{ height: 4, width: `${share * 100}%`, background: LIVE }}
+                />
+              </span>
+              <span
+                className="font-['Inter',sans-serif] leading-[15px] text-[10px] whitespace-nowrap"
+                style={{ color: live ? LIVE : FAINT, fontWeight: live ? 500 : 400 }}
+              >
+                {band.range} · {live}/{items.length}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex flex-wrap gap-x-[12px] gap-y-[2px] w-full" style={{ marginTop: 6 }}>
+        {views.map(v => (
+          <span key={v.signal.label} className="content-stretch flex gap-[5px] items-center shrink-0">
+            {v.live ? <Tick size={9} /> : <Hollow size={9} />}
+            <Name view={v} size={11} />
+          </span>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 4 · Strongest first ────────────────────────────────────────────
+   Ranked rather than grouped: what fired, strongest band at the top, then
+   what did not, under a rule. The first line of the list is always this
+   prospect's best evidence, so the section can be read by its top edge alone
+   — which is how a list gets read when there are nineteen prospects behind
+   this modal. What it gives up is the fixed order the other two keep. */
+function StrongestFirst({ views }: { views: View[] }) {
+  const rank = (v: View) => (v.live ? 0 : 1) * 1000 - v.signal.min;
+  const sorted = [...views].sort((a, b) => rank(a) - rank(b));
+  const firstDead = sorted.findIndex(v => !v.live);
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div className="flex flex-col w-full" style={{ marginTop: 5 }}>
+        {sorted.map((v, i) => (
+          <span
+            key={v.signal.label}
+            className="content-stretch flex gap-[6px] items-center shrink-0 w-full"
+            style={{
+              paddingTop: i === firstDead && i !== 0 ? 4 : 0,
+              paddingBottom: 0,
+              boxShadow: i === firstDead - 1 && firstDead > 0 ? `inset 0 -1px 0 0 ${HAIR}` : undefined,
+            }}
+          >
+            {v.live ? <Tick /> : <Hollow />}
+            <span className="min-w-px overflow-hidden">
+              <Name view={v} />
+            </span>
+            <span className="ml-auto">
+              <RangeText view={v} />
+            </span>
+          </span>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 5 · Against the score ──────────────────────────────────────────
+   The only one that puts the prospect's actual score on screen and shows the
+   bands under it, with their signals. It answers the question the others
+   leave implicit: this company scores 65 — which of these behaviours put them
+   there, and which band are they short of. The score is the one the modal's
+   header is already showing, so the two cannot disagree. */
+function AgainstTheScore({ views, company }: { views: View[]; company: string }) {
+  const score = getCompanyProfile(company)?.intentPct ?? 0;
+  const at = (n: number) => `${Math.max(0, Math.min(100, ((n - 30) / 70) * 100))}%`;
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div className="relative w-full" style={{ marginTop: 8, height: 16 }}>
+        <span className="absolute rounded-[100px]" style={{ left: 0, right: 0, top: 6, height: 4, background: "rgba(47,43,61,0.08)" }} />
+        {INTENT_BANDS.map(band => {
+          const items = views.filter(v => v.signal.range === band.range);
+          const live = items.filter(v => v.live).length;
+          if (!live) return null;
+          return (
+            <span
+              key={band.range}
+              className="absolute rounded-[100px]"
+              style={{ left: at(band.min), width: `calc(${at(band.max)} - ${at(band.min)})`, top: 6, height: 4, background: "rgba(7,41,41,0.35)" }}
+            />
+          );
+        })}
+        {/* Where this prospect actually sits. */}
+        <span className="absolute rounded-[100px]" style={{ left: at(score), marginLeft: -5, top: 2, width: 10, height: 10, background: LIVE, boxShadow: "0 0 0 2px #ffffff" }} />
+        <span
+          className="absolute font-['Inter',sans-serif] font-medium leading-[14px] text-[10px] whitespace-nowrap"
+          style={{ left: at(score), marginLeft: -5, top: 14, color: LIVE, transform: "translateX(-40%)" }}
+        >
+          {score}%
+        </span>
+      </div>
+      <div className="flex flex-col w-full" style={{ marginTop: 14 }}>
+        {INTENT_BANDS.map(band => {
+          const items = views.filter(v => v.signal.range === band.range);
+          if (!items.length) return null;
+          return (
+            <span key={band.range} className="content-stretch flex gap-[8px] items-start shrink-0 w-full" style={{ paddingTop: 2 }}>
+              <span
+                className="font-['Inter',sans-serif] font-medium leading-[17px] shrink-0 text-[10.5px] w-[42px]"
+                style={{ color: items.some(v => v.live) ? LIVE : FAINT }}
+              >
+                {band.range}
+              </span>
+              <span className="flex flex-wrap gap-x-[10px] min-w-px">
+                {items.map(v => (
+                  <span key={v.signal.label} className="content-stretch flex gap-[4px] items-center shrink-0">
+                    {v.live ? <Tick size={9} /> : <Hollow size={9} />}
+                    <Name view={v} size={11} />
+                  </span>
+                ))}
+              </span>
+            </span>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 6 · Band columns ───────────────────────────────────────────────
+   The banded arrangement turned on its side: the bands are columns, their
+   signals stacked inside. It is the shortest of the six — the section is only
+   as tall as the busiest band — and it reads as a small matrix, which suits
+   someone comparing prospects rather than studying one. The cost is that the
+   columns are uneven, so the eye has no single line to run along. */
+function BandColumns({ views }: { views: View[] }) {
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div className="flex gap-[10px] w-full" style={{ marginTop: 7 }}>
+        {INTENT_BANDS.slice().reverse().map(band => {
+          const items = views.filter(v => v.signal.range === band.range);
+          if (!items.length) return null;
+          const anyLive = items.some(v => v.live);
+          return (
+            <div key={band.range} className="flex flex-col gap-[3px] min-w-px" style={{ flex: 1 }}>
+              <span
+                className="font-['Inter',sans-serif] font-medium leading-[15px] text-[10px] whitespace-nowrap"
+                style={{ color: anyLive ? LIVE : FAINT, borderBottom: `1px solid ${HAIR}`, paddingBottom: 3 }}
+              >
+                {band.range}
+              </span>
               {items.map(v => (
-                <span key={v.signal.label} className="content-stretch flex gap-[6px] items-center">
-                  {v.live ? <Tick size={10} /> : <Hollow size={10} />}
-                  <span
-                    className="font-['Inter',sans-serif] leading-[18px] text-[12px] whitespace-nowrap"
-                    style={{ color: v.live ? INK : FAINT, fontWeight: v.live ? 500 : 400 }}
-                  >
-                    {v.signal.label}
+                <span key={v.signal.label} className="content-stretch flex gap-[4px] items-start min-w-px">
+                  <span style={{ marginTop: 3 }}>{v.live ? <Tick size={9} /> : <Hollow size={9} />}</span>
+                  <span className="min-w-px">
+                    <Name view={v} size={10.5} wrap />
                   </span>
                 </span>
               ))}
             </div>
-          </div>
-        );
-      })}
-    </Panel>
-  );
-}
-
-/* ── 4 · On the scale ───────────────────────────────────────────────
-   The six placed along the 30-to-100 axis the score itself runs on, so the
-   relationship the section exists to explain is the layout rather than
-   something stated in a column. A vendor sees where this prospect's evidence
-   sits without reading a single range. The cost is precision: a marker's
-   position is its band, not a value. */
-function OnTheScale({ views }: { views: View[] }) {
-  const at = (n: number) => `${((n - 30) / 70) * 100}%`;
-  return (
-    <Panel>
-      <div className="relative w-full" style={{ height: 8 }}>
-        <span className="absolute bg-[rgba(47,43,61,0.08)] rounded-[100px]" style={{ left: 0, right: 0, top: 3, height: 2 }} />
-        {views.map(v => {
-          const mid = (v.signal.min + v.signal.max) / 2;
-          return (
-            <span
-              key={v.signal.label}
-              className="absolute block rounded-[100px]"
-              title={`${v.signal.label} · ${v.signal.range}`}
-              style={{
-                left: at(mid),
-                top: 0,
-                width: 8,
-                height: 8,
-                marginLeft: -4,
-                background: v.live ? LIVE : "#ffffff",
-                border: v.live ? "none" : "1px solid rgba(47,43,61,0.22)",
-              }}
-            />
           );
         })}
       </div>
-      <div className="flex justify-between w-full" style={{ marginTop: 2 }}>
-        {INTENT_BANDS.slice().reverse().map(b => (
-          <span key={b.range} className="font-['Inter',sans-serif] leading-[16px] text-[10px]" style={{ color: FAINT }}>
-            {b.range}
-          </span>
-        ))}
-      </div>
-      <div className="flex flex-col gap-[3px] w-full" style={{ marginTop: 8 }}>
-        {views.map(v => (
-          <span key={v.signal.label} className="content-stretch flex gap-[6px] items-center">
-            <span
-              className="block rounded-[100px] shrink-0"
-              style={{
-                width: 6,
-                height: 6,
-                background: v.live ? LIVE : "#ffffff",
-                border: v.live ? "none" : "1px solid rgba(47,43,61,0.22)",
-              }}
-            />
-            <span
-              className="font-['Inter',sans-serif] leading-[17px] text-[11px] whitespace-nowrap"
-              style={{ color: v.live ? INK : FAINT, fontWeight: v.live ? 500 : 400 }}
-            >
-              {v.signal.label}
-            </span>
-            <span className="ml-auto">
-              <Range signal={v.signal} live={v.live} />
-            </span>
-          </span>
-        ))}
-      </div>
-    </Panel>
-  );
-}
-
-/* ── 5 · Evidence count ─────────────────────────────────────────────
-   Leads with the summary and lets the six be the supporting detail: how many
-   of the signals fired, and of those, how strong the strongest was. A vendor
-   triaging a list wants that sentence, not six rows; the rows are there for
-   the one prospect in ten they stop on. */
-function EvidenceCount({ views }: { views: View[] }) {
-  const live = views.filter(v => v.live);
-  const strongest = live.reduce<IntentSignal | null>(
-    (best, v) => (!best || v.signal.min > best.min ? v.signal : best),
-    null,
-  );
-  return (
-    <Panel>
-      <div className="content-stretch flex items-baseline gap-[6px] w-full">
-        <span className="font-['Inter',sans-serif] font-medium leading-[26px] text-[20px]" style={{ color: INK }}>
-          {live.length}
-          <span style={{ color: FAINT }}>{` / ${views.length}`}</span>
-        </span>
-        <span className="font-['Inter',sans-serif] leading-[18px] text-[12px]" style={{ color: MUTED }}>
-          signals triggered
-          {strongest ? `, strongest ${strongest.range}` : ""}
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-[4px] w-full" style={{ marginTop: 8 }}>
-        {views.map(v => (
-          <span
-            key={v.signal.label}
-            title={`${v.signal.label} · ${v.signal.range}`}
-            className="content-stretch flex gap-[5px] items-center px-[7px] py-[3px] rounded-[100px] shrink-0"
-            style={{
-              background: v.live ? "rgba(7,41,41,0.08)" : "transparent",
-              border: v.live ? "none" : "1px solid rgba(47,43,61,0.10)",
-            }}
-          >
-            <span
-              className="font-['Inter',sans-serif] leading-[16px] text-[11px] whitespace-nowrap"
-              style={{ color: v.live ? INK : FAINT, fontWeight: v.live ? 500 : 400 }}
-            >
-              {v.signal.label}
-            </span>
-            <Range signal={v.signal} live={v.live} />
-          </span>
-        ))}
-      </div>
-    </Panel>
-  );
-}
-
-/* ── 6 · Pick a signal ──────────────────────────────────────────────
-   The most compact at rest: six names, and one line that answers for whichever
-   is selected. It suits a panel where the section is a reference rather than
-   the reason the modal was opened — and it is the only one here that asks for
-   a click before it says anything, which is the thing to judge it on. */
-function PickASignal({ views }: { views: View[] }) {
-  const [picked, setPicked] = useState(views.find(v => v.live)?.signal.label ?? views[0]?.signal.label ?? "");
-  const current = views.find(v => v.signal.label === picked) ?? views[0];
-  return (
-    <Panel>
-      <div className="flex flex-wrap gap-[4px] w-full">
-        {views.map(v => {
-          const on = v.signal.label === picked;
-          return (
-            <button
-              key={v.signal.label}
-              type="button"
-              aria-pressed={on}
-              onClick={e => {
-                e.stopPropagation();
-                setPicked(v.signal.label);
-              }}
-              className="cursor-pointer px-[8px] py-[3px] rounded-[6px] shrink-0 transition-colors"
-              style={{
-                background: on ? "rgba(7,41,41,0.12)" : "transparent",
-                border: `1px solid ${on ? "transparent" : "rgba(47,43,61,0.10)"}`,
-              }}
-            >
-              <span
-                className="font-['Inter',sans-serif] leading-[16px] text-[11px] whitespace-nowrap"
-                style={{ color: v.live ? INK : FAINT, fontWeight: v.live ? 500 : 400 }}
-              >
-                {v.signal.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      {current && (
-        <div className="content-stretch flex gap-[6px] items-center w-full" style={{ marginTop: 8 }}>
-          {current.live ? <Tick size={10} /> : <Hollow size={10} />}
-          <span className="font-['Inter',sans-serif] leading-[18px] text-[12px]" style={{ color: MUTED }}>
-            {current.live ? "Triggered by this prospect" : "Not seen from this prospect"}
-            {" · "}
-            <span style={{ color: INK, fontWeight: 500 }}>{current.signal.range}</span>
-            {" intent"}
-          </span>
-        </div>
-      )}
     </Panel>
   );
 }
 
 /* ── the section ───────────────────────────────────────────────────── */
 
-const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[]) => ReactNode }> = [
-  { label: "1 · Signal rows", render: v => <SignalRows views={v} /> },
-  { label: "2 · Grouped", render: v => <Grouped views={v} /> },
-  { label: "3 · Score ladder", render: v => <Ladder views={v} /> },
-  { label: "4 · On the scale", render: v => <OnTheScale views={v} /> },
-  { label: "5 · Evidence count", render: v => <EvidenceCount views={v} /> },
-  { label: "6 · Pick a signal", render: v => <PickASignal views={v} /> },
+const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: string) => ReactNode }> = [
+  { label: "1 · Banded rows", render: v => <BandedRows views={v} /> },
+  { label: "2 · Two columns", render: v => <TwoColumns views={v} /> },
+  { label: "3 · Band strength", render: v => <BandStrength views={v} /> },
+  { label: "4 · Strongest first", render: v => <StrongestFirst views={v} /> },
+  { label: "5 · Against the score", render: (v, c) => <AgainstTheScore views={v} company={c} /> },
+  { label: "6 · Band columns", render: v => <BandColumns views={v} /> },
 ];
 
 export default function IntentSignals({ company }: { company: string }) {
@@ -381,12 +388,12 @@ export default function IntentSignals({ company }: { company: string }) {
   const views: View[] = INTENT_SIGNALS.map(signal => ({ signal, live: triggered.has(signal.label) }));
 
   return (
-    <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full" data-name="Intent Signals">
-      <div className="content-stretch flex gap-[8px] items-center relative shrink-0 w-full">
-        <p className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[13px]" style={{ color: INK }}>
+    <div className="content-stretch flex flex-col gap-[6px] items-start relative shrink-0 w-full" data-name="Intent Signals">
+      <div className="content-stretch flex gap-[8px] items-baseline relative shrink-0 w-full">
+        <p className="font-['Inter',sans-serif] font-medium leading-[18px] shrink-0 text-[13px]" style={{ color: INK }}>
           Intent Signals
         </p>
-        <p className="font-['Inter',sans-serif] font-normal leading-[20px] shrink-0 text-[12px]" style={{ color: MUTED }}>
+        <p className="font-['Inter',sans-serif] font-normal leading-[18px] shrink-0 text-[11.5px]" style={{ color: MUTED }}>
           what this score is built from
         </p>
       </div>
@@ -404,8 +411,8 @@ export default function IntentSignals({ company }: { company: string }) {
               }}
               className="cursor-pointer px-[7px] py-[2px] rounded-[5px] shrink-0 transition-colors"
               style={{
-                background: i === concept ? "#072929" : "transparent",
-                border: `1px solid ${i === concept ? "#072929" : "rgba(47,43,61,0.14)"}`,
+                background: i === concept ? LIVE : "transparent",
+                border: `1px solid ${i === concept ? LIVE : "rgba(47,43,61,0.14)"}`,
               }}
             >
               <span
@@ -419,7 +426,7 @@ export default function IntentSignals({ company }: { company: string }) {
         </div>
       )}
 
-      {CONCEPTS[concept].render(views)}
+      {CONCEPTS[concept].render(views, company)}
     </div>
   );
 }
