@@ -52,11 +52,17 @@ function Hollow({ size = 10 }: { size?: number }) {
   );
 }
 
-/** The module's framed card, tightened — this panel is a key, not a card. */
+/**
+ * The module's framed card: a 2px tint ring at radius 12 over a white face at
+ * radius 10, with the uniform 12px pad every other card in the Activity tab
+ * uses. It was tighter here on the argument that a key is not a card — but it
+ * sits between the summary cards and the session cards, and text starting 2px
+ * in from theirs is the kind of difference you see without being able to name.
+ */
 function Panel({ children }: { children: ReactNode }) {
   return (
     <div className="bg-[rgba(244,242,240,0.6)] content-stretch flex items-start p-[2px] relative rounded-[12px] shrink-0 w-full">
-      <div className="bg-white content-stretch flex flex-[1_0_0] flex-col items-start min-w-px px-[10px] py-[8px] relative rounded-[10px]">
+      <div className="bg-white content-stretch flex flex-[1_0_0] flex-col items-start min-w-px p-[12px] relative rounded-[10px]">
         {children}
       </div>
     </div>
