@@ -14,6 +14,9 @@ import linkedinGlyph from "./assets/contact-linkedin.svg";
 import ContactTag, { type ContactVariant } from "@/components/ContactTag";
 import CopyableValue from "@/components/CopyableValue";
 import { contactId, useProspectReveal } from "@/context/ProspectRevealContext";
+import { useIsLegacyReveal } from "@/context/RevealVariationContext";
+import CompanyContactsReveal from "@/components/reveal/variations";
+import { getCompanyContacts } from "@/data/prospects";
 import ContactPreviewCard from "@/components/contacts/ContactPreviewCard";
 import RevealContactButton from "@/components/reveal/RevealContactButton";
 import { REVEAL_DELAY, showButtonLoader } from "@/components/reveal/revealMechanics";
@@ -314,9 +317,17 @@ function ContactSection({
 }
 
 /**
- * The Contacts tab: verified contacts first, then the AI recommended ones.
- * A hairline rule separates the two without breaking the panel into cards of
- * its own, and each contact still reveals on its own.
+ * The Contacts tab.
+ *
+ * Reveals are company-level, so the tab's job is to set out everyone the
+ * company holds — up to three — and offer the one action that opens all of
+ * them. Which arrangement it uses is the selected concept's; the contacts
+ * themselves come from the prospect record, so the count the card promised is
+ * the count this opens.
+ *
+ * The pre-change implementation is still reachable: it split the same people
+ * into a Verified section and an AI Recommended one, each contact revealing —
+ * and charging — on its own.
  */
 /** The tab surfaces a single verified contact, however many the company has. */
 const VERIFIED_CONTACT_LIMIT = 1;
@@ -330,6 +341,14 @@ export function ContactsPanel({
   verified: ContactEntry[];
   recommended: ContactEntry[];
 }) {
+  const legacy = useIsLegacyReveal();
+  const contacts = getCompanyContacts(company);
+
+  if (!legacy) {
+    if (!contacts.length) return <PanelEmptyState label="contacts" />;
+    return <CompanyContactsReveal company={company} contacts={contacts} layout="modal" />;
+  }
+
   return (
     /* 266:966 — 20px between the disclosed contacts and the recommended group
        below them, which is what sets that group apart from the cards above it

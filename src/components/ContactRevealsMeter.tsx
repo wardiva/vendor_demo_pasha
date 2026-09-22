@@ -1,5 +1,7 @@
 import { createContext, useContext } from "react";
 import { REVEAL_ALLOWANCE } from "@/data/contactLeads";
+import { CURRENT_PLAN, PLAN_NAMES } from "@/data/revealPlans";
+import { useIsLegacyReveal } from "@/context/RevealVariationContext";
 
 /**
  * Contact Reveals usage indicator in the page header — Figma node 37:3914.
@@ -66,7 +68,7 @@ export function RevealProgressRing({ used, total }: RevealAllowance) {
         viewBox={`${-PAD} ${-PAD} ${BOX} ${BOX}`}
         fill="none"
         role="img"
-        aria-label={`${used} of ${total} contact reveals used`}
+        aria-label={`${used} of ${total} reveals used`}
       >
         <circle cx={OUTER} cy={OUTER} r={RADIUS} stroke={TRACK} strokeWidth={BAND} />
         {pct > 0 && (
@@ -89,12 +91,34 @@ export function RevealProgressRing({ used, total }: RevealAllowance) {
   );
 }
 
+/**
+ * The allowance in the page header.
+ *
+ * It counts what the plan sells. Reveals are bought per company now — opening
+ * one company discloses every contact it holds, up to three, for a single
+ * reveal — so the meter counts companies and says so. The label is the one
+ * place a vendor can read the unit without pressing anything, which is why it
+ * is the unit's name rather than the older "Contact Reveals".
+ *
+ * The pre-change implementation is still selectable for comparison, and it
+ * counts contacts; when it is on screen this says that instead, so the meter
+ * never describes the model the page is not running.
+ */
 export default function ContactRevealsMeter() {
   const { used, total } = useRevealAllowance();
+  const legacy = useIsLegacyReveal();
+  const label = legacy ? "Contact Reveals" : "Company Reveals";
   return (
     <>
-      <p className="[word-break:break-word] font-['Inter',sans-serif] font-normal leading-[22px] not-italic relative shrink-0 text-[13px] text-[rgba(47,43,61,0.7)] text-center whitespace-nowrap">
-        Contact Reveals
+      <p
+        className="[word-break:break-word] font-['Inter',sans-serif] font-normal leading-[22px] not-italic relative shrink-0 text-[13px] text-[rgba(47,43,61,0.7)] text-center whitespace-nowrap"
+        title={
+          legacy
+            ? `${total} contact reveals on your plan`
+            : `${PLAN_NAMES[CURRENT_PLAN]} plan — ${total} company reveals. Revealing a company's contacts uses 1, however many it has.`
+        }
+      >
+        {label}
       </p>
       <div className="content-stretch flex gap-[4px] items-center relative shrink-0">
         <RevealProgressRing used={used} total={total} />

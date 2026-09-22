@@ -1,6 +1,7 @@
 import { getCompanyProfile } from "@/data/companies";
 import { deriveEmail, derivePhone } from "@/data/contactIdentity";
 import { PROSPECT_DAY_OFFSETS, daysAgo, formatVisited } from "@/data/demoDates";
+import { MAX_CONTACTS_PER_COMPANY } from "@/data/revealPlans";
 import type { ContactVariant } from "@/components/ContactTag";
 import avatarElena from "@/data/assets/avatar-elena.png";
 import avatarJames from "@/data/assets/avatar-james.png";
@@ -76,8 +77,20 @@ export type Prospect = {
   /** The card derives its 7-pill meter from this score. */
   intentPct: number;
   date: string;
-  /** null when the prospect has neither a verified nor a recommended contact. */
+  /**
+   * The contact the card previews — the first of `contacts`, and null when the
+   * company has none. Kept alongside the list so the surfaces that preview a
+   * single person (the table's CONTACT DETAILS column) still have one to name.
+   */
   contact: ProspectContact | null;
+  /**
+   * Every contact identified at the company, up to the three it can hold.
+   *
+   * Reveals are company-level: these are disclosed together, for one reveal,
+   * however many of them there are. The list is the same one the Prospect
+   * Details modal lists, so what a card promises is what the modal opens.
+   */
+  contacts: ProspectContact[];
 };
 
 /**
@@ -96,22 +109,43 @@ type ProspectSeed = {
   intentPct: number;
   date: string;
   contact: SeedContact | null;
+  /**
+   * The rest of the company's contacts, after the one the card previews.
+   *
+   * A company holds three at most, so a seed states none, one or two here. They
+   * are disclosed with the contact above them rather than separately: the
+   * reveal is the company's, and this is the rest of what it buys.
+   */
+  alsoAt?: SeedContact[];
 };
 
 const SEEDS: ProspectSeed[] = [
   {
     company: "Meridian Supply Co.", industry: "Manufacturing", intentPct: 80, date: "Jul 18, 2026",
     contact: { avatar: avatarElena, name: "Elena Vasquez", jobTitle: "VP of Procurement", phone: "+1 312-555-4091", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarDaniel, name: "Owen Brady", jobTitle: "Director of Operations", variant: "recommended" },
+      { avatar: avatarPriya, name: "Hana Lin", jobTitle: "Procurement Manager", variant: "recommended" },
+    ],
   },
   {
     company: "Northvane Technologies", industry: "Cloud Infrastructure", intentPct: 75, date: "Aug 02, 2026",
     contact: { avatar: avatarJames, name: "James Whitfield", jobTitle: "Chief Revenue Officer", phone: "+1 628-555-7320", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarNadia, name: "Sonia Patel", jobTitle: "VP of Engineering", variant: "recommended" },
+    ],
   },
   {
     company: "Bowline Freight", industry: "Logistics & Shipping", intentPct: 65, date: "Jun 25, 2026",
     contact: { avatar: avatarPriya, name: "Callum Ridley", jobTitle: "Director of Fleet Operations", phone: "+1 704-555-8126", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarRachel, name: "Greta Olsen", jobTitle: "Head of Logistics", variant: "recommended" },
+      { avatar: avatarTobias, name: "Marco Vidal", jobTitle: "Operations Manager", variant: "recommended" },
+    ],
   },
   {
+    /* One contact and no more — what a card, a modal and a reveal control all
+       have to read correctly when the company holds a single person. */
     company: "Canopy Health Group", industry: "Healthcare Services", intentPct: 62, date: "Aug 11, 2026",
     contact: { avatar: avatarMarcus, name: "Marcus Lindgren", jobTitle: "Head of Business Dev", phone: "+1 206-555-9243", variant: "verified" },
   },
@@ -119,14 +153,24 @@ const SEEDS: ProspectSeed[] = [
     /* AI recommended only — the modal shows no verified section for this one. */
     company: "Stratos Analytics", industry: "Data & Analytics", intentPct: 52, date: "May 30, 2026",
     contact: { avatar: avatarNadia, name: "Nadia Okoro", jobTitle: "Senior Account Executive", phone: "+1 917-555-6158", variant: "recommended" },
+    alsoAt: [
+      { avatar: avatarJames, name: "Theo Bright", jobTitle: "Director of Data Platform", variant: "recommended" },
+    ],
   },
   {
     company: "Ironclad Construction", industry: "Construction", intentPct: 50, date: "Jul 03, 2026",
     contact: { avatar: avatarDaniel, name: "Daniel Reeves", jobTitle: "General Manager", phone: "+1 503-555-3402", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarElena, name: "Wanda Cole", jobTitle: "Procurement Director", variant: "recommended" },
+      { avatar: avatarMarcus, name: "Sam Ortiz", jobTitle: "Project Executive", variant: "recommended" },
+    ],
   },
   {
     company: "Summit Ridge Energy", industry: "Renewable Energy", intentPct: 40, date: "Jul 09, 2026",
     contact: { avatar: avatarTobias, name: "Tobias Engström", jobTitle: "Business Development Manager", phone: "+1 858-555-4637", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarNadia, name: "Ingrid Solberg", jobTitle: "Head of Grid Strategy", variant: "recommended" },
+    ],
   },
   {
     company: "Pinehurst Media", industry: "Digital Advertising", intentPct: 32, date: "Aug 21, 2026",
@@ -147,28 +191,49 @@ const SEEDS: ProspectSeed[] = [
   {
     company: "Apex Logistics Group", industry: "Supply Chain", intentPct: 85, date: "Aug 01, 2026",
     contact: { avatar: avatarFigma, name: "Carlos Mendez", jobTitle: "Regional Sales Director", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarElena, name: "Renata Diaz", jobTitle: "VP of Supply Chain", variant: "recommended" },
+      { avatar: avatarDaniel, name: "Paul Osei", jobTitle: "Fleet Director", variant: "recommended" },
+    ],
   },
   {
     company: "Meridian Health Systems", industry: "Healthcare IT", intentPct: 70, date: "Jul 28, 2026",
     contact: { avatar: avatarFigma, name: "Priya Sharma", jobTitle: "VP of Procurement", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarJames, name: "Alan Whitaker", jobTitle: "Chief Information Officer", variant: "recommended" },
+    ],
   },
   {
-    /* 221:2275 — the one card the node draws already disclosed. */
+    /* 221:2275 — the one card the node draws already disclosed. Company-level
+       now, so every contact it holds opens with it. */
     company: "NovaTech Solutions", industry: "Cloud Infrastructure", intentPct: 91, date: "Jul 30, 2026",
     contact: { avatar: avatarFigma, name: "James Whitfield", jobTitle: "Chief Technology Officer", variant: "verified", revealedByDefault: true },
+    alsoAt: [
+      { avatar: avatarPriya, name: "Dana Cho", jobTitle: "Head of Platform", variant: "recommended", revealedByDefault: true },
+    ],
   },
   {
     /* AI recommended — the node marks this card with the recommended glyph. */
     company: "Pinnacle Financial Group", industry: "Financial Services", intentPct: 68, date: "Aug 02, 2026",
     contact: { avatar: avatarFigma, name: "Sarah Chen", jobTitle: "Head of Partnerships", variant: "recommended" },
+    alsoAt: [
+      { avatar: avatarTobias, name: "Victor Hale", jobTitle: "Director of Partnerships", variant: "recommended" },
+    ],
   },
   {
     company: "Vanguard Manufacturing", industry: "Industrial IoT", intentPct: 79, date: "Jul 25, 2026",
     contact: { avatar: avatarFigma, name: "Marcus Johnson", jobTitle: "Director of Operations", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarRachel, name: "Lena Fischer", jobTitle: "Plant Operations Lead", variant: "recommended" },
+      { avatar: avatarMarcus, name: "Ray Kimura", jobTitle: "Head of Industrial IoT", variant: "recommended" },
+    ],
   },
   {
     company: "Clearview Analytics", industry: "Data & AI", intentPct: 88, date: "Aug 03, 2026",
     contact: { avatar: avatarFigma, name: "Elena Kovacs", jobTitle: "Chief Data Officer", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarJames, name: "Noah Bennett", jobTitle: "VP of Analytics", variant: "recommended" },
+    ],
   },
   {
     company: "Summit Energy Corp", industry: "Clean Energy", intentPct: 64, date: "Jul 22, 2026",
@@ -177,20 +242,34 @@ const SEEDS: ProspectSeed[] = [
   {
     company: "Bridgeport Consulting", industry: "Management Consulting", intentPct: 50, date: "Aug 05, 2026",
     contact: { avatar: avatarFigma, name: "Amara Okafor", jobTitle: "Senior Partner", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarNadia, name: "Grace Lim", jobTitle: "Engagement Director", variant: "recommended" },
+    ],
   },
   {
     company: "Hyperion Aerospace", industry: "Defense & Aerospace", intentPct: 44, date: "Jul 19, 2026",
     contact: { avatar: avatarFigma, name: "Robert Fischer", jobTitle: "Program Director", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarElena, name: "Iris Navarro", jobTitle: "Head of Procurement", variant: "recommended" },
+      { avatar: avatarTobias, name: "Tom Haley", jobTitle: "Systems Program Manager", variant: "recommended" },
+    ],
   },
   {
     company: "Solaris Biotech", industry: "Life Sciences", intentPct: 56, date: "Aug 07, 2026",
     contact: { avatar: avatarFigma, name: "Hannah Reeves", jobTitle: "VP of R&D", variant: "verified" },
+    alsoAt: [
+      { avatar: avatarDaniel, name: "Felix Moreau", jobTitle: "Director of Clinical Ops", variant: "recommended" },
+    ],
   },
   {
     /* The node repeats the company name in this card's industry slot; the
        category the name states is used instead. See the profile in companies. */
     company: "Onyx Cybersecurity", industry: "Cybersecurity", intentPct: 61, date: "Jul 31, 2026",
     contact: { avatar: avatarFigma, name: "Leo Tanaka", jobTitle: "Head of Sales Engineering", variant: "recommended" },
+    alsoAt: [
+      { avatar: avatarNadia, name: "Dana Whitlock", jobTitle: "Director of Security Operations", variant: "verified" },
+      { avatar: avatarRachel, name: "Miriam Kaur", jobTitle: "Principal Security Architect", variant: "recommended" },
+    ],
   },
 ];
 
@@ -201,6 +280,20 @@ const toId = (name: string) =>
 export const PROSPECTS: Prospect[] = SEEDS.map((seed, index) => {
   const profile = getCompanyProfile(seed.company);
   const name = profile?.name ?? seed.company;
+  /* Completed here rather than in each seed: a contact reaches the page with
+     both channels whatever the seed stated, and the address is built from this
+     person's name and this company's own domain. */
+  const complete = (c: SeedContact): ProspectContact => ({
+    ...c,
+    phone: c.phone || derivePhone(`${name}:${c.name}`),
+    email: c.email || deriveEmail(c.name, profile?.website ?? ""),
+  });
+  /* The previewed contact first, then the rest, capped at what a company can
+     hold — one reveal buys this list and nothing beyond it. */
+  const contacts = [seed.contact, ...(seed.alsoAt ?? [])]
+    .filter((c): c is SeedContact => c !== null)
+    .slice(0, MAX_CONTACTS_PER_COMPANY)
+    .map(complete);
   return {
     id: toId(name),
     index,
@@ -218,14 +311,8 @@ export const PROSPECTS: Prospect[] = SEEDS.map((seed, index) => {
     date: PROSPECT_DAY_OFFSETS[index] === undefined
       ? seed.date
       : formatVisited(daysAgo(PROSPECT_DAY_OFFSETS[index])),
-    /* Completed here rather than in each seed: a contact reaches the page with
-       both channels whatever the seed stated, and the address is built from
-       this person's name and this company's own domain. */
-    contact: seed.contact && {
-      ...seed.contact,
-      phone: seed.contact.phone || derivePhone(`${name}:${seed.contact.name}`),
-      email: seed.contact.email || deriveEmail(seed.contact.name, profile?.website ?? ""),
-    },
+    contact: contacts[0] ?? null,
+    contacts,
   };
 });
 
@@ -255,6 +342,20 @@ export function getProspect(index: number): Prospect | null {
 /** Resolve a prospect by its stable id, whatever order the caller lists them in. */
 export function getProspectById(id: string): Prospect | null {
   return PROSPECTS.find(p => p.id === id) ?? null;
+}
+
+const BY_COMPANY = new Map(PROSPECTS.map(p => [p.name, p]));
+
+/**
+ * Every contact at a company, in the order its surfaces list them.
+ *
+ * One answer for the card, the table row and the modal. Reveals are
+ * company-level, so the count a card promises — "3 contacts available" — has to
+ * be the count the modal opens and the count one reveal pays for; reading them
+ * from the same record is what guarantees it.
+ */
+export function getCompanyContacts(company: string): ProspectContact[] {
+  return BY_COMPANY.get(company)?.contacts ?? [];
 }
 
 /**

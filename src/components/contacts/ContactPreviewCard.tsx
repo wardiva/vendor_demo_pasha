@@ -210,6 +210,7 @@ export default function ContactPreviewCard({
   locked,
   settled,
   reveal,
+  onRevealRequest,
   layout = "prospect",
   className = "",
 }: {
@@ -236,6 +237,17 @@ export default function ContactPreviewCard({
   settled: boolean;
   /** The host's Reveal Contact control, rendered while locked. */
   reveal?: ReactNode;
+  /**
+   * What a press on the card itself should do when the card holds no control
+   * of its own.
+   *
+   * Company-level reveals put one action over a group of contacts rather than a
+   * button on each card, so a card in such a group has nothing inside it to
+   * forward a click to. This is that group's action: pressing any sealed card
+   * in the group opens the whole company, which is what the single control
+   * beside them would have done.
+   */
+  onRevealRequest?: () => void;
   /**
    * Which arrangement the card takes. "prospect" is the Prospects page panel
    * (Figma 133:1183); "modal" is the Prospect Details modal's Contacts section
@@ -279,7 +291,11 @@ export default function ContactPreviewCard({
     /* The card sits inside surfaces that open a modal on click. While it is
        withheld, this press means "reveal" and nothing behind it should act. */
     e.stopPropagation();
-    e.currentTarget.querySelector<HTMLButtonElement>(".lead-reveal-btn")?.click();
+    const own = e.currentTarget.querySelector<HTMLButtonElement>(".lead-reveal-btn");
+    if (own) own.click();
+    /* No control of its own — the card belongs to a group whose single action
+       sits outside it. Same reveal, reached from the card the press landed on. */
+    else onRevealRequest?.();
   };
 
   return (

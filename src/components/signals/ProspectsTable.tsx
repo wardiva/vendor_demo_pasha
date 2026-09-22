@@ -10,6 +10,10 @@ import RevealContactButton from "@/components/reveal/RevealContactButton";
 import { fireConfettiFrom } from "@/components/reveal/confetti";
 import { REVEAL_DELAY, showButtonLoader } from "@/components/reveal/revealMechanics";
 import { contactId, useProspectReveal } from "@/context/ProspectRevealContext";
+import { useIsLegacyReveal } from "@/context/RevealVariationContext";
+import { useCompanyRevealFlow } from "@/components/reveal/useCompanyRevealFlow";
+import { RevealCta, revealCountLabel } from "@/components/reveal/variations/parts";
+import { getCompanyContacts } from "@/data/prospects";
 import { SIGNAL_ROWS, type SignalRow } from "@/data/signalsRows";
 
 /**
@@ -311,11 +315,18 @@ function TableRow({
   /** True once the columns have been scrolled off their left edge. */
   scrolled: boolean;
 }) {
+  const legacy = useIsLegacyReveal();
   const { revealed: revealedIds, requestReveal, completeReveal } = useProspectReveal();
   /* Keyed by the contact, not by this row: a person disclosed on their card or
      in the modal opens here already disclosed, and is never charged twice. */
   const id = row.contact ? contactId(row.company, row.contact.name) : "";
-  const locked = !!row.contact && !revealedIds.has(id);
+  /* Company-level now: the row previews one contact, and the reveal opens
+     every contact the company holds for the one credit. The count is the
+     company's own, so the control names the same number the cards do. */
+  const companyContacts = getCompanyContacts(row.company);
+  const contactCount = Math.max(companyContacts.length, row.contact ? 1 : 0);
+  const companyFlow = useCompanyRevealFlow(row.company, contactCount);
+  const locked = !!row.contact && (legacy ? !revealedIds.has(id) : companyFlow.locked);
   const [, setSettled] = useState(!locked);
   const btnRef = useRef<HTMLButtonElement>(null);
   const pending = useRef(false);
@@ -327,6 +338,10 @@ function TableRow({
      button, the reveal, the burst from the button, then the veil fading out. */
   const handleReveal = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+    if (!legacy) {
+      companyFlow.reveal(e);
+      return;
+    }
     if (pending.current || !locked || !row.contact) return;
     if (!requestReveal(id)) return;
     pending.current = true;
@@ -398,18 +413,31 @@ function TableRow({
       {/* Holds the row level with the header's trailing control cell. */}
       <div className="shrink-0" style={{ width: ADD_COL_W }} aria-hidden />
 
-      {/* One control over both withheld columns, above their veils. */}
+      {/* One control over both withheld columns, above their veils. Under the
+          company-level model it opens every contact at the company and says
+          how many that is; the pre-change implementation still reveals the one
+          person the row names. */}
       {locked && (
         <div
           className="absolute bottom-0 flex items-center justify-center pointer-events-none top-0 z-[3]"
           style={{ left: REVEAL_LEFT, width: REVEAL_SPAN }}
         >
-          <RevealContactButton
-            ref={btnRef}
-            onClick={handleReveal}
-            variant="label"
-            className="pointer-events-auto"
-          />
+          {legacy ? (
+            <RevealContactButton
+              ref={btnRef}
+              onClick={handleReveal}
+              variant="label"
+              className="pointer-events-auto"
+            />
+          ) : (
+            <RevealCta
+              flow={companyFlow}
+              count={contactCount}
+              label={revealCountLabel(contactCount)}
+              size="md"
+              className="pointer-events-auto"
+            />
+          )}
         </div>
       )}
     </div>

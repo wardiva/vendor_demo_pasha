@@ -764,3 +764,84 @@ body,
   inset: 2px;
   border-radius: 10px;
 }
+
+/* ── Company reveal ────────────────────────────────────────────────────
+   The control's two extra tones. The tinted treatment's wash is above; the
+   filled one darkens instead, and its spinner is drawn light so it reads on
+   the fill rather than disappearing into it. */
+.lead-reveal-btn[data-tone="primary"]:hover {
+  background-color: #0b3636;
+}
+
+.lead-reveal-btn[data-tone="primary"] .lead-reveal-spinner {
+  border-color: rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+}
+
+.lead-reveal-btn[data-tone="outline"]:hover {
+  background-color: rgba(7, 41, 41, 0.06);
+}
+
+/* The stacked-deck concept: the cards behind the top one are the same card
+   scaled back and lifted, so the group reads as a depth rather than as a list
+   that has been cropped. Opening the company flattens the stack — the offsets
+   go to zero and the cards become the list they always were. */
+.reveal-deck-card {
+  transition: transform 420ms cubic-bezier(0.2, 0.7, 0.3, 1), opacity 320ms ease;
+}
+
+/* The sealed skeleton: a line in place of a value, sweeping slowly so the
+   panel reads as withheld rather than as still loading. A reveal is a purchase,
+   not a request that is taking its time, so the sweep is gentle and long. */
+@keyframes reveal-skeleton-sweep {
+  0%   { background-position: 120% 0; }
+  100% { background-position: -20% 0; }
+}
+
+.reveal-skeleton {
+  background-color: rgba(47, 43, 61, 0.1);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 60% 100%;
+  background-repeat: no-repeat;
+  border-radius: 4px;
+  animation: reveal-skeleton-sweep 2.6s linear infinite;
+}
+
+/* The expandable concept opens in place. Height is animated through a grid
+   row rather than a max-height guess, so the panel is exactly as tall as the
+   contacts inside it at both ends of the transition. */
+.reveal-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.reveal-collapse[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.reveal-collapse > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The chevron turns with the section it opens. */
+.reveal-chevron {
+  transition: transform 280ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.reveal-chevron[data-open="true"] {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-deck-card,
+  .reveal-collapse,
+  .reveal-chevron { transition: none; }
+  .reveal-skeleton { animation: none; }
+}

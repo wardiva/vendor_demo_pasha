@@ -1,16 +1,12 @@
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import svgPaths from "@/imports/BuyerActivityLeads/svg-ry772luhk7";
-import ContactPreviewCard from "@/components/contacts/ContactPreviewCard";
-import RevealContactButton from "@/components/reveal/RevealContactButton";
-import { REVEAL_DELAY, showButtonLoader } from "@/components/reveal/revealMechanics";
-import { fireConfettiFrom } from "@/components/reveal/confetti";
+import CompanyContactsReveal from "@/components/reveal/variations";
 import IntentTag from "@/components/IntentTag";
 import LinkedInMark from "@/components/LinkedInMark";
 
 import visitedGlyph from "./assets/icon-visited.svg";
-import { contactId, useProspectReveal } from "@/context/ProspectRevealContext";
 import { withoutYear } from "@/data/demoDates";
-import type { Prospect, ProspectContact } from "@/data/prospects";
+import type { Prospect } from "@/data/prospects";
 
 /**
  * A prospect card on the Prospects page.
@@ -89,86 +85,10 @@ function DetailRow({ icon, value, leading = "19px" }: { icon: ReactNode; value: 
 
 /* ─────────────────────── contact reveal section ─────────────────────── */
 
-/**
- * The locked contact beside a company prospect.
- *
- * Locked, it shows nothing but the avatar, phone number and verification mark
- * under the shared veil, with the Reveal Contact control sharp above it — the
- * same treatment the contact-level cards carried. Name, job title, email,
- * LinkedIn and notes are not in this card at all.
- */
-function ContactRevealSection({ company, contact }: { company: string; contact: ProspectContact }) {
-  const { revealed, requestReveal, completeReveal } = useProspectReveal();
-  /* Keyed by the contact, not the card, so the modal's copy of this person
-     reads the same revealed state. */
-  const id = contactId(company, contact.name);
-  const isRevealed = revealed.has(id);
-  /* Held until the ring and shadow have faded, after which the section is
-     styled like any other settled card. */
-  const [settled, setSettled] = useState(isRevealed);
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const pending = useRef(false);
-  const timers = useRef<number[]>([]);
-  const locked = !isRevealed;
-
-  /* Filters can hide a card mid-reveal, so nothing lands after unmount. */
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
-
-  /* Same sequence as the contact card it replaces: loader in the button, then
-     the reveal, the burst from the button, and the locked treatment fading
-     out. The card itself never moves — the button is absolutely positioned
-     and the revealed fields were always in the layout. */
-  const handleReveal = (e: MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    if (pending.current || isRevealed) return;
-    /* Out of allowance — this opens the Buy More flow and leaves it locked. */
-    if (!requestReveal(id)) return;
-    pending.current = true;
-
-    const btn = btnRef.current;
-    const restore = btn ? showButtonLoader(btn) : () => {};
-
-    timers.current.push(
-      window.setTimeout(() => {
-        pending.current = false;
-        restore();
-        /* Measured while the button is still on screen, so the burst launches
-           from the button rather than the card. */
-        const origin = btn?.getBoundingClientRect();
-        if (origin) fireConfettiFrom(origin);
-        completeReveal(id, contact.phone);
-        timers.current.push(window.setTimeout(() => setSettled(true), 520));
-      }, REVEAL_DELAY),
-    );
-  };
-
-  return (
-    <ContactPreviewCard
-      variant={contact.variant}
-      avatar={contact.avatar}
-      name={contact.name}
-      jobTitle={contact.jobTitle}
-      phone={contact.phone}
-      email={contact.email}
-      locked={locked}
-      settled={settled}
-      className="w-[310px]"
-      reveal={
-        locked ? (
-          /* 219:1041 centres the control on the panel in both axes, half a
-             pixel left and half a pixel down, which is the design's own
-             rounding of a 111x26 button inside a 310x59 card. */
-          <RevealContactButton
-            ref={btnRef}
-            onClick={handleReveal}
-            variant="label-sm"
-            className="absolute left-[calc(50%-0.5px)] top-[calc(50%+0.5px)] -translate-x-1/2 -translate-y-1/2 z-[3]"
-          />
-        ) : undefined
-      }
-    />
-  );
-}
+/* The panel is `CompanyContactsReveal`, which draws the company's contacts in
+   whichever concept is selected. What it never does is charge per person: one
+   reveal opens every contact the company holds, so the panel speaks about the
+   group even where it previews one of them. */
 
 /* ─────────────────────────── the card ─────────────────────────── */
 
@@ -222,7 +142,9 @@ export default function ProspectCard({ prospect }: { prospect: Prospect }) {
         </div>
       </div>
 
-      {prospect.contact && <ContactRevealSection company={prospect.name} contact={prospect.contact} />}
+      {/* The company's contacts, drawn by whichever reveal concept is selected.
+          A company with none identified has no panel, as before. */}
+      <CompanyContactsReveal company={prospect.name} contacts={prospect.contacts} layout="card" />
     </div>
   );
 }

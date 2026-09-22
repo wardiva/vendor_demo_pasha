@@ -56,6 +56,18 @@ import {
   type ProspectRevealState,
 } from "@/context/ProspectRevealContext";
 import {
+  CompanyRevealProvider,
+  companyKey,
+  type CompanyRevealState,
+} from "@/context/CompanyRevealContext";
+import {
+  DEFAULT_REVEAL_VARIATION,
+  RevealVariationProvider,
+  type RevealVariation,
+} from "@/context/RevealVariationContext";
+import RevealVariationBar from "@/components/reveal/RevealVariationBar";
+import { COMPANY_REVEAL_ALLOWANCE } from "@/data/revealPlans";
+import {
   EMPTY_FILTERS,
   aggregate,
   countActiveFilters,
@@ -155,6 +167,37 @@ export default function App() {
       ),
   );
   const [revealsUsed, setRevealsUsed] = useState(REVEAL_ALLOWANCE.used);
+  /* Company reveals — the model the product runs on now. Keyed by company, so
+     opening one discloses every contact it holds for a single reveal and the
+     card, the table row and the modal all read the same fact. Seeded with the
+     companies the dataset ships already disclosed, which spends nothing. */
+  const [revealedCompanies, setRevealedCompanies] = useState<Set<string>>(
+    () =>
+      new Set(
+        PROSPECTS.filter(p => p.contacts.some(c => c.revealedByDefault)).map(p =>
+          companyKey(p.name),
+        ),
+      ),
+  );
+  const [companyRevealsUsed, setCompanyRevealsUsed] = useState(COMPANY_REVEAL_ALLOWANCE.used);
+  /* Which contact-reveal concept is on screen. A review control: the choice is
+     remembered for the tab so a reload comes back on the same concept. */
+  const [revealVariation, setRevealVariation] = useState<RevealVariation>(() => {
+    try {
+      const stored = sessionStorage.getItem("reveal-variation");
+      return (stored as RevealVariation | null) ?? DEFAULT_REVEAL_VARIATION;
+    } catch {
+      return DEFAULT_REVEAL_VARIATION;
+    }
+  });
+  const chooseVariation = useCallback((v: RevealVariation) => {
+    setRevealVariation(v);
+    try {
+      sessionStorage.setItem("reveal-variation", v);
+    } catch {
+      /* Storage unavailable — the choice still holds for this render. */
+    }
+  }, []);
   const [toast, setToast] = useState<string | null>(null);
 
   const showToast = useCallback((msg: string) => {
@@ -600,10 +643,15 @@ export default function App() {
     [appliedFilters, showToast, signalsChip, signalsFilterValues],
   );
 
-  /* The header's reveal allowance now renders from state via context. */
+  /* The header's reveal allowance now renders from state via context. It counts
+     whatever the concept on screen spends: companies under the current model,
+     contacts under the pre-change implementation kept for comparison. */
   const revealAllowance = useMemo(
-    () => ({ used: revealsUsed, total: REVEAL_ALLOWANCE.total }),
-    [revealsUsed],
+    () =>
+      revealVariation === "current"
+        ? { used: revealsUsed, total: REVEAL_ALLOWANCE.total }
+        : { used: companyRevealsUsed, total: COMPANY_REVEAL_ALLOWANCE.total },
+    [revealVariation, revealsUsed, companyRevealsUsed],
   );
 
   /**
@@ -636,6 +684,44 @@ export default function App() {
       },
     }),
     [revealedContacts, revealsUsed, showToast],
+  );
+
+  /**
+   * Company reveals. One reveal opens every contact a company holds, so the
+   * allowance is spent once per company however many people that turns out to
+   * be — which is the whole of the change, expressed in one place.
+   *
+   * The surface still runs its own loader and burst; what lives here is the
+   * allowance, the Buy More fallback and the record of which companies are
+   * open, so every surface agrees about all three.
+   */
+  const companyReveal = useMemo<CompanyRevealState>(
+    () => ({
+      revealedCompanies,
+      requestCompanyReveal: company => {
+        /* Already open — nothing further to spend. */
+        if (revealedCompanies.has(companyKey(company))) return true;
+        /* Out of allowance — the existing Buy More flow takes over. */
+        if (companyRevealsUsed >= COMPANY_REVEAL_ALLOWANCE.total) {
+          setBuyMoreOpen(true);
+          return false;
+        }
+        return true;
+      },
+      completeCompanyReveal: (company, contactCount) => {
+        const key = companyKey(company);
+        if (revealedCompanies.has(key)) return;
+        setRevealedCompanies(prev => new Set(prev).add(key));
+        setCompanyRevealsUsed(n => n + 1);
+        showToast(
+          contactCount === 1
+            ? "1 contact revealed — 1 company reveal used"
+            : `${contactCount} contacts revealed — 1 company reveal used`,
+        );
+      },
+      remaining: Math.max(COMPANY_REVEAL_ALLOWANCE.total - companyRevealsUsed, 0),
+    }),
+    [revealedCompanies, companyRevealsUsed, showToast],
   );
 
   /* Which prospect cards survive the applied filters and the toolbar search.
@@ -933,7 +1019,12 @@ export default function App() {
 
   return (
     /* Both the page and the Prospect Details modal below read reveals from
-       here, so a contact disclosed on a card is disclosed in the modal too. */
+       here, so a contact disclosed on a card is disclosed in the modal too.
+       Three providers, one subject: which concept is drawn, the company
+       reveals it spends, and the contact-level reveals the pre-change
+       implementation still runs on. */
+    <RevealVariationProvider value={revealVariation}>
+    <CompanyRevealProvider value={companyReveal}>
     <ProspectRevealProvider value={prospectReveal}>
     <div ref={containerRef} className="relative w-full min-h-screen overflow-auto bg-[#dde8e5]">
       {/* The design is authored on a 1440px canvas. Width tracks the viewport so
@@ -1039,7 +1130,20 @@ export default function App() {
           {toast}
         </div>
       )}
+
+      {/* The concept switch. Fixed to the window's bottom-left — the opposite
+          corner from the Prospects page's own prototype switch — so it takes no
+          room from either page and the two never overlap. */}
+      <RevealVariationBar
+        variation={revealVariation}
+        onChange={chooseVariation}
+        used={companyRevealsUsed}
+        total={COMPANY_REVEAL_ALLOWANCE.total}
+        onSetUsed={setCompanyRevealsUsed}
+      />
     </div>
     </ProspectRevealProvider>
+    </CompanyRevealProvider>
+    </RevealVariationProvider>
   );
 }
