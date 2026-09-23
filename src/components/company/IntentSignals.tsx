@@ -2208,11 +2208,12 @@ function FiveColumns({ views, style }: { views: View[]; style: FiveStyle }) {
 const FINAL_CONCEPT = 0;
 
 const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: string) => ReactNode }> = [
-  /* The two being weighed, first, and in the order they are being weighed in.
-     Their numbers are where they were drawn rather than where they now sit —
-     "19" and "13" are what they are called, so promoting them must not
-     renumber them or the names stop matching the conversation about them. */
-  { label: "19 · Ruled: chips", render: (v, c) => <ActivityChips views={v} company={c} /> },
+  /* The one that was chosen, and the one it was chosen over, first. Their
+     numbers are where they were drawn rather than where they now sit: 19 is
+     still 19 after being picked and renamed, because the number is how the
+     concept is referred to and renumbering it would strand every reference
+     to it. The name is free to say what it became. */
+  { label: "19 · Final Design", render: (v, c) => <ActivityChips views={v} company={c} /> },
   { label: "13 · Bands: minimal", render: (v, c) => <BandColumns views={v} company={c} style="minimal" /> },
 
   /* Everything else, in the order it was already in. The three Score and
