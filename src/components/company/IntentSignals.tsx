@@ -1358,14 +1358,22 @@ function OneScale({ views, company }: { views: View[]; company: string }) {
 
 /* ── the section ───────────────────────────────────────────────────── */
 
+/**
+ * The one that was chosen, by index into CONCEPTS.
+ *
+ * It is what the Activity tab opens with and what the picker marks "Final",
+ * so the two can never disagree — moving the design means moving this
+ * number, and both follow.
+ */
+const FINAL_CONCEPT = 0;
+
 const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: string) => ReactNode }> = [
-  /* Score and bands, three times, differing only in its intent indicator —
-     which is the one thing being chosen between, so it is the one thing that
-     changes between these three entries. Everything else each of them draws
-     is the approved design, from the same component. */
-  { label: "1 · Bar: segmented", render: (v, c) => <ScoreAndBands views={v} company={c} bar="segmented" /> },
-  { label: "2 · Bar: scale", render: (v, c) => <ScoreAndBands views={v} company={c} bar="scale" /> },
-  { label: "3 · Bar: ladder", render: (v, c) => <ScoreAndBands views={v} company={c} bar="none" summary="heading" /> },
+  /* The finished design first, and the two it was chosen over behind it.
+     All three are Score and bands, differing only in the indicator, so what
+     separates them is exactly what was being decided. */
+  { label: "1 · Bar: ladder", render: (v, c) => <ScoreAndBands views={v} company={c} bar="none" summary="heading" /> },
+  { label: "2 · Bar: segmented", render: (v, c) => <ScoreAndBands views={v} company={c} bar="segmented" /> },
+  { label: "3 · Bar: scale", render: (v, c) => <ScoreAndBands views={v} company={c} bar="scale" /> },
 
   /* The other section designs, and the eleven behind them. */
   { label: "4 · Six chips", render: (v, c) => <SixChips views={v} company={c} /> },
@@ -1600,6 +1608,22 @@ function IndexPanel({ concept, onStep, onPick, onClose }: PanelProps) {
               >
                 {name}
               </span>
+              {/* The lime chip the Filters button and the count use, at the
+                  size this row can hold. It marks the finished design, which
+                  is also the one the tab opens with — so it is the default
+                  as well, and a second chip saying so would be the same
+                  fact twice in a 190px panel. */}
+              {i === FINAL_CONCEPT && (
+                <span
+                  className="flex items-center justify-center rounded-[4px] shrink-0"
+                  style={{ background: "rgba(177,250,99,0.32)", padding: "1px 5px" }}
+                  title="Final — the design the Activity tab opens with"
+                >
+                  <span className="font-semibold leading-[14px] text-[9.5px]" style={{ color: LIVE }}>
+                    Final
+                  </span>
+                </span>
+              )}
             </button>
           );
         })}
@@ -1696,8 +1720,8 @@ function ConceptsPanel({
 }
 
 export default function IntentSignals({ company }: { company: string }) {
-  /* Opens on the ladder, which is the indicator that was chosen. */
-  const [concept, setConcept] = useState(2);
+  /* Opens on the finished design, which is the first in the list. */
+  const [concept, setConcept] = useState(FINAL_CONCEPT);
   const triggered = getTriggeredSignals(company);
   const views: View[] = INTENT_SIGNALS.map(signal => ({ signal, live: triggered.has(signal.label) }));
 
