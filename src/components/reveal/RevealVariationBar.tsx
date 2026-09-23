@@ -200,10 +200,14 @@ export default function RevealVariationBar({
         })}
       </div>
 
-      {/* The allowance, so the exhausted state and the ordinary one are both a
-          click away. Demo controls: they set the same counter a reveal spends.
-          Borderless, like everything else in both panels — the hover tint is
-          what says they are pressable. */}
+      {/* The allowance, and the way back to it. Reset is a demo control: it
+          sets the same counter a reveal spends. Borderless, like everything
+          else in both panels — the hover tint is what says it is pressable.
+
+          "Use all" is gone. It existed to reach the exhausted state in one
+          click, which is a thing to look at once; Reset is the one you need
+          every time, and two controls made the reader decide which of them
+          they wanted before noticing either. */}
       <div
         className="flex items-center gap-[4px] mt-[4px] pl-[9px] pr-[4px] pt-[7px] shrink-0"
         style={{ borderTop: `1px solid ${HAIR}` }}
@@ -220,14 +224,6 @@ export default function RevealVariationBar({
           style={{ color: INK }}
         >
           Reset
-        </button>
-        <button
-          type="button"
-          onClick={() => onSetUsed(total)}
-          className="cursor-pointer rounded-[6px] px-[8px] py-[3px] text-[10.5px] transition-colors hover:bg-[rgba(7,41,41,0.06)]"
-          style={{ color: INK }}
-        >
-          Use all
         </button>
       </div>
     </div>
