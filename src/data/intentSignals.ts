@@ -1,6 +1,5 @@
 import { getActivitySessions } from "@/data/activitySessions";
 import { LEADS } from "@/data/leads";
-import { getCompanyProfile } from "@/data/companies";
 
 /**
  * The signals a prospect's intent score is built from.
@@ -39,16 +38,14 @@ export const INTENT_BANDS: ReadonlyArray<{ range: string; min: number; max: numb
 /**
  * Which of the six this company has actually produced.
  *
- * Two questions, asked in order, because they are different questions and
- * running them together is what produced a 50% prospect whose signals said
- * "strongest is a 71%+ signal".
+ * One question, asked of the activity and of nothing else: did the prospect
+ * do this?
  *
- * First: did the activity produce this signal at all? Four of the six are
- * read off the sessions in the Activity tab — the pages the buyer opened,
- * matched on their own paths — so what this section claims is visible in the
- * timeline beneath it. The other two, "looked at your profile" and "compared
- * you against someone", have no page of their own and come from the
- * company-level research flags the Signals page counts.
+ * Four of the six are a page in the Activity tab's own sessions, matched on
+ * its path, so what this section claims is visible in the timeline beneath
+ * it. The other two, "looked at your profile" and "compared you against
+ * someone", have no page of their own and come from the company-level
+ * research flags the Signals page counts.
  *
  * Pricing used to be either: the page, or the flag. That OR was the bug.
  * Ironclad Construction carries `pricing: true` and has never opened a
@@ -57,12 +54,18 @@ export const INTENT_BANDS: ReadonlyArray<{ range: string; min: number; max: numb
  * summary up with it. Pricing has a page of its own, unlike the other two, so
  * the page is the better evidence and now the only evidence.
  *
- * Second: could this signal have contributed to the score the prospect
- * actually carries? A band is what a signal is worth when it fires. If a
- * 71%+ signal had counted, the score would not be 50 — so at 50 it did not
- * count, whatever the activity shows, and a signal the score cannot account
- * for is not reported as triggered. The score is the source of truth, and
- * this is the line that makes it one.
+ * What does not come into it is the score. The direction runs one way —
+ * activity produces signals, signals feed the scoring, scoring produces the
+ * number — and reading it backwards to decide which signals fired was wrong
+ * in both directions. It deleted real evidence: Bridgeport Consulting opened
+ * the alternatives page and the reviews page and scored 50, so both were
+ * suppressed for starting above 50 and the section reported "0 of 6" over a
+ * timeline showing the two visits. And it would have credited evidence that
+ * does not exist, had it ever been allowed to add rather than only remove.
+ *
+ * A band is what a signal is worth to the scoring, not a claim about where
+ * the prospect ended up. The two can disagree — that is what a weighted
+ * score does — and when they do, the timeline is what happened.
  */
 export function getTriggeredSignals(company: string): ReadonlySet<string> {
   const paths = new Set<string>();
@@ -82,25 +85,29 @@ export function getTriggeredSignals(company: string): ReadonlySet<string> {
 
   const lead = LEADS.find(l => l.name === company);
 
-  /* 1 — what the activity produced. */
-  const observed = new Set<string>();
-  if (visitedCategory) observed.add("Viewed Category Page");
-  if (lead?.signals.profile) observed.add("Viewed Product Profile");
-  if (visited("pricing")) observed.add("Viewed Pricing");
-  if (visited("alternatives")) observed.add("Viewed Alternatives");
-  if (lead?.signals.competitor) observed.add("Compared Products");
-  if (visited("reviews")) observed.add("Viewed Reviews");
-
-  /* 2 — of those, the ones the score can account for. A signal whose band
-     starts above the prospect's score cannot have contributed to it: the
-     score would be at least that high if it had. Missing profile, or a score
-     of 0, admits nothing above the bottom band, which is the honest reading
-     of having no score to attribute anything to. */
-  const score = getCompanyProfile(company)?.intentPct ?? 0;
   const triggered = new Set<string>();
-  for (const signal of INTENT_SIGNALS) {
-    if (observed.has(signal.label) && signal.min <= score) triggered.add(signal.label);
-  }
+
+  /* Four of the six are a page in the timeline below, matched on its own
+     path, so a tick here is something the reader can scroll down and see. */
+  if (visitedCategory) triggered.add("Viewed Category Page");
+  if (visited("pricing")) triggered.add("Viewed Pricing");
+  if (visited("alternatives")) triggered.add("Viewed Alternatives");
+  if (visited("reviews")) triggered.add("Viewed Reviews");
+
+  /* The other two have no page to match. The seven page shapes the sessions
+     are built from are the category listing, pricing, reviews, buyers-guide,
+     alternatives, demo and implementation — there is no product-profile page
+     and no compare page — so these stay on the company-level research
+     signals, which is where "looked at your profile" and "compared you
+     against someone" are actually recorded and what the Signals page counts
+     and the Prospects filter selects on.
+
+     Note that the category listing is titled "Best X Software - Compared for
+     2026". It is not a compare event and is not read as one: it is already
+     the category page, and matching "Compared Products" off a word in a
+     title would be inventing evidence rather than finding it. */
+  if (lead?.signals.profile) triggered.add("Viewed Product Profile");
+  if (lead?.signals.competitor) triggered.add("Compared Products");
 
   return triggered;
 }
