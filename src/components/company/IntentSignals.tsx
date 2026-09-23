@@ -7,6 +7,7 @@ import {
   getTriggeredSignals,
   type IntentSignal,
 } from "@/data/intentSignals";
+import { intentTagColor } from "@/components/IntentTag";
 
 /**
  * Intent Signals — what the prospect's score is built from.
@@ -398,78 +399,283 @@ function AgainstTheScore({ views, company }: { views: View[]; company: string })
  */
 const shortLabel = (label: string) => label.replace(/^Viewed\s+/, "");
 
-/* ── 11 · Band columns ──────────────────────────────────────────────
-   The banded arrangement turned on its side: the bands are columns, their
-   signals stacked inside. It is the shortest of them — as tall as the busiest
-   band and no taller — and it reads as a small matrix, which suits someone
-   comparing prospects rather than studying one.
+/* ── 11 – 13 · Bands with the score ─────────────────────────────────
+   Band columns with the Six chips indicator over it, three ways.
 
-   Rebuilt on the Activity tab's own scale rather than a smaller one of its
-   own. It was set at 10 and 10.5 on 15, with 3px gaps and a 9px mark, which
-   is a second type system inside a card whose neighbours are all 12 on 20 —
-   small enough that the distinction between a ticked name and an unticked one
-   was carried by colour alone. Now: 12 on 20 for both the band and its
-   signals, the tab's 8 between a mark and its name and 12 between columns,
-   and the 10px tick the rest of the section uses.
+   The colour is not invented here. IntentTag already decides what an intent
+   score looks like — #FEFFCA at 30, #E6FFC3 at 51, #C3FFC9 at 71, warm
+   through to green as intent climbs — and its own note says any surface
+   showing a score should render that mapping rather than repeat it, so the
+   bands cannot drift apart. `intentTagColor(band.min)` asks it for a band's
+   fill. The chip on the prospect card, the chip in this modal's header and
+   the bands under this bar are all the same three colours, which is what
+   makes the bar legible at a glance: the reader has seen them already.
 
-   The columns are a grid rather than three flexed boxes, so the rules under
-   the headings are the same width and land on one line across the card — the
-   thing that makes this read as a table instead of three lists standing next
-   to each other. Bands with nothing in them are dropped before the grid is
-   sized, so the remaining ones still divide the full width.
+   What differs between the three is how the bar is tied to the columns:
 
-   Triggered is ink at medium behind a tick; untriggered is faint behind a
-   hollow ring. Two differences, weight and mark, so the state survives being
-   read at a glance rather than resting on a colour. */
-function BandColumns({ views }: { views: View[] }) {
-  /* Ascending, so the columns read left to right as intent rises. */
+     chips    colour ties them — the bar's segments and the column headings
+              carry the same three fills
+     aligned  geometry ties them — each column is as wide as its band's share
+              of the scale, and the bar above is cut at the same places, so a
+              column sits under its own segment
+     minimal  position ties them — the scale is nearly colourless until the
+              band the score is in, which is lit in both places at once
+
+   The horizontal rule under each heading is gone from all three. Three rules
+   side by side read as one broken row divider rather than as three columns —
+   the same thing that was wrong with the five-column version. Colour and
+   geometry do that work now. */
+
+type BandColumnsStyle = "chips" | "aligned" | "minimal";
+
+function BandColumns({
+  views,
+  company,
+  style,
+}: {
+  views: View[];
+  company: string;
+  style: BandColumnsStyle;
+}) {
+  const score = scoreOf(company);
+  const here = bandOfScore(score);
+  /* Ascending, so bar and columns both read left to right as intent rises. */
   const columns = [...INTENT_BANDS]
     .reverse()
     .map(band => ({ band, items: views.filter(v => v.signal.range === band.range) }))
     .filter(c => c.items.length > 0);
 
+  /** A band's share of the 30-to-100 the scale runs over. */
+  const span = (b: { min: number; max: number }) => at(b.max) - at(b.min);
+
+  const signalRows = (items: View[]) =>
+    items.map(v => (
+      <span
+        key={v.signal.label}
+        className="content-stretch flex gap-[8px] h-[20px] items-center min-w-px shrink-0 w-full"
+      >
+        {v.live ? <Tick /> : <Hollow />}
+        <span
+          className="font-['Inter',sans-serif] leading-[20px] min-w-px overflow-hidden text-[12px] text-ellipsis whitespace-nowrap"
+          style={{ color: v.live ? INK : FAINT, fontWeight: v.live ? 500 : 400 }}
+          title={v.signal.label}
+        >
+          {shortLabel(v.signal.label)}
+        </span>
+      </span>
+    ));
+
+  /* ── the indicator ── */
+  const marker = (
+    <span
+      aria-hidden
+      className="absolute rounded-[2px]"
+      style={{ left: `${at(score)}%`, marginLeft: -1, top: -2, bottom: -2, width: 2, background: LIVE }}
+    />
+  );
+
+  const scoreLabel = (
+    <span
+      className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px] whitespace-nowrap"
+      style={{ color: LIVE }}
+    >
+      {`${score}%`}
+    </span>
+  );
+
   return (
     <Panel>
+      {/* No heading. It was not asked for, the arrangement never had one, and
+          at 22px it is the most expensive thing that could be added to a
+          section whose brief is "compact". The count line says what this is. */}
       <Summary views={views} />
+
+      {/* ── chips: one full-width scale, the three fills, colour ties it to
+             the headings below ── */}
+      {style === "chips" && (
+        <div className="content-stretch flex gap-[12px] items-center w-full" style={{ marginTop: 12 }}>
+          <span
+            className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px] w-[48px]"
+            style={{ color: INK }}
+          >
+            Intent
+          </span>
+          <div className="relative flex-1 min-w-px" style={{ height: 8 }}>
+            {columns.map(({ band }, i) => (
+              <span
+                key={band.range}
+                aria-hidden
+                className="absolute bottom-0 top-0"
+                style={{
+                  left: `${at(band.min)}%`,
+                  width: `${span(band)}%`,
+                  background: intentTagColor(band.min),
+                  borderTopLeftRadius: i === 0 ? 100 : 0,
+                  borderBottomLeftRadius: i === 0 ? 100 : 0,
+                  borderTopRightRadius: i === columns.length - 1 ? 100 : 0,
+                  borderBottomRightRadius: i === columns.length - 1 ? 100 : 0,
+                }}
+              />
+            ))}
+            {marker}
+          </div>
+          {scoreLabel}
+        </div>
+      )}
+
+      {/* ── aligned: the bar is the columns' own header strip, cut where they
+             are cut, each band as wide as its share of the scale ── */}
+      {style === "aligned" && (
+        <div className="content-stretch flex gap-[12px] items-baseline w-full" style={{ marginTop: 12 }}>
+          <span
+            className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px]"
+            style={{ color: INK }}
+          >
+            Intent
+          </span>
+          {scoreLabel}
+          <span
+            className="font-['Inter',sans-serif] leading-[20px] shrink-0 text-[11px] whitespace-nowrap"
+            style={{ color: MUTED }}
+          >
+            {here ? `· ${here}` : ""}
+          </span>
+        </div>
+      )}
+
+      {/* ── minimal: the scale stays quiet until the band the score is in ── */}
+      {style === "minimal" && (
+        <div className="content-stretch flex gap-[12px] items-center w-full" style={{ marginTop: 12 }}>
+          <span
+            className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px] w-[48px]"
+            style={{ color: INK }}
+          >
+            Intent
+          </span>
+          <div className="relative flex-1 min-w-px" style={{ height: 6 }}>
+            {columns.map(({ band }, i) => {
+              const active = band.range === here;
+              return (
+                <span
+                  key={band.range}
+                  aria-hidden
+                  className="absolute bottom-0 top-0"
+                  style={{
+                    left: `${at(band.min)}%`,
+                    width: `${span(band)}%`,
+                    background: intentTagColor(band.min),
+                    opacity: active ? 1 : 0.4,
+                    borderTopLeftRadius: i === 0 ? 100 : 0,
+                    borderBottomLeftRadius: i === 0 ? 100 : 0,
+                    borderTopRightRadius: i === columns.length - 1 ? 100 : 0,
+                    borderBottomRightRadius: i === columns.length - 1 ? 100 : 0,
+                  }}
+                />
+              );
+            })}
+            {marker}
+          </div>
+          {scoreLabel}
+        </div>
+      )}
+
+      {/* ── the columns ── */}
       <div
-        className="grid w-full"
-        style={{
-          marginTop: 12,
-          gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
-          columnGap: 12,
-        }}
+        className={`w-full ${style === "aligned" ? "content-stretch flex" : "grid"}`}
+        style={
+          style === "aligned"
+            ? { marginTop: 8, columnGap: 12 }
+            : {
+                marginTop: 12,
+                gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
+                columnGap: 12,
+              }
+        }
       >
         {columns.map(({ band, items }) => {
-          const anyLive = items.some(v => v.live);
+          const active = band.range === here;
           return (
-            <div key={band.range} className="content-stretch flex flex-col items-start min-w-px">
-              {/* The heading and its rule, 8 above the first name — the same
-                  interval the tab puts between a card's blocks. */}
-              <span
-                className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px] w-full whitespace-nowrap"
-                style={{
-                  color: anyLive ? LIVE : FAINT,
-                  borderBottom: `1px solid ${HAIR}`,
-                  paddingBottom: 8,
-                  marginBottom: 8,
-                }}
-              >
-                {band.range}
-              </span>
-              {items.map(v => (
+            <div
+              key={band.range}
+              className="content-stretch flex flex-col items-start min-w-px"
+              /* Aligned sizes each column by its band's share of the scale,
+                 so the strip above it is its own. The other two divide the
+                 width evenly, which keeps three unequal groups reading as
+                 three columns. */
+              style={style === "aligned" ? { flex: `${span(band)} 1 0` } : undefined}
+            >
+              {/* The strip: in `aligned` it is the bar itself, sitting over
+                  the column it describes and carrying the mark when the
+                  score falls inside it. */}
+              {style === "aligned" && (
                 <span
-                  key={v.signal.label}
-                  className="content-stretch flex gap-[8px] h-[20px] items-center min-w-px shrink-0 w-full"
+                  className="relative block shrink-0 w-full"
+                  style={{ height: 8, marginBottom: 8 }}
                 >
-                  {v.live ? <Tick /> : <Hollow />}
                   <span
-                    className="font-['Inter',sans-serif] leading-[20px] min-w-px overflow-hidden text-[12px] text-ellipsis whitespace-nowrap"
-                    style={{ color: v.live ? INK : FAINT, fontWeight: v.live ? 500 : 400 }}
+                    aria-hidden
+                    className="absolute inset-0 rounded-[100px]"
+                    style={{ background: intentTagColor(band.min) }}
+                  />
+                  {active && (
+                    <span
+                      aria-hidden
+                      className="absolute rounded-[2px]"
+                      style={{
+                        /* Where the score sits inside this band, not on the
+                           whole scale — the strip is this band and nothing
+                           else, so the mark is placed against its own ends. */
+                        left: `${((score - band.min) / (band.max - band.min)) * 100}%`,
+                        marginLeft: -1,
+                        top: -2,
+                        bottom: -2,
+                        width: 2,
+                        background: LIVE,
+                      }}
+                    />
+                  )}
+                </span>
+              )}
+
+              {/* The range. In `chips` it takes the band's own fill, which is
+                  the chip the prospect card and this modal's header already
+                  draw a score in; in the other two it is plain text with a
+                  2px accent over it in `minimal`. */}
+              {style === "minimal" && (
+                <span
+                  aria-hidden
+                  className="block rounded-[100px] shrink-0 w-full"
+                  style={{
+                    height: 2,
+                    marginBottom: 8,
+                    background: intentTagColor(band.min),
+                    opacity: active ? 1 : 0.5,
+                  }}
+                />
+              )}
+
+              {style === "chips" ? (
+                <span
+                  className="content-stretch flex items-center justify-center min-w-[24px] px-[8px] py-px rounded-[6px] shrink-0"
+                  style={{ background: intentTagColor(band.min), marginBottom: 8 }}
+                >
+                  <span
+                    className="font-['Inter',sans-serif] font-medium leading-[18px] text-[11px] whitespace-nowrap"
+                    style={{ color: INK }}
                   >
-                    {shortLabel(v.signal.label)}
+                    {band.range}
                   </span>
                 </span>
-              ))}
+              ) : (
+                <span
+                  className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px] w-full whitespace-nowrap"
+                  style={{ color: active ? LIVE : MUTED, marginBottom: 8 }}
+                >
+                  {band.range}
+                </span>
+              )}
+
+              {signalRows(items)}
             </div>
           );
         })}
@@ -1633,15 +1839,17 @@ const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: 
   { label: "8 · Band strength", render: v => <BandStrength views={v} /> },
   { label: "9 · Strongest first", render: v => <StrongestFirst views={v} /> },
   { label: "10 · Against the score", render: (v, c) => <AgainstTheScore views={v} company={c} /> },
-  { label: "11 · Band columns", render: v => <BandColumns views={v} /> },
-  { label: "12 · Score gutter", render: (v, c) => <ScoreGutter views={v} company={c} /> },
-  { label: "13 · Band tracks", render: (v, c) => <BandTracks views={v} company={c} /> },
-  { label: "14 · Score first", render: (v, c) => <ScoreFirst views={v} company={c} /> },
-  { label: "15 · Reached / not yet", render: (v, c) => <ReachedAndNotYet views={v} company={c} /> },
-  { label: "16 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
-  { label: "17 · Columns: ruled", render: v => <FiveColumns views={v} style="ruled" /> },
-  { label: "18 · Columns: bars", render: v => <FiveColumns views={v} style="bars" /> },
-  { label: "19 · Columns: accent", render: v => <FiveColumns views={v} style="accent" /> },
+  { label: "11 · Bands: chips", render: (v, c) => <BandColumns views={v} company={c} style="chips" /> },
+  { label: "12 · Bands: aligned", render: (v, c) => <BandColumns views={v} company={c} style="aligned" /> },
+  { label: "13 · Bands: minimal", render: (v, c) => <BandColumns views={v} company={c} style="minimal" /> },
+  { label: "14 · Score gutter", render: (v, c) => <ScoreGutter views={v} company={c} /> },
+  { label: "15 · Band tracks", render: (v, c) => <BandTracks views={v} company={c} /> },
+  { label: "16 · Score first", render: (v, c) => <ScoreFirst views={v} company={c} /> },
+  { label: "17 · Reached / not yet", render: (v, c) => <ReachedAndNotYet views={v} company={c} /> },
+  { label: "18 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
+  { label: "19 · Columns: ruled", render: v => <FiveColumns views={v} style="ruled" /> },
+  { label: "20 · Columns: bars", render: v => <FiveColumns views={v} style="bars" /> },
+  { label: "21 · Columns: accent", render: v => <FiveColumns views={v} style="accent" /> },
 ];
 
 /* ── the concepts panel ─────────────────────────────────────────────
