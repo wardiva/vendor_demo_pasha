@@ -1676,7 +1676,7 @@ const MOVE_MS = 300;
 const MOVE_EASE = "cubic-bezier(0.4, 0.05, 0.2, 1)";
 /** Clear of the window's edges, and of the prototype bars in the corners. */
 const PILL_INSET = 24;
-const PILL_LABEL = "Version history · Activity tab";
+const PILL_LABEL = "History — Variations of Activity Signals";
 
 function ConceptsPanel({
   concept,
@@ -1843,11 +1843,19 @@ function ConceptsPanel({
         inert={open}
         className="absolute cursor-pointer flex h-[30px] items-center left-0 px-[12px] top-0 whitespace-nowrap"
         style={{
+          /* max-content, or the label is measured wrong. An absolutely
+             positioned box shrink-to-fits against its containing block, and
+             the containing block here is the shell — which is 190 wide while
+             the panel is showing. A label longer than that was being capped
+             at 190, measured at 190, and then overflowed its own pill.
+             max-content asks for the width the text actually wants, which is
+             what the observer is there to read. */
+          width: "max-content",
           opacity: open ? 0 : 1,
           pointerEvents: open ? "none" : "auto",
           transition: open ? leaving : arriving,
         }}
-        title="Open the Activity tab's version history"
+        title={PILL_LABEL}
       >
         <span className="font-['Inter',sans-serif] leading-[16px] text-[11px]" style={{ color: MUTED }}>
           {PILL_LABEL}
