@@ -118,9 +118,9 @@ export default function RevealVariationBar({
         <p
           className="flex-1 font-medium leading-[16px] overflow-hidden text-[11.5px] text-ellipsis whitespace-nowrap"
           style={{ color: INK }}
-          title="Version history of stack cards of contacts"
+          title="History — Variations of Stacked Cards"
         >
-          Version history of stack cards of contacts
+          History — Variations of Stacked Cards
         </p>
         <button
           type="button"
