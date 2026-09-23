@@ -43,15 +43,18 @@ export const revealAllLabel = (n: number) => (n === 1 ? "Reveal contact" : "Reve
 export const revealCountLabel = (n: number) => (n === 1 ? "Reveal contact" : `Reveal ${n} contacts`);
 
 /**
- * The same thing said in full — "Reveal all 3 contacts".
+ * What the shipped surfaces use — "Reveal contacts", or the singular when
+ * there is only one.
  *
- * What the shipped surfaces use. The count on its own leaves open the question
- * the whole model exists to answer: is that three contacts for one reveal, or
- * three reveals? "All" settles it in the control itself, which is where the
- * vendor is looking at the moment they ask.
+ * It used to carry the count and the word "all": "Reveal all 3 contacts". The
+ * count is already on the card the button sits on, so saying it again bought
+ * nothing, and it made the label's width a function of the data — three rows
+ * of buttons that are each a different length read as three different
+ * controls. Naming the action and leaving the arithmetic to the card gives
+ * every one of them the same button.
  */
 export const revealAllCountLabel = (n: number) =>
-  n === 1 ? "Reveal contact" : `Reveal all ${n} contacts`;
+  n === 1 ? "Reveal contact" : "Reveal contacts";
 
 /** The cost, stated in the unit the plan counts. */
 export const COST_NOTE = "Uses 1 contact reveal";
