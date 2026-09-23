@@ -1467,65 +1467,139 @@ const FIVE_COLUMNS: ReadonlyArray<{ label: string; short: string }> = [
   { label: "Viewed Pricing", short: "Pricing" },
 ];
 
-function FiveColumns({ views }: { views: View[] }) {
+/**
+ * The three arrangements of the five columns.
+ *
+ * All of them answer the same complaint. The first version ruled under each
+ * heading, and five horizontal rules laid side by side do not read as five
+ * columns — they read as one row divider with gaps in it, which is the
+ * opposite of the structure. Nothing that separates columns can run across
+ * them.
+ *
+ * So each of these carries the column structure in something that runs the
+ * other way, or in something there are visibly five of:
+ *
+ *   ruled   a hairline standing in each gap, the table's own answer
+ *   bars    a filled or hollow bar under each name, which marks the column
+ *           and says whether it fired in the same stroke
+ *   accent  a rule over each column doing both of those jobs at 2px
+ *
+ * None of them costs the names any width. At 424 of content and 12 between
+ * columns each track is 75, "Alternatives" is 69 at this size, and a cell
+ * with padding inside a border would leave 62 — which is why none of these
+ * is a box. The rules sit in the gaps that were already there.
+ */
+type FiveStyle = "ruled" | "bars" | "accent";
+
+/** The gap between columns, and what the rules in `ruled` are placed against. */
+const FIVE_GAP = 12;
+
+function FiveColumns({ views, style }: { views: View[]; style: FiveStyle }) {
   const columns = FIVE_COLUMNS.map(c => ({
     ...c,
     view: views.find(v => v.signal.label === c.label),
   })).filter((c): c is typeof c & { view: View } => Boolean(c.view));
 
+  const n = columns.length;
+  /* The centre of gap i, from the left edge of the grid. Each track is
+     (100% - the gaps) / n, so gap i opens after i tracks and i-1 gaps. */
+  const gapCentre = (i: number) =>
+    `calc(${i} * (100% - ${(n - 1) * FIVE_GAP}px) / ${n} + ${(i - 1) * FIVE_GAP + FIVE_GAP / 2}px)`;
+
+  const name = (view: View, short: string) => (
+    <span
+      className="font-['Inter',sans-serif] leading-[20px] overflow-hidden shrink-0 text-[12px] text-ellipsis w-full whitespace-nowrap"
+      style={{ color: view.live ? INK : FAINT, fontWeight: view.live ? 500 : 400 }}
+      title={view.signal.label}
+    >
+      {short}
+    </span>
+  );
+
+  const range = (view: View, withMark: boolean) => (
+    <span className="content-stretch flex gap-[6px] h-[20px] items-center min-w-px shrink-0 w-full">
+      {withMark && (view.live ? <Tick /> : <Hollow />)}
+      <span
+        className="font-['Inter',sans-serif] leading-[20px] text-[11px] whitespace-nowrap"
+        style={{ color: view.live ? LIVE : FAINT }}
+      >
+        {view.signal.range}
+      </span>
+    </span>
+  );
+
   return (
     <Panel>
       {/* The heading and the count are a pair, 2 apart — the interval the tab
-          puts between "Visited" and the location under it, and between a
-          summary card's label and its value. The columns are the next block
-          and take the card's own 12.
-
-          That is the whole hierarchy: two lines that belong together, then
-          the thing they are about. Setting the count 12 below the heading
-          would have made three blocks out of two and cost a line's height to
-          say something the 2 already says. */}
+          puts between "Visited" and the location under it. The columns are
+          the next block and take the card's own 12. */}
       <SignalsHeading>Viewed Summary</SignalsHeading>
       <div style={{ marginTop: 2, width: "100%" }}>
         <Summary views={views} />
       </div>
-      <div
-        className="grid w-full"
-        style={{
-          marginTop: 12,
-          gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
-          columnGap: 12,
-        }}
-      >
-        {columns.map(({ short, view }) => (
-          <div key={short} className="content-stretch flex flex-col items-start min-w-px">
-            {/* The signal names the column, on the rule the parent concept
-                draws under its heading. 12 on 20, the tab's own. */}
+
+      <div className="relative w-full" style={{ marginTop: 12 }}>
+        {/* Standing in the gaps rather than between the tracks, so the
+            columns keep every pixel of their width and the rule is centred
+            in the space that was already empty. Full height of the block:
+            a divider that stops short of the content it divides is a dash. */}
+        {style === "ruled" &&
+          Array.from({ length: Math.max(0, n - 1) }, (_, k) => (
             <span
-              className="font-['Inter',sans-serif] leading-[20px] overflow-hidden shrink-0 text-[12px] text-ellipsis w-full whitespace-nowrap"
-              style={{
-                color: view.live ? INK : FAINT,
-                fontWeight: view.live ? 500 : 400,
-                borderBottom: `1px solid ${HAIR}`,
-                paddingBottom: 8,
-                marginBottom: 8,
-              }}
-              title={view.signal.label}
-            >
-              {short}
-            </span>
-            {/* What it is worth, beside whether it fired — the two facts the
-                column exists to pair. */}
-            <span className="content-stretch flex gap-[6px] h-[20px] items-center min-w-px shrink-0 w-full">
-              {view.live ? <Tick /> : <Hollow />}
-              <span
-                className="font-['Inter',sans-serif] leading-[20px] text-[11px] whitespace-nowrap"
-                style={{ color: view.live ? LIVE : FAINT }}
-              >
-                {view.signal.range}
-              </span>
-            </span>
-          </div>
-        ))}
+              key={k}
+              aria-hidden
+              className="absolute bottom-0 top-0"
+              style={{ left: gapCentre(k + 1), width: 1, background: HAIR }}
+            />
+          ))}
+
+        <div
+          className="grid w-full"
+          style={{
+            gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`,
+            columnGap: FIVE_GAP,
+          }}
+        >
+          {columns.map(({ short, view }) => (
+            <div key={short} className="content-stretch flex flex-col items-start min-w-px">
+              {/* A rule over the column, in the live ink when the signal
+                  fired and a hairline when it did not. It is the column
+                  marker and the state in one 2px stroke — five of them, so
+                  the count of columns is never in question, and lit or not
+                  is readable before any word is. */}
+              {style === "accent" && (
+                <span
+                  aria-hidden
+                  className="block rounded-[100px] shrink-0 w-full"
+                  style={{ height: 2, marginBottom: 8, background: view.live ? LIVE : HAIR }}
+                />
+              )}
+
+              {name(view, short)}
+
+              {/* Filled or hollow, the width of its own column: the bar says
+                  which column this is and whether it fired without a mark or
+                  a border doing either. */}
+              {style === "bars" && (
+                <span
+                  aria-hidden
+                  className="block rounded-[100px] shrink-0 w-full"
+                  style={{
+                    height: 4,
+                    marginTop: 6,
+                    marginBottom: 6,
+                    background: view.live ? LIVE : "rgba(47,43,61,0.10)",
+                  }}
+                />
+              )}
+
+              {/* The tick is the state in `ruled`, where nothing else carries
+                  it. The other two already say it twice over, and a third
+                  mark would be the noise this was meant to lose. */}
+              {range(view, style === "ruled")}
+            </div>
+          ))}
+        </div>
       </div>
     </Panel>
   );
@@ -1565,7 +1639,9 @@ const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: 
   { label: "14 · Score first", render: (v, c) => <ScoreFirst views={v} company={c} /> },
   { label: "15 · Reached / not yet", render: (v, c) => <ReachedAndNotYet views={v} company={c} /> },
   { label: "16 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
-  { label: "17 · Five columns", render: v => <FiveColumns views={v} /> },
+  { label: "17 · Columns: ruled", render: v => <FiveColumns views={v} style="ruled" /> },
+  { label: "18 · Columns: bars", render: v => <FiveColumns views={v} style="bars" /> },
+  { label: "19 · Columns: accent", render: v => <FiveColumns views={v} style="accent" /> },
 ];
 
 /* ── the concepts panel ─────────────────────────────────────────────
