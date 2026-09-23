@@ -57,7 +57,9 @@ export default function RevealVariationBar({
     }
   };
 
-  const current = REVEAL_VARIATIONS.find(v => v.key === variation);
+  /* One string for both states, so the panel and the pill it collapses into
+     can never be retitled apart. */
+  const PANEL_TITLE = "History — Variations of Stacked Cards";
 
   /* The Intent Signals selector's own values, so the two version histories
      read as one system rather than as two panels that happen to both be
@@ -86,12 +88,9 @@ export default function RevealVariationBar({
         className={`${CARD_SURFACE} ${PLACE} cursor-pointer flex h-[30px] items-center px-[12px] text-[11px] whitespace-nowrap`}
         style={{ color: MUTED }}
         data-reveal-variation-bar
-        title="Contact reveal version history"
+        title={PANEL_TITLE}
       >
-        {"Version history · "}
-        <span className="font-medium" style={{ color: INK }}>
-          {current?.label ?? variation}
-        </span>
+        {PANEL_TITLE}
       </button>
     );
   }
@@ -118,9 +117,9 @@ export default function RevealVariationBar({
         <p
           className="flex-1 font-medium leading-[16px] overflow-hidden text-[11.5px] text-ellipsis whitespace-nowrap"
           style={{ color: INK }}
-          title="History — Variations of Stacked Cards"
+          title={PANEL_TITLE}
         >
-          History — Variations of Stacked Cards
+          {PANEL_TITLE}
         </p>
         <button
           type="button"
