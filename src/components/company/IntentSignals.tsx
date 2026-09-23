@@ -967,26 +967,39 @@ function LadderBar({ score }: { score: number }) {
   const here = bandAt(score);
   return (
     <IntentRow>
-      <div className="relative flex-1 min-w-px" style={{ height: 16 }}>
-        <span className="absolute rounded-[100px]" style={{ left: 0, right: 0, top: 4, height: 8, background: "rgba(47,43,61,0.06)" }} />
-        <span
-          className="absolute rounded-[100px]"
-          style={{ left: 0, width: `${x}%`, top: 4, height: 8, background: "rgba(7,41,41,0.40)" }}
-        />
-        {ASCENDING_BANDS.filter(b => b.min > 30).map(b => (
-          <span
-            key={b.range}
-            aria-hidden
-            className="absolute"
-            style={{ left: `${at(b.min)}%`, top: 3, width: 1, height: 10, background: "#ffffff" }}
-          />
-        ))}
-        {/* A rule rather than a dot: it reads as a position on a scale, and
-            it cannot be mistaken for the end of the fill behind it. */}
+      <div className="relative flex-1 min-w-px" style={{ height: 10 }}>
+        {ASCENDING_BANDS.map(band => {
+          const left = at(band.min);
+          const span = at(band.max) - left;
+          /* How far this band has been filled: everything behind the score,
+             nothing ahead of it, and the part of the way through for the one
+             the score is in. The ladder, which is the whole idea — what is
+             behind them, where they stopped. */
+          const filled = Math.max(0, Math.min(x - left, span));
+          return (
+            <span
+              key={band.range}
+              className="absolute overflow-hidden rounded-[100px]"
+              style={{ left: `${left}%`, width: `${span}%`, top: 2, height: 6, background: "rgba(47,43,61,0.08)" }}
+            >
+              {filled > 0 && (
+                <span
+                  className="absolute bottom-0 left-0 rounded-[100px] top-0"
+                  style={{ width: `${(filled / span) * 100}%`, background: "rgba(7,41,41,0.38)" }}
+                />
+              )}
+            </span>
+          );
+        })}
+        {/* The bands divide themselves. A segment runs to its own maximum and
+            the next starts at its own minimum, and 50 to 51 is 1.4% of the
+            scale — so the gap between the three is the gap in the data,
+            about four pixels at this width. Drawn hairlines on top of a
+            continuous track were a heavier way of saying the same thing. */}
         <span
           aria-hidden
-          className="absolute rounded-[2px]"
-          style={{ left: `${x}%`, marginLeft: -1.5, top: 2, width: 3, height: 12, background: LIVE }}
+          className="absolute rounded-[1px]"
+          style={{ left: `${x}%`, marginLeft: -1, top: 1, width: 2, height: 8, background: LIVE }}
         />
       </div>
       <span
@@ -1005,7 +1018,7 @@ function LadderBar({ score }: { score: number }) {
           {`${score}%`}
         </span>
         <span className="font-['Inter',sans-serif] leading-[20px] text-[10.5px]" style={{ color: MUTED }}>
-          {`in ${here.range}`}
+          {`· ${here.range}`}
         </span>
       </span>
     </IntentRow>
@@ -1055,15 +1068,20 @@ function ScoreAndBands({
   const rows = bandRows(views);
   return (
     <Panel>
-      <Summary views={views} />
-      {/* The sentence and its picture are one pair, 8 apart, and the rows are
-          the next block, 12 — the tab's own two intervals. Nothing here is at
-          5, 6, 7 or 10 any more: the Activity tab is built on 2, 8 and 12,
-          and a key sitting between its cards on a scale of its own is the
-          kind of difference that reads as sloppiness rather than as
-          hierarchy. */}
+      {/* The answer, then the working.
+
+          The score led nothing before: the section opened by counting
+          signals, which is evidence for a conclusion the reader had not been
+          given yet. A prospect is opened to find out how interested they
+          are, so that is the first line now, and the count beneath it is
+          what it rests on — what, then why.
+
+          The intervals are unchanged and so is the total: the indicator and
+          the sentence are one pair 8 apart, the rows are the next block at
+          12. Only the order of the first two moved. */}
+      <IntentBar score={score} variant={bar} />
       <div style={{ marginTop: 8, width: "100%" }}>
-        <IntentBar score={score} variant={bar} />
+        <Summary views={views} />
       </div>
       <div className="flex flex-col w-full" style={{ marginTop: 12 }}>
         {rows.map((band, i) => {
@@ -1636,8 +1654,8 @@ function ConceptsPanel({
 }
 
 export default function IntentSignals({ company }: { company: string }) {
-  /* Opens on the first of the three intent-bar designs being compared. */
-  const [concept, setConcept] = useState(0);
+  /* Opens on the ladder, which is the indicator that was chosen. */
+  const [concept, setConcept] = useState(2);
   const triggered = getTriggeredSignals(company);
   const views: View[] = INTENT_SIGNALS.map(signal => ({ signal, live: triggered.has(signal.label) }));
 
