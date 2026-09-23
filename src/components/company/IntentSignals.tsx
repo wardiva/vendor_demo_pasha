@@ -788,6 +788,237 @@ function ScoreBar({ score, height = 16 }: { score: number; height?: number }) {
   );
 }
 
+/* ── the intent indicator ────────────────────────────────────────────
+   Three designs of the same 20px row, so they can be held against each
+   other with everything around them identical.
+
+   The constraints they share. The row is labelled "Intent", in the same
+   48px column the band rows put their ranges in. It carries the prospect's
+   actual score, unrounded and unchanged. It shows all three bands, because
+   a position means nothing without the scale it is on. And it fits in the
+   height the row already had — 20px, a 12-on-20 label with the indicator
+   centred against it — so none of them makes the section taller.
+
+   The scale is 30 to 100 rather than 0 to 100: 30 is the floor of the
+   lowest band, so a bar starting at 0 would spend its first third on
+   territory no signal can put a prospect in. `at` does that mapping.
+*/
+
+type IntentBarVariant = "segmented" | "scale" | "ladder";
+
+/** Ascending, which is the order a left-to-right scale reads in. */
+const ASCENDING_BANDS = [...INTENT_BANDS].slice().reverse();
+
+/** The band a score sits in, falling back to the lowest rather than to none. */
+const bandAt = (score: number) =>
+  ASCENDING_BANDS.find(b => score >= b.min && score <= b.max) ?? ASCENDING_BANDS[0];
+
+/** The row's label and its 48px column, shared by all three. */
+function IntentRow({ children }: { children: ReactNode }) {
+  return (
+    <div className="content-stretch flex gap-[12px] items-center w-full">
+      <span
+        className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px] w-[48px] whitespace-nowrap"
+        style={{ color: INK }}
+      >
+        Intent
+      </span>
+      {children}
+    </div>
+  );
+}
+
+/* ── 1 · Segmented ───────────────────────────────────────────────────
+   Three segments, one per band, each as wide as the share of the scale it
+   owns — so 71%+ is visibly the long end and 30–50 the short one.
+
+   The band a prospect is in is filled and states the score; the two they
+   are not state their own range instead. That swap is the whole idea: at
+   any moment the bar is showing you the two ranges you need in order to
+   read the third, and the third is showing you the answer. Nothing is
+   repeated and nothing is decorative — three boxes, three pieces of text.
+
+   What it gives up is the exact position inside the band: 71% and 99% fill
+   the same segment. The number is right there in the segment, so what is
+   lost is the picture of it, not the fact. */
+function SegmentedBar({ score }: { score: number }) {
+  const here = bandAt(score);
+  return (
+    <IntentRow>
+      <div className="flex flex-1 gap-[2px] min-w-px" style={{ height: 16 }}>
+        {ASCENDING_BANDS.map(band => {
+          const active = band.range === here.range;
+          return (
+            <div
+              key={band.range}
+              className="flex items-center justify-center min-w-px rounded-[4px]"
+              /* Sized by the span each band actually owns, not evenly: an
+                 even split would draw 71-to-100 the same width as 51-to-70
+                 and quietly misstate the scale. */
+              style={{
+                flex: band.max - band.min,
+                background: active ? "rgba(7,41,41,0.16)" : "rgba(47,43,61,0.06)",
+              }}
+            >
+              <span
+                className="font-['Inter',sans-serif] leading-[14px] overflow-hidden text-ellipsis whitespace-nowrap"
+                style={{
+                  fontSize: 9.5,
+                  color: active ? LIVE : FAINT,
+                  fontWeight: active ? 600 : 400,
+                }}
+              >
+                {active ? `${score}%` : band.range}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </IntentRow>
+  );
+}
+
+/* ── 2 · Scale ───────────────────────────────────────────────────────
+   One continuous track, and the bands drawn as tone rather than as text.
+
+   The three zones step from a faint wash to a firm one as the scale rises,
+   so "further right is stronger" is carried by the bar itself and needs no
+   labels to say it — which is what keeps this one quiet enough to sit under
+   a sentence without competing with it. The boundaries are hairlines cut
+   through the track at 51 and 71, present for anyone looking for them and
+   invisible to anyone who is not.
+
+   The mark is the only saturated thing in the row, so the eye lands on the
+   position first and reads the number second, at the end of the track where
+   the row naturally finishes. */
+function ScaleBar({ score }: { score: number }) {
+  const x = at(score);
+  return (
+    <IntentRow>
+      <div className="relative flex-1 min-w-px" style={{ height: 16 }}>
+        <span className="absolute rounded-[100px]" style={{ left: 0, right: 0, top: 5, height: 6, background: "rgba(47,43,61,0.05)" }} />
+        {ASCENDING_BANDS.map((band, i) => (
+          <span
+            key={band.range}
+            aria-hidden
+            className="absolute"
+            style={{
+              left: `${at(band.min)}%`,
+              width: `${at(band.max) - at(band.min)}%`,
+              top: 5,
+              height: 6,
+              background: `rgba(7,41,41,${0.05 + i * 0.05})`,
+              borderTopLeftRadius: i === 0 ? 100 : 0,
+              borderBottomLeftRadius: i === 0 ? 100 : 0,
+              borderTopRightRadius: i === ASCENDING_BANDS.length - 1 ? 100 : 0,
+              borderBottomRightRadius: i === ASCENDING_BANDS.length - 1 ? 100 : 0,
+            }}
+          />
+        ))}
+        {ASCENDING_BANDS.filter(b => b.min > 30).map(b => (
+          <span
+            key={b.range}
+            aria-hidden
+            className="absolute"
+            style={{ left: `${at(b.min)}%`, top: 4, width: 1, height: 8, background: "#ffffff" }}
+          />
+        ))}
+        <span
+          aria-hidden
+          className="absolute rounded-[100px]"
+          style={{
+            left: `${x}%`,
+            marginLeft: -5,
+            top: 3,
+            width: 10,
+            height: 10,
+            background: LIVE,
+            boxShadow: "0 0 0 2px #ffffff",
+          }}
+        />
+      </div>
+      <span
+        className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[11px] text-right whitespace-nowrap"
+        style={{ color: LIVE, width: 30 }}
+      >
+        {score}%
+      </span>
+    </IntentRow>
+  );
+}
+
+/* ── 3 · Ladder ──────────────────────────────────────────────────────
+   The one that answers the question in words.
+
+   The other two leave the reader to work out which band a position is in by
+   looking at where the mark sits between two boundaries. That is a small
+   piece of work, and it is the piece the section exists to do — so this one
+   says it outright: the track, then the score, then the band it lands in,
+   written the way the six signals below write theirs.
+
+   The track keeps the picture — how far along, how much is behind them —
+   and the words remove the inference. It costs a few characters at the end
+   of a row that had spare width, and it is the only one of the three that
+   cannot be misread. The track still starts on the 60px line the band rows
+   start on, so the bar and the rows under it remain one column.
+*/
+function LadderBar({ score }: { score: number }) {
+  const x = at(score);
+  const here = bandAt(score);
+  return (
+    <IntentRow>
+      <div className="relative flex-1 min-w-px" style={{ height: 16 }}>
+        <span className="absolute rounded-[100px]" style={{ left: 0, right: 0, top: 4, height: 8, background: "rgba(47,43,61,0.06)" }} />
+        <span
+          className="absolute rounded-[100px]"
+          style={{ left: 0, width: `${x}%`, top: 4, height: 8, background: "rgba(7,41,41,0.40)" }}
+        />
+        {ASCENDING_BANDS.filter(b => b.min > 30).map(b => (
+          <span
+            key={b.range}
+            aria-hidden
+            className="absolute"
+            style={{ left: `${at(b.min)}%`, top: 3, width: 1, height: 10, background: "#ffffff" }}
+          />
+        ))}
+        {/* A rule rather than a dot: it reads as a position on a scale, and
+            it cannot be mistaken for the end of the fill behind it. */}
+        <span
+          aria-hidden
+          className="absolute rounded-[2px]"
+          style={{ left: `${x}%`, marginLeft: -1.5, top: 2, width: 3, height: 12, background: LIVE }}
+        />
+      </div>
+      <span
+        /* A flex line rather than an inline one. Two inline spans at 11.5 and
+           10.5 share a baseline, and the line box that holds both of them is
+           21px tall — one pixel more than the row everything else in this
+           card sits on. Laying them out as flex boxes on a fixed 20 puts the
+           row back on the grid. */
+        className="content-stretch flex gap-[3px] items-baseline shrink-0 whitespace-nowrap"
+        style={{ height: 20 }}
+      >
+        <span
+          className="font-['Inter',sans-serif] font-medium leading-[20px] text-[11.5px]"
+          style={{ color: LIVE }}
+        >
+          {`${score}%`}
+        </span>
+        <span className="font-['Inter',sans-serif] leading-[20px] text-[10.5px]" style={{ color: MUTED }}>
+          {`in ${here.range}`}
+        </span>
+      </span>
+    </IntentRow>
+  );
+}
+
+/** The indicator, in whichever of the three designs is being looked at. */
+function IntentBar({ score, variant }: { score: number; variant: IntentBarVariant }) {
+  if (variant === "segmented") return <SegmentedBar score={score} />;
+  if (variant === "scale") return <ScaleBar score={score} />;
+  return <LadderBar score={score} />;
+}
+
 /* ── 1 · Score and bands ────────────────────────────────────────────
    The three parts that earned their place, in the order they answer the
    question.
@@ -807,7 +1038,18 @@ function ScoreBar({ score, height = 16 }: { score: number; height?: number }) {
    Triggered signals are set in ink at medium against a tick; the ones that
    did not fire are faint against a hollow ring. Two differences, weight and
    mark, so the state survives being read quickly. */
-function ScoreAndBands({ views, company }: { views: View[]; company: string }) {
+function ScoreAndBands({
+  views,
+  company,
+  bar,
+}: {
+  views: View[];
+  company: string;
+  /* The one thing that varies between the three. Everything else in this
+     component — the sentence, the band rows, the tinted row, the spacing —
+     is the approved design and is identical whichever is passed. */
+  bar: IntentBarVariant;
+}) {
   const score = scoreOf(company);
   const here = bandOfScore(score);
   const rows = bandRows(views);
@@ -821,7 +1063,7 @@ function ScoreAndBands({ views, company }: { views: View[]; company: string }) {
           kind of difference that reads as sloppiness rather than as
           hierarchy. */}
       <div style={{ marginTop: 8, width: "100%" }}>
-        <ScoreBar score={score} />
+        <IntentBar score={score} variant={bar} />
       </div>
       <div className="flex flex-col w-full" style={{ marginTop: 12 }}>
         {rows.map((band, i) => {
@@ -1057,24 +1299,29 @@ function OneScale({ views, company }: { views: View[]; company: string }) {
 /* ── the section ───────────────────────────────────────────────────── */
 
 const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: string) => ReactNode }> = [
-  /* The three that came out of the eleven, first because they are the ones
-     being chosen between. The eleven keep their names and follow, renumbered
-     — they are the working, and worth being able to go back to. */
-  { label: "1 · Score and bands", render: (v, c) => <ScoreAndBands views={v} company={c} /> },
-  { label: "2 · Six chips", render: (v, c) => <SixChips views={v} company={c} /> },
-  { label: "3 · One scale", render: (v, c) => <OneScale views={v} company={c} /> },
+  /* Score and bands, three times, differing only in its intent indicator —
+     which is the one thing being chosen between, so it is the one thing that
+     changes between these three entries. Everything else each of them draws
+     is the approved design, from the same component. */
+  { label: "1 · Bar: segmented", render: (v, c) => <ScoreAndBands views={v} company={c} bar="segmented" /> },
+  { label: "2 · Bar: scale", render: (v, c) => <ScoreAndBands views={v} company={c} bar="scale" /> },
+  { label: "3 · Bar: ladder", render: (v, c) => <ScoreAndBands views={v} company={c} bar="ladder" /> },
 
-  { label: "4 · Banded rows", render: v => <BandedRows views={v} /> },
-  { label: "5 · Two columns", render: v => <TwoColumns views={v} /> },
-  { label: "6 · Band strength", render: v => <BandStrength views={v} /> },
-  { label: "7 · Strongest first", render: v => <StrongestFirst views={v} /> },
-  { label: "8 · Against the score", render: (v, c) => <AgainstTheScore views={v} company={c} /> },
-  { label: "9 · Band columns", render: v => <BandColumns views={v} /> },
-  { label: "10 · Score gutter", render: (v, c) => <ScoreGutter views={v} company={c} /> },
-  { label: "11 · Band tracks", render: (v, c) => <BandTracks views={v} company={c} /> },
-  { label: "12 · Score first", render: (v, c) => <ScoreFirst views={v} company={c} /> },
-  { label: "13 · Reached / not yet", render: (v, c) => <ReachedAndNotYet views={v} company={c} /> },
-  { label: "14 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
+  /* The other section designs, and the eleven behind them. */
+  { label: "4 · Six chips", render: (v, c) => <SixChips views={v} company={c} /> },
+  { label: "5 · One scale", render: (v, c) => <OneScale views={v} company={c} /> },
+
+  { label: "6 · Banded rows", render: v => <BandedRows views={v} /> },
+  { label: "7 · Two columns", render: v => <TwoColumns views={v} /> },
+  { label: "8 · Band strength", render: v => <BandStrength views={v} /> },
+  { label: "9 · Strongest first", render: v => <StrongestFirst views={v} /> },
+  { label: "10 · Against the score", render: (v, c) => <AgainstTheScore views={v} company={c} /> },
+  { label: "11 · Band columns", render: v => <BandColumns views={v} /> },
+  { label: "12 · Score gutter", render: (v, c) => <ScoreGutter views={v} company={c} /> },
+  { label: "13 · Band tracks", render: (v, c) => <BandTracks views={v} company={c} /> },
+  { label: "14 · Score first", render: (v, c) => <ScoreFirst views={v} company={c} /> },
+  { label: "15 · Reached / not yet", render: (v, c) => <ReachedAndNotYet views={v} company={c} /> },
+  { label: "16 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
 ];
 
 /* ── the concepts panel ─────────────────────────────────────────────
@@ -1389,9 +1636,8 @@ function ConceptsPanel({
 }
 
 export default function IntentSignals({ company }: { company: string }) {
-  /* Six chips — the one chosen out of the fourteen. Named by index, and the
-     index is the list's own order, so adding a concept cannot move it. */
-  const [concept, setConcept] = useState(1);
+  /* Opens on the first of the three intent-bar designs being compared. */
+  const [concept, setConcept] = useState(0);
   const triggered = getTriggeredSignals(company);
   const views: View[] = INTENT_SIGNALS.map(signal => ({ signal, live: triggered.has(signal.label) }));
 
