@@ -127,7 +127,7 @@ function SignalsHeading() {
       className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[13px] w-full"
       style={{ color: INK }}
     >
-      Signals triggered
+      Signals Triggered
     </p>
   );
 }
