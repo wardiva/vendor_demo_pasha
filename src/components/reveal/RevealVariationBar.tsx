@@ -40,11 +40,15 @@ export default function RevealVariationBar({
   total: number;
   onSetUsed: (used: number) => void;
 }) {
+  /* Closed unless this session has opened it — the same default the Intent
+     Signals panel takes, and for the same reason: a version history is a
+     review control, and a review control should not be the first thing on
+     screen. Once opened it stays open for the session. */
   const [open, setOpen] = useState(() => {
     try {
-      return sessionStorage.getItem("reveal-variation-bar") !== "closed";
+      return sessionStorage.getItem("reveal-variation-bar") === "open";
     } catch {
-      return true;
+      return false;
     }
   });
 

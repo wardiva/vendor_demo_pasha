@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
   INTENT_BANDS,
@@ -58,16 +58,47 @@ function Hollow({ size = 10 }: { size?: number }) {
 }
 
 /**
+ * The mark where it is carrying the row on its own.
+ *
+ * `Tick` is a stroke and nothing else, which works beside a filled chip that
+ * has already said "this one" — the chip is the mark and the tick only says
+ * what kind. Take the chip away and a bare stroke is too little to find in a
+ * column of five, so the disc comes back as the thing you actually scan for:
+ * the lime the Filters button and the reveal counts use, with the check cut
+ * out of it in the product's live ink.
+ */
+function CircleTick({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" fill="none" aria-hidden className="shrink-0 block">
+      <circle cx="6" cy="6" r="5.5" fill="#b1fa63" stroke="#b1fa63" strokeLinejoin="round" />
+      <path
+        d="M3.33212 6.20512L5.00859 7.88159L8.36153 4.52865"
+        stroke={LIVE}
+        strokeWidth="1.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/**
  * The module's framed card: a 2px tint ring at radius 12 over a white face at
  * radius 10, with the uniform 12px pad every other card in the Activity tab
  * uses. It was tighter here on the argument that a key is not a card — but it
  * sits between the summary cards and the session cards, and text starting 2px
  * in from theirs is the kind of difference you see without being able to name.
  */
-function Panel({ children }: { children: ReactNode }) {
+function Panel({ children, face }: { children: ReactNode; face?: CSSProperties }) {
   return (
     <div className="bg-[rgba(244,242,240,0.6)] content-stretch flex items-start p-[2px] relative rounded-[12px] shrink-0 w-full">
-      <div className="bg-white content-stretch flex flex-[1_0_0] flex-col items-start min-w-px p-[12px] relative rounded-[10px]">
+      {/* `face` is for an arrangement that needs to break the uniform pad —
+          only the bottom, and only where something sits low enough in the
+          card that 12 under it reads as clipped. */}
+      <div
+        className="bg-white content-stretch flex flex-[1_0_0] flex-col items-start min-w-px p-[12px] relative rounded-[10px]"
+        style={face}
+      >
         {children}
       </div>
     </div>
@@ -1700,7 +1731,152 @@ type FiveStyle = "ruled" | "bars" | "accent";
 /** The gap between columns, and what the rules in `ruled` are placed against. */
 const FIVE_GAP = 12;
 
-/* ── 19 – 21 · Ruled columns ────────────────────────────────────────
+/* ── 19 · Buyer Intelligence Activity ───────────────────────────────
+   The five columns with the scale over them, from the Figma.
+
+   It drops two things the earlier arrangements carried, and both go for the
+   same reason: the scale now says them.
+
+   The sentence above the columns counted the signals and named the strongest
+   band. The bar states the score outright and marks where it falls, so the
+   count is the row of five marks underneath and the strongest band is where
+   the marker sits — reading both twice was the cost of not having a bar.
+
+   And each column's range chip is gone. A chip per column repeated the band
+   five times over to say what three colours say once, and it forced every
+   column to be wide enough for "51–70%" when the widest thing that has to
+   fit is "Alternatives". What is left in the column is the name and whether
+   it fired, which is the only thing a column was ever answering.
+
+   The scale is three equal segments rather than three proportional ones. The
+   bands are not equal — 30–50 is twenty points, 71–100 is twenty-nine — but
+   the reader is not measuring a distance along it, they are seeing which of
+   three the score is in, and thirds put each band's share of the *attention*
+   where its share of the meaning is. The 5px between them is what keeps them
+   reading as three rather than as one bar that changes colour twice. */
+
+/** Between the scale's three segments. */
+const SCALE_GAP = 5;
+/** The rule between columns, from the design: 32 tall in a 44 row. */
+const TRACK_RULE = "#ebebeb";
+
+function ActivityChips({ views, company }: { views: View[]; company: string }) {
+  const score = scoreOf(company);
+  const columns = FIVE_COLUMNS.map(c => ({
+    ...c,
+    view: views.find(v => v.signal.label === c.label),
+  })).filter((c): c is typeof c & { view: View } => Boolean(c.view));
+
+  const n = columns.length;
+  /* Ascending, so the bar reads left to right as intent rises. */
+  const bands = [...INTENT_BANDS].reverse();
+
+  /* Where the marker goes. The segments are equal, so the score's place on
+     the bar is its place *inside its own band* offset by the bands before
+     it — not a fraction of 30-to-100, which is what `at` computes and what a
+     proportional bar would want. */
+  const i = Math.max(0, bands.findIndex(b => score >= b.min && score <= b.max));
+  const band = bands[i];
+  const within = band.max === band.min ? 0 : (score - band.min) / (band.max - band.min);
+  const markLeft = `calc((100% - ${(bands.length - 1) * SCALE_GAP}px) / ${bands.length} * ${(
+    i + within
+  ).toFixed(4)} + ${SCALE_GAP * i}px)`;
+
+  return (
+    /* 16 under, not 12: the marks sit at the bottom of the card and the
+       uniform pad reads as clipped under a row that ends in a shape. */
+    <Panel face={{ paddingBottom: 16 }}>
+      <SignalsHeading>Buyer Intelligence Activity</SignalsHeading>
+
+      <div className="content-stretch flex gap-[40px] items-center w-full" style={{ marginTop: 12 }}>
+        <span
+          className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px]"
+          style={{ color: INK }}
+        >
+          Intent
+        </span>
+
+        {/* Not clipped: the score rides above the bar and has to leave it. */}
+        <div className="relative flex-1 min-w-px" style={{ height: 6 }}>
+          <div className="content-stretch flex h-full items-center w-full" style={{ gap: SCALE_GAP }}>
+            {bands.map(b => (
+              <span
+                key={b.range}
+                aria-hidden
+                className="flex-1 h-full min-w-px rounded-[100px]"
+                style={{ background: intentTagColor(b.min) }}
+              />
+            ))}
+          </div>
+
+          <span
+            aria-hidden
+            className="absolute rounded-[2px]"
+            style={{ left: markLeft, marginLeft: -1, top: -2, bottom: -2, width: 2, background: LIVE }}
+          />
+
+          {/* The number itself, on the mark rather than at the end of the
+              row: what it labels is a position, and a value parked in the
+              margin makes the reader carry it back. */}
+          <span
+            className="absolute flex items-center justify-center rounded-[100px] whitespace-nowrap"
+            style={{
+              left: markLeft,
+              bottom: "calc(100% + 6px)",
+              transform: "translateX(-50%)",
+              background: "#ffffff",
+              border: "1px solid #fafafa",
+              filter: "drop-shadow(3px 3px 6px rgba(12,10,21,0.12))",
+              padding: "2px 5px",
+            }}
+          >
+            <span className="font-['Inter',sans-serif] font-semibold text-[10px]" style={{ color: LIVE }}>
+              {`${score}%`}
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <div className="relative w-full" style={{ marginTop: 12 }}>
+        {/* On the boundaries, 32 of the row's 44 — short of both ends, so it
+            separates the columns without ruling the block off. */}
+        {Array.from({ length: Math.max(0, n - 1) }, (_, k) => (
+          <span
+            key={k}
+            aria-hidden
+            className="absolute"
+            style={{ left: `calc(${k + 1} * 100% / ${n})`, top: 6, bottom: 6, width: 1, background: TRACK_RULE }}
+          />
+        ))}
+
+        <div className="grid" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
+          {columns.map(({ short, view }) => (
+            <div
+              key={short}
+              className="content-stretch flex flex-col gap-[6px] items-center min-w-px overflow-hidden"
+            >
+              {/* Weight alone carries the state in the name — the mark under
+                  it is unambiguous, so dimming the word as well would be the
+                  third time this column says the same thing. */}
+              <span
+                className="font-['Inter',sans-serif] leading-[20px] max-w-full overflow-hidden text-[12px] text-ellipsis whitespace-nowrap"
+                style={{ color: INK, fontWeight: view.live ? 500 : 400 }}
+                title={view.signal.label}
+              >
+                {short}
+              </span>
+              <span className="content-stretch flex h-[18px] items-center justify-center w-full">
+                {view.live ? <CircleTick /> : <Hollow size={12} />}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+/* ── 20 – 21 · Ruled columns ────────────────────────────────────────
    Five columns, a rule between each, and the state on its own row.
 
    Two things were wrong and both are geometry.
@@ -1731,7 +1907,7 @@ const FIVE_GAP = 12;
      marks   colour only on the mark, the quietest of the three
      score   the scale above it, and the column holding the score lit */
 
-type RuledStyle = "chips" | "marks" | "score";
+type RuledStyle = "marks" | "score";
 
 /** Inside every column, on both sides — including the outer two. */
 const RULED_PAD = 6;
@@ -1854,29 +2030,7 @@ function RuledColumns({
             const inBand = style === "score" && view.signal.range === here;
             return (
               <div key={`s-${short}`} className={cell} style={{ ...cellStyle, marginTop: 6 }}>
-                {style === "chips" ? (
-                  /* The band's fill behind the mark and the range, so the row
-                     of five is the bands themselves — and three of them share
-                     a colour because three of them share a band. Unfired, the
-                     chip keeps its shape and loses its colour: the row stays
-                     a row, and what changed is legible without reading it. */
-                  <span
-                    className="content-stretch flex gap-[4px] h-[20px] items-center rounded-[6px] w-full"
-                    style={{
-                      background: view.live ? fill : "rgba(47,43,61,0.05)",
-                      paddingLeft: 6,
-                      paddingRight: 6,
-                    }}
-                  >
-                    {view.live ? <Tick /> : <Hollow />}
-                    <span
-                      className="font-['Inter',sans-serif] leading-[18px] text-[11px] whitespace-nowrap"
-                      style={{ color: view.live ? INK : FAINT, fontWeight: view.live ? 500 : 400 }}
-                    >
-                      {view.signal.range}
-                    </span>
-                  </span>
-                ) : style === "marks" ? (
+                {style === "marks" ? (
                   /* Colour on the mark and nowhere else — a band-filled disc
                      when it fired, an empty ring when it did not. The range
                      keeps its own line under it in plain ink. */
@@ -2043,18 +2197,27 @@ function FiveColumns({ views, style }: { views: View[]; style: FiveStyle }) {
 /* ── the section ───────────────────────────────────────────────────── */
 
 /**
- * The one that was chosen, by index into CONCEPTS.
+ * The one the Activity tab opens with, by index into CONCEPTS.
  *
- * It is what the Activity tab opens with and what the picker marks "Final",
- * so the two can never disagree — moving the design means moving this
- * number, and both follow.
+ * It is 0 because the head of the list is the leading design, which is the
+ * arrangement the picker has always used: moving a design to the top is how
+ * you promote it, and the tab follows without a second place to say so. The
+ * picker used to mark this row with a lime "Final" chip as well; the chip is
+ * gone, so the list now carries colour on the selected row and nowhere else.
  */
 const FINAL_CONCEPT = 0;
 
 const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: string) => ReactNode }> = [
-  /* The finished design first, and the two it was chosen over behind it.
-     All three are Score and bands, differing only in the indicator, so what
-     separates them is exactly what was being decided. */
+  /* The two being weighed, first, and in the order they are being weighed in.
+     Their numbers are where they were drawn rather than where they now sit —
+     "19" and "13" are what they are called, so promoting them must not
+     renumber them or the names stop matching the conversation about them. */
+  { label: "19 · Ruled: chips", render: (v, c) => <ActivityChips views={v} company={c} /> },
+  { label: "13 · Bands: minimal", render: (v, c) => <BandColumns views={v} company={c} style="minimal" /> },
+
+  /* Everything else, in the order it was already in. The three Score and
+     bands arrangements stay together at the head of it: they differ only in
+     the indicator, so what separates them is exactly what was being decided. */
   { label: "1 · Bar: ladder", render: (v, c) => <ScoreAndBands views={v} company={c} bar="none" summary="heading" /> },
   { label: "2 · Bar: segmented", render: (v, c) => <ScoreAndBands views={v} company={c} bar="segmented" /> },
   { label: "3 · Bar: scale", render: (v, c) => <ScoreAndBands views={v} company={c} bar="scale" /> },
@@ -2070,13 +2233,11 @@ const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: 
   { label: "10 · Against the score", render: (v, c) => <AgainstTheScore views={v} company={c} /> },
   { label: "11 · Bands: chips", render: (v, c) => <BandColumns views={v} company={c} style="chips" /> },
   { label: "12 · Bands: aligned", render: (v, c) => <BandColumns views={v} company={c} style="aligned" /> },
-  { label: "13 · Bands: minimal", render: (v, c) => <BandColumns views={v} company={c} style="minimal" /> },
   { label: "14 · Score gutter", render: (v, c) => <ScoreGutter views={v} company={c} /> },
   { label: "15 · Band tracks", render: (v, c) => <BandTracks views={v} company={c} /> },
   { label: "16 · Score first", render: (v, c) => <ScoreFirst views={v} company={c} /> },
   { label: "17 · Reached / not yet", render: (v, c) => <ReachedAndNotYet views={v} company={c} /> },
   { label: "18 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
-  { label: "19 · Ruled: chips", render: (v, c) => <RuledColumns views={v} company={c} style="chips" /> },
   { label: "20 · Ruled: marks", render: (v, c) => <RuledColumns views={v} company={c} style="marks" /> },
   { label: "21 · Ruled: score", render: (v, c) => <RuledColumns views={v} company={c} style="score" /> },
   { label: "22 · Columns: bars", render: v => <FiveColumns views={v} style="bars" /> },
@@ -2299,22 +2460,13 @@ function IndexPanel({ concept, onStep, onPick, onClose }: PanelProps) {
               >
                 {name}
               </span>
-              {/* The lime chip the Filters button and the count use, at the
-                  size this row can hold. It marks the finished design, which
-                  is also the one the tab opens with — so it is the default
-                  as well, and a second chip saying so would be the same
-                  fact twice in a 190px panel. */}
-              {i === FINAL_CONCEPT && (
-                <span
-                  className="flex items-center justify-center rounded-[4px] shrink-0"
-                  style={{ background: "rgba(177,250,99,0.32)", padding: "1px 5px" }}
-                  title="Final — the design the Activity tab opens with"
-                >
-                  <span className="font-semibold leading-[14px] text-[9.5px]" style={{ color: LIVE }}>
-                    Final
-                  </span>
-                </span>
-              )}
+              {/* Nothing else. A row that is not the selected one carries no
+                  colour of its own — the lime "Final" chip that used to sit
+                  here was the one exception, and being the exception was the
+                  problem: a standing mark on an unselected row competes with
+                  the only mark that should be reading, which is where you
+                  are. What it said is now said by position instead, which
+                  costs the list no colour at all. */}
             </button>
           );
         })}
@@ -2366,11 +2518,18 @@ function ConceptsPanel({
   onPick: (i: number) => void;
   onStep: (delta: number) => void;
 }) {
+  /* Closed unless this session has opened it.
+     It used to be the other way round — open unless closed — which made a
+     review control the first thing the Activity tab showed, every time the
+     modal was opened, to everyone. The tab's own content should be what
+     opens, so the default is the pill and the panel is something you ask
+     for. Asking once is still remembered for the rest of the session: what
+     changed is the starting point, not the memory. */
   const [open, setOpen] = useState(() => {
     try {
-      return sessionStorage.getItem(PANEL_KEY) !== "closed";
+      return sessionStorage.getItem(PANEL_KEY) === "open";
     } catch {
-      return true;
+      return false;
     }
   });
   const setOpenPersisted = (next: boolean) => {
