@@ -82,10 +82,15 @@ export function ctaLabel(flow: CompanyRevealFlow, count: number, label?: string)
 export type CtaTone = "primary" | "soft" | "outline" | "invert" | "invert-outline";
 export type CtaSize = "sm" | "md" | "lg";
 
+/* Weight sits here with the rest of the type, because it varies with the
+   size. Figma 8:434 draws the small one in Inter Regular; it was medium
+   along with every other size, which at 11px on a tint is the difference
+   between a label and a button shouting. The larger two are unchanged —
+   there is no node for them and nothing to say they moved. */
 const SIZES: Record<CtaSize, { pad: string; text: string; icon: number; gap: string }> = {
-  sm: { pad: "px-[8px] py-[4px]", text: "text-[11px] leading-[18px]", icon: 12, gap: "gap-[4px]" },
-  md: { pad: "px-[12px] py-[6px]", text: "text-[12px] leading-[18px]", icon: 14, gap: "gap-[6px]" },
-  lg: { pad: "px-[14px] py-[8px]", text: "text-[13px] leading-[20px]", icon: 14, gap: "gap-[6px]" },
+  sm: { pad: "px-[8px] py-[4px]", text: "font-normal text-[11px] leading-[18px]", icon: 12, gap: "gap-[4px]" },
+  md: { pad: "px-[12px] py-[6px]", text: "font-medium text-[12px] leading-[18px]", icon: 14, gap: "gap-[6px]" },
+  lg: { pad: "px-[14px] py-[8px]", text: "font-medium text-[13px] leading-[20px]", icon: 14, gap: "gap-[6px]" },
 };
 
 const TONES: Record<CtaTone, string> = {
@@ -159,7 +164,7 @@ export function RevealCta({
         </span>
       )}
       <p
-        className={`[word-break:break-word] font-['Inter',sans-serif] font-medium not-italic relative shrink-0 whitespace-nowrap ${s.text}`}
+        className={`[word-break:break-word] font-['Inter',sans-serif] not-italic relative shrink-0 whitespace-nowrap ${s.text}`}
       >
         {ctaLabel(flow, count, label)}
       </p>

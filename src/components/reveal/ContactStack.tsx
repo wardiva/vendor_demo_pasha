@@ -351,12 +351,28 @@ export function ContactStackModal({
                      the reveal is the company's, one press for all of them,
                      so only i === 0 is given it. */
                   i === 0 && flow.locked ? (
+                    /* Figma 8:434 "Label Button" — and it is the CTA the
+                       module already builds, not a new one. The node is a
+                       12% tint of the product's ink behind ink-coloured
+                       text, 8 by 4 at radius 6, 4px to a 12px eye-off, 11 on
+                       18: which is `soft` at `sm` exactly, both of them
+                       already in RevealCta's own tables. The eye-off is the
+                       component's own mark, the same glyph the node exports,
+                       so nothing was downloaded to draw it.
+
+                       It was primary at md — a solid dark pill. Sitting on
+                       the face of a card rather than under it, that was the
+                       heaviest thing in the panel, and it covered the
+                       contact it is offering to show. The tinted one reads
+                       as something laid over the card instead of something
+                       blocking it, which is also what the prospect row has
+                       always drawn here. */
                     <RevealCta
                       flow={flow}
                       count={count}
                       label={revealAllCountLabel(count)}
-                      tone="primary"
-                      size="md"
+                      tone="soft"
+                      size="sm"
                       className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[3]"
                     />
                   ) : undefined
