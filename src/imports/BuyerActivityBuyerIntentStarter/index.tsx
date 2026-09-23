@@ -31,7 +31,6 @@ import ContactRevealsMeter from "@/components/ContactRevealsMeter";
 import SignalsFilterRow from "@/components/signals/SignalsFilterRow";
 import { COMPANIES, type SignalsAnalytics, type SummaryStat } from "@/data/signals";
 import { PROSPECT_COMPANIES } from "@/data/prospects";
-import { IS_LOCAL } from "@/lib/environment";
 import { CardEmptyState, DonutChart, MAX_BAR_FILL, barWidth, largest } from "@/components/analytics/ChartPrimitives";
 import { HelpControl } from "@/components/HelpIcon";
 
@@ -676,181 +675,28 @@ function MemoryUsage3() {
   );
 }
 
-/**
- * The buyer companies behind a research signal, and how many are not shown.
- *
- * Read off the dataset rather than written down: a company is in the stack
- * when its account actually produces that signal, and the logos are the ones
- * the Prospects page and the Competitors filter already draw for it, so the
- * faces on the card are the same companies named everywhere else. Six slots,
- * as the two cards beside them have — five logos and a sixth carrying the
- * overflow count over a dimmed logo.
- */
-function signalStack(kind: "profile" | "pricing") {
-  const carrying = PROSPECT_COMPANIES.filter(
-    c => COMPANIES.find(account => account.name === c.name)?.signals[kind],
-  );
-  return { slots: carrying.slice(0, 6).map(c => c.logo), more: Math.max(0, carrying.length - 5) };
-}
-
-const SIGNAL_STACKS = { profile: signalStack("profile"), pricing: signalStack("pricing") };
-
-/**
- * The avatar group on the Profile and Pricing cards.
- *
- * The geometry the other two groups use — 28px circles overlapping by 4px, a
- * white ring on each, the last dimmed under its count — and the same
- * data-name="Friends", which is what the hover spring and the click through to
- * the Prospects page key on, so all four cards behave alike. Its own component
- * rather than a parameter on the existing two, which are left exactly as they
- * were.
- */
-function FriendsSignal({ kind }: { kind: "profile" | "pricing" }) {
-  const { slots, more } = SIGNAL_STACKS[kind];
-  const slot =
-    "border border-solid border-white mr-[-4px] overflow-hidden relative rounded-[100px] shrink-0 size-[28px]";
-  const mark = "absolute block inset-0 max-w-none object-cover size-full";
-  const [lead, overflow] = [slots.slice(0, 5), slots[5]];
-  return (
-    <div className="content-stretch flex items-center relative shrink-0" data-name="Friends">
-      {lead.map((logo, i) => (
-        <div key={i} className={slot}>
-          <img alt="" className={mark} height="28" src={logo} width="28" />
-        </div>
-      ))}
-      {more > 0 && (
-        <div className={slot} data-name="Frame">
-          <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[100px]">
-            {overflow && (
-              <img alt="" className="absolute max-w-none object-cover rounded-[100px] size-full" src={overflow} />
-            )}
-            <div className="absolute bg-[rgba(0,0,0,0.6)] inset-0 rounded-[100px]" />
-          </div>
-          <div className="content-stretch flex items-center justify-center overflow-clip relative rounded-[inherit] size-full">
-            <p className="[word-break:break-word] font-['Inter',sans-serif] font-medium leading-[20px] not-italic relative shrink-0 text-[13px] text-white whitespace-nowrap">
-              +{more}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/**
- * Profile Signals and Pricing Signals.
- *
- * Built to the spec of Competitor Signals beside them: the same white 186px
- * card at 12px radius, the same 20px padding, the same title-and-info row over
- * a 28px figure with the md trend glyph, and the same 11px caption over the
- * avatar stack. Only the words, the figure and the faces differ, so the four
- * read as one set. The figure counts buyers, and is animated and trended by the
- * components the other cards already use.
- */
-function SignalSummaryCard({
-  title,
-  caption,
-  stat,
-  kind,
-}: {
-  title: string;
-  caption: string;
-  stat: SummaryStat;
-  kind: "profile" | "pricing";
-}) {
-  return (
-    <div className="bg-white flex-[1_1_220px] h-[186px] min-w-px relative rounded-[12px]" data-name="Memory Usage">
-      <div className="flex flex-col justify-center size-full">
-        <div className="content-stretch flex flex-col items-start justify-between p-[20px] relative size-full">
-          <div className="content-stretch flex flex-col items-start relative shrink-0 w-full">
-            <div className="content-stretch flex flex-col gap-[6px] items-start relative shrink-0 w-full">
-              <div className="content-stretch flex gap-[8px] items-center relative shrink-0 w-full">
-                <div className="[word-break:break-word] flex flex-col font-['Inter',sans-serif] font-medium justify-center leading-[0] not-italic relative shrink-0 text-[#2f2b3d] text-[16px] whitespace-nowrap">
-                  <p className="leading-[24px]">{title}</p>
-                </div>
-                <InfoIcon />
-              </div>
-              <div className="content-stretch flex gap-[4px] items-end relative shrink-0">
-                <div className="[word-break:break-word] capitalize flex flex-col font-['Inter',sans-serif] font-medium justify-center leading-[0] not-italic relative shrink-0 text-[#2f2b3d] text-[28px] whitespace-nowrap">
-                  {/* Only the figure counts; the trend beside it is untouched. */}
-                  <p className="leading-[36px]"><AnimatedMetric value={stat.value} /></p>
-                </div>
-                <TrendIndicator stat={stat} variant="md" />
-              </div>
-            </div>
-          </div>
-          <div className="content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-[197.5px]">
-            <div className="[word-break:break-word] flex flex-col font-['Inter',sans-serif] font-medium justify-center leading-[0] not-italic relative shrink-0 text-[11px] text-[rgba(47,43,61,0.6)] w-full">
-              <p className="leading-[15px]">{caption}</p>
-            </div>
-            <FriendsSignal kind={kind} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MemoryUsageProfile() {
-  return (
-    <SignalSummaryCard
-      title="Profile Signals"
-      caption="Visited your product profile."
-      stat={useSignalsAnalytics().signalBuyers.profile}
-      kind="profile"
-    />
-  );
-}
-
-function MemoryUsagePricing() {
-  return (
-    <SignalSummaryCard
-      title="Pricing Signals"
-      caption="Visited your pricing page."
-      stat={useSignalsAnalytics().signalBuyers.pricing}
-      kind="pricing"
-    />
-  );
-}
-
 function Row() {
   /* data-summary-cards opts this row out of the [data-name="Row"] hover styling
    * that the selectable leads-table rows use — these cards are static.
    *
-   * All four across one line, at the 16px gutter the row already used. The
-   * content column is 998px wide, so a quarter of it less the gutters is
-   * 237.5px a card and 197.5px inside the 20px padding — which is the width
-   * the caption block and its avatar stack were already drawn at. The card's
-   * own spacing therefore needs nothing taken out of it to fit: four across is
-   * the width these cards were designed for.
-   *
    * Wrapping is the row's, not a breakpoint's. This page is drawn on a canvas
    * held open at 1440px whatever the window does, so a `md:`-style rule reads a
    * viewport that has nothing to do with how much room the cards actually have.
-   * Each card asks for 220px and takes an equal share of whatever is left over,
-   * so the four sit on one line while the row can hold 4 x 220 plus gutters and
-   * fall onto a second line when it cannot — at which point the ones still
-   * together share their line equally, the same way. `h-[186px]` keeps every
-   * card the design's height on every line. */
+   * Each card takes an equal share of the line, so no layout rule here knows
+   * how many cards there are — which is why removing two of them needed
+   * nothing but removing them. */
   return (
     <div
       className="content-stretch flex flex-wrap gap-[16px] items-start relative shrink-0 w-full"
       data-name="Row"
       data-summary-cards
     >
-      {/* Buyers in Market, then the two page signals it breaks down into, then
-          Competitor — the whole audience first, then what it looked at.
-
-          Profile and Pricing are held back locally and shipped everywhere
-          else. Nothing about them is removed: the cards, their figures, their
-          avatar stacks and the filters those stacks open are all still here and
-          still built — this only decides whether the two are put on the row.
-          The row is flex-wrap over cards that each take an equal share of it,
-          so the two that remain simply widen to fill the line; no layout rule
-          knows how many cards there are. */}
+      {/* Buyers in Market, then Competitor: the whole audience, then what it
+          looked at. Profile Signals and Pricing Signals are gone — they were
+          shown on deployments and held back locally, which is the one
+          arrangement where nobody reviewing the page ever saw them. Their
+          filter options are untouched and still on the Filters panel. */}
       <MemoryUsage />
-      {!IS_LOCAL && <MemoryUsageProfile />}
-      {!IS_LOCAL && <MemoryUsagePricing />}
       <MemoryUsage3 />
     </div>
   );
