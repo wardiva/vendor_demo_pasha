@@ -1700,6 +1700,235 @@ type FiveStyle = "ruled" | "bars" | "accent";
 /** The gap between columns, and what the rules in `ruled` are placed against. */
 const FIVE_GAP = 12;
 
+/* ── 19 – 21 · Ruled columns ────────────────────────────────────────
+   Five columns, a rule between each, and the state on its own row.
+
+   Two things were wrong and both are geometry.
+
+   The state sat beside the name, so each cell was a line of prose — a mark,
+   a word, a number — and reading down a column meant reading across five of
+   them. Names on one row and states on the row beneath turns that back into
+   a table: one pass across the names to find the column, one pass across the
+   marks to see which fired.
+
+   And the columns were not evenly bedded. The grid put a 12px gap between
+   tracks and the rules stood in the middle of it, which gives every inner
+   column 6px either side of its rule and the outer two nothing at all on
+   their outer edge. The fix is to pad the columns rather than gap them: 6px
+   inside every column on both sides, the grid pulled 6px wider than its box
+   at each end so the first and last columns' text still lines up with the
+   summary above, and the rules on the track boundaries. Every column now has
+   the same 6px of air on both sides, the outer two included, and the rules
+   are evenly spaced by construction rather than by arithmetic.
+
+   The colour is IntentTag's, as everywhere else that shows a band — #FEFFCA,
+   #E6FFC3, #C3FFC9, warm through to green. Three of the five columns share
+   the middle band and so share its fill, which is the point: the colour says
+   what a signal is worth, and three of them are worth the same.
+
+     chips   the band's fill behind the state, so the row of five reads as
+             the bands at a glance
+     marks   colour only on the mark, the quietest of the three
+     score   the scale above it, and the column holding the score lit */
+
+type RuledStyle = "chips" | "marks" | "score";
+
+/** Inside every column, on both sides — including the outer two. */
+const RULED_PAD = 6;
+
+function RuledColumns({
+  views,
+  company,
+  style,
+}: {
+  views: View[];
+  company: string;
+  style: RuledStyle;
+}) {
+  const score = scoreOf(company);
+  const here = bandOfScore(score);
+  const columns = FIVE_COLUMNS.map(c => ({
+    ...c,
+    view: views.find(v => v.signal.label === c.label),
+  })).filter((c): c is typeof c & { view: View } => Boolean(c.view));
+
+  const n = columns.length;
+  const bands = [...INTENT_BANDS].reverse();
+
+  /* The grid is 2 * RULED_PAD wider than the block it sits in, pulled back by
+     that much at each end, so the padding inside the outer columns lands
+     outside the text column and the first name still starts where the line
+     above it does. */
+  const gridStyle = {
+    marginLeft: -RULED_PAD,
+    marginRight: -RULED_PAD,
+    width: `calc(100% + ${2 * RULED_PAD}px)`,
+    gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`,
+  } as const;
+
+  const cell = "min-w-px" as const;
+  const cellStyle = { paddingLeft: RULED_PAD, paddingRight: RULED_PAD } as const;
+
+  return (
+    <Panel>
+      <Summary views={views} />
+
+      {/* The scale, for the one arrangement that carries it. Bands in their
+          own fills, the mark where the prospect actually is. */}
+      {style === "score" && (
+        <div className="content-stretch flex gap-[12px] items-center w-full" style={{ marginTop: 12 }}>
+          <span
+            className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px] w-[48px]"
+            style={{ color: INK }}
+          >
+            Intent
+          </span>
+          <div className="relative flex-1 min-w-px" style={{ height: 8 }}>
+            {bands.map((band, i) => (
+              <span
+                key={band.range}
+                aria-hidden
+                className="absolute bottom-0 top-0"
+                style={{
+                  left: `${at(band.min)}%`,
+                  width: `${at(band.max) - at(band.min)}%`,
+                  background: intentTagColor(band.min),
+                  borderTopLeftRadius: i === 0 ? 100 : 0,
+                  borderBottomLeftRadius: i === 0 ? 100 : 0,
+                  borderTopRightRadius: i === bands.length - 1 ? 100 : 0,
+                  borderBottomRightRadius: i === bands.length - 1 ? 100 : 0,
+                }}
+              />
+            ))}
+            <span
+              aria-hidden
+              className="absolute rounded-[2px]"
+              style={{ left: `${at(score)}%`, marginLeft: -1, top: -2, bottom: -2, width: 2, background: LIVE }}
+            />
+          </div>
+          <span
+            className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px] whitespace-nowrap"
+            style={{ color: LIVE }}
+          >
+            {`${score}%`}
+          </span>
+        </div>
+      )}
+
+      <div className="relative w-full" style={{ marginTop: 12 }}>
+        {/* On the track boundaries, so the spacing either side of every rule
+            is the column padding and nothing else. */}
+        {Array.from({ length: Math.max(0, n - 1) }, (_, k) => (
+          <span
+            key={k}
+            aria-hidden
+            className="absolute bottom-0 top-0"
+            style={{
+              left: `calc(${k + 1} * (100% + ${2 * RULED_PAD}px) / ${n} - ${RULED_PAD}px)`,
+              width: 1,
+              background: HAIR,
+            }}
+          />
+        ))}
+
+        <div className="grid" style={gridStyle}>
+          {/* ── names ── */}
+          {columns.map(({ short, view }) => (
+            <span
+              key={`n-${short}`}
+              className={`${cell} font-['Inter',sans-serif] leading-[20px] overflow-hidden text-[12px] text-ellipsis whitespace-nowrap`}
+              style={{
+                ...cellStyle,
+                color: view.live ? INK : FAINT,
+                fontWeight: view.live ? 500 : 400,
+              }}
+              title={view.signal.label}
+            >
+              {short}
+            </span>
+          ))}
+
+          {/* ── the state, on its own row ── */}
+          {columns.map(({ short, view }) => {
+            const fill = intentTagColor(view.signal.min);
+            const inBand = style === "score" && view.signal.range === here;
+            return (
+              <div key={`s-${short}`} className={cell} style={{ ...cellStyle, marginTop: 6 }}>
+                {style === "chips" ? (
+                  /* The band's fill behind the mark and the range, so the row
+                     of five is the bands themselves — and three of them share
+                     a colour because three of them share a band. Unfired, the
+                     chip keeps its shape and loses its colour: the row stays
+                     a row, and what changed is legible without reading it. */
+                  <span
+                    className="content-stretch flex gap-[4px] h-[20px] items-center rounded-[6px] w-full"
+                    style={{
+                      background: view.live ? fill : "rgba(47,43,61,0.05)",
+                      paddingLeft: 6,
+                      paddingRight: 6,
+                    }}
+                  >
+                    {view.live ? <Tick /> : <Hollow />}
+                    <span
+                      className="font-['Inter',sans-serif] leading-[18px] text-[11px] whitespace-nowrap"
+                      style={{ color: view.live ? INK : FAINT, fontWeight: view.live ? 500 : 400 }}
+                    >
+                      {view.signal.range}
+                    </span>
+                  </span>
+                ) : style === "marks" ? (
+                  /* Colour on the mark and nowhere else — a band-filled disc
+                     when it fired, an empty ring when it did not. The range
+                     keeps its own line under it in plain ink. */
+                  <span className="content-stretch flex flex-col gap-[4px] items-start w-full">
+                    <span
+                      className="content-stretch flex items-center justify-center rounded-[100px] shrink-0"
+                      style={{
+                        width: 18,
+                        height: 18,
+                        background: view.live ? fill : "transparent",
+                        border: view.live ? "none" : `1px solid ${HAIR}`,
+                      }}
+                    >
+                      {view.live && <Tick />}
+                    </span>
+                    <span
+                      className="font-['Inter',sans-serif] leading-[16px] text-[11px] whitespace-nowrap"
+                      style={{ color: view.live ? MUTED : FAINT }}
+                    >
+                      {view.signal.range}
+                    </span>
+                  </span>
+                ) : (
+                  /* The column whose band holds the score is the one the
+                     reader is being pointed at, so it takes the band's fill
+                     and the rest stay plain. */
+                  <span
+                    className="content-stretch flex gap-[4px] h-[20px] items-center rounded-[6px] w-full"
+                    style={{
+                      background: inBand ? fill : "transparent",
+                      paddingLeft: inBand ? 6 : 0,
+                      paddingRight: inBand ? 6 : 0,
+                    }}
+                  >
+                    {view.live ? <Tick /> : <Hollow />}
+                    <span
+                      className="font-['Inter',sans-serif] leading-[18px] text-[11px] whitespace-nowrap"
+                      style={{ color: view.live ? (inBand ? INK : MUTED) : FAINT }}
+                    >
+                      {view.signal.range}
+                    </span>
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
 function FiveColumns({ views, style }: { views: View[]; style: FiveStyle }) {
   const columns = FIVE_COLUMNS.map(c => ({
     ...c,
@@ -1847,9 +2076,11 @@ const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: 
   { label: "16 · Score first", render: (v, c) => <ScoreFirst views={v} company={c} /> },
   { label: "17 · Reached / not yet", render: (v, c) => <ReachedAndNotYet views={v} company={c} /> },
   { label: "18 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
-  { label: "19 · Columns: ruled", render: v => <FiveColumns views={v} style="ruled" /> },
-  { label: "20 · Columns: bars", render: v => <FiveColumns views={v} style="bars" /> },
-  { label: "21 · Columns: accent", render: v => <FiveColumns views={v} style="accent" /> },
+  { label: "19 · Ruled: chips", render: (v, c) => <RuledColumns views={v} company={c} style="chips" /> },
+  { label: "20 · Ruled: marks", render: (v, c) => <RuledColumns views={v} company={c} style="marks" /> },
+  { label: "21 · Ruled: score", render: (v, c) => <RuledColumns views={v} company={c} style="score" /> },
+  { label: "22 · Columns: bars", render: v => <FiveColumns views={v} style="bars" /> },
+  { label: "23 · Columns: accent", render: v => <FiveColumns views={v} style="accent" /> },
 ];
 
 /* ── the concepts panel ─────────────────────────────────────────────
