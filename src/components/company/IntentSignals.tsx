@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { INTENT_BANDS, INTENT_SIGNALS, getTriggeredSignals, type IntentSignal } from "@/data/intentSignals";
 import { getCompanyProfile } from "@/data/companies";
@@ -1639,6 +1639,33 @@ function IndexPanel({ concept, onStep, onPick, onClose }: PanelProps) {
   );
 }
 
+/* ── the panel's two states, and the move between them ───────────────
+   Open it is a card beside the dialog; closed it is a pill in the corner of
+   the window. It is the same element in both, so closing it is a move and a
+   shrink rather than one thing vanishing and another appearing somewhere
+   else.
+
+   That is why both contents stay mounted the whole time. The list is never
+   torn down, so what it is scrolled to and which concept is selected survive
+   a close with nothing saved and restored — there is nothing to restore,
+   because nothing was lost. The panel is only faded and made unclickable.
+
+   What does have to stop is the keyboard: the arrow keys step concepts off
+   the window, and a hidden panel must not answer them. onStep is swapped for
+   a no-op while it is closed, which the listener picks up through its own
+   dependency. */
+
+/** Stepping is silenced while the panel is closed; this is what replaces it. */
+const NO_STEP = () => {};
+
+const MOVE_MS = 300;
+/* The ease the contact stack uses, so a panel moving across this app moves
+   the way everything else in it does. */
+const MOVE_EASE = "cubic-bezier(0.4, 0.05, 0.2, 1)";
+/** Clear of the window's edges, and of the prototype bars in the corners. */
+const PILL_INSET = 24;
+const PILL_LABEL = "Version history · Activity tab";
+
 function ConceptsPanel({
   concept,
   onPick,
@@ -1664,56 +1691,156 @@ function ConceptsPanel({
     }
   };
 
-  /* Half the dialog's own width, plus a gap, from the centre of the window. */
-  const anchor = { left: "calc(50% + 389px)", top: "50%", transform: "translateY(-50%)" } as const;
+  /* Both contents are measured once, because the shell has to be given the
+     size of whichever one it is becoming before it starts becoming it. They
+     are laid out at their natural size and the shell is sized from them, so
+     nothing here is a guessed width that a longer label would break. */
+  const cardRef = useRef<HTMLDivElement>(null);
+  const pillRef = useRef<HTMLButtonElement>(null);
+  const [cardSize, setCardSize] = useState({ w: 190, h: 260 });
+  const [pillSize, setPillSize] = useState({ w: 190, h: 30 });
+  useLayoutEffect(() => {
+    /* Watched rather than measured once: the list grows when a concept is
+       added, and a font arriving late changes the label's width. A shell
+       sized from a stale measurement either clips its own contents or holds
+       a strip of empty card beside them. Only a real change is written back,
+       so the observer cannot drive itself. */
+    const fit = (
+      el: HTMLElement | null,
+      set: (next: { w: number; h: number }) => void,
+    ) => {
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      set({ w: Math.ceil(r.width), h: Math.ceil(r.height) });
+    };
+    const measure = () => {
+      fit(cardRef.current, next =>
+        setCardSize(s => (s.w === next.w && s.h === next.h ? s : next)),
+      );
+      fit(pillRef.current, next =>
+        setPillSize(s => (s.w === next.w && s.h === next.h ? s : next)),
+      );
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (cardRef.current) ro.observe(cardRef.current);
+    if (pillRef.current) ro.observe(pillRef.current);
+    return () => ro.disconnect();
+  }, []);
 
-  if (!open) {
-    return createPortal(
+  /* The window, so both anchors stay put when it is resized. */
+  const [vw, setVw] = useState(() => window.innerWidth);
+  const [vh, setVh] = useState(() => window.innerHeight);
+  useEffect(() => {
+    const onResize = () => {
+      setVw(window.innerWidth);
+      setVh(window.innerHeight);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  /* Someone who has asked for less motion gets the same two positions with
+     nothing in between. */
+  const reduced =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ms = reduced ? 0 : MOVE_MS;
+
+  /* Open: half the dialog's own width, plus a gap, from the centre, and
+     centred vertically — held to the window if the list ever outgrows it.
+     Closed: the bottom-right corner. */
+  const h = Math.min(cardSize.h, vh - 2 * PILL_INSET);
+  const box = open
+    ? { left: vw / 2 + 389, top: Math.max(PILL_INSET, (vh - h) / 2), w: cardSize.w, h, r: 12 }
+    : {
+        left: vw - PILL_INSET - pillSize.w,
+        top: vh - PILL_INSET - pillSize.h,
+        w: pillSize.w,
+        h: pillSize.h,
+        r: pillSize.h / 2,
+      };
+
+  /* The box moves for the whole beat. The contents cross over inside it:
+     whichever is arriving waits until the box is most of the way to its new
+     shape, so a label never sits in a box still shaped like the other one. */
+  const arriving = `opacity ${Math.round(ms * 0.55)}ms linear ${Math.round(ms * 0.45)}ms`;
+  const leaving = `opacity ${Math.round(ms * 0.3)}ms linear`;
+
+  return createPortal(
+    <div
+      className={CARD_SURFACE}
+      style={{
+        position: "fixed",
+        zIndex: 10000,
+        left: box.left,
+        top: box.top,
+        width: box.w,
+        height: box.h,
+        borderRadius: box.r,
+        /* clip, not hidden. hidden leaves the shell a scroll container, and
+           closing it moves focus' own 00d7 button out of a 30px box — so the
+           browser scrolled it back into view and carried both contents 30px
+           up with it, out of the pill and under the clip. clip cannot
+           scroll, so there is nothing to scroll. */
+        overflow: "clip",
+        transition: `left ${ms}ms ${MOVE_EASE}, top ${ms}ms ${MOVE_EASE}, width ${ms}ms ${MOVE_EASE}, height ${ms}ms ${MOVE_EASE}, border-radius ${ms}ms ${MOVE_EASE}`,
+      }}
+      onClick={e => e.stopPropagation()}
+      data-intent-concepts
+      data-open={open}
+    >
+      {/* The list. Mounted whether or not it is being shown, which is what
+          keeps its scroll and its selection across a close. */}
+      <div
+        ref={cardRef}
+        role="group"
+        aria-label="Intent Signals concept"
+        /* inert rather than aria-hidden: the list is full of buttons, and a
+           subtree that is hidden from the reader but still tabbable is the
+           one combination worse than either. inert takes it out of the
+           focus order too, which is also what stops the shell being asked
+           to scroll to something inside it. */
+        inert={!open}
+        className="absolute left-0 top-0"
+        style={{
+          opacity: open ? 1 : 0,
+          pointerEvents: open ? "auto" : "none",
+          transition: open ? arriving : leaving,
+        }}
+      >
+        <IndexPanel
+          concept={concept}
+          onPick={onPick}
+          /* Silenced while closed: the arrow keys must not step a panel that
+             is not on the window. */
+          onStep={open ? onStep : NO_STEP}
+          onClose={() => setOpenPersisted(false)}
+        />
+      </div>
+
+      {/* The pill. Its own button, so the whole corner control is the hit
+          target rather than the text inside it. */}
       <button
         type="button"
+        ref={pillRef}
         onClick={e => {
           e.stopPropagation();
           setOpenPersisted(true);
         }}
-        className={`${CARD_SURFACE} fixed z-[10000] cursor-pointer flex gap-[6px] h-[30px] items-center pl-[10px] pr-[8px] text-[12px]`}
-        style={{ ...anchor, color: INK }}
-        data-intent-concepts
-        title="Intent Signals concepts"
+        inert={open}
+        className="absolute cursor-pointer flex h-[30px] items-center left-0 px-[12px] top-0 whitespace-nowrap"
+        style={{
+          opacity: open ? 0 : 1,
+          pointerEvents: open ? "none" : "auto",
+          transition: open ? leaving : arriving,
+        }}
+        title="Open the Activity tab's version history"
       >
-        Concepts
-        <span
-          className="flex items-center justify-center rounded-[6px] size-[18px] tabular-nums"
-          style={{ background: "rgba(177,250,99,0.32)" }}
-        >
-          <span className="font-semibold leading-[16px] text-[11px]" style={{ color: LIVE }}>
-            {concept + 1}
-          </span>
+        <span className="font-['Inter',sans-serif] leading-[16px] text-[11px]" style={{ color: MUTED }}>
+          {PILL_LABEL}
         </span>
-      </button>,
-      document.body,
-    );
-  }
-
-  return createPortal(
-    <div
-      className={`${CARD_SURFACE} fixed z-[10000]`}
-      style={{
-        ...anchor,
-        /* Held to the dialog's own height at most, so it can never run off
-           the window however many concepts the list grows to. */
-        maxHeight: "calc(100vh - 80px)",
-      }}
-      onClick={e => e.stopPropagation()}
-      data-intent-concepts
-      role="group"
-      aria-label="Intent Signals concept"
-    >
-      <IndexPanel
-        concept={concept}
-        onPick={onPick}
-        onStep={onStep}
-        onClose={() => setOpenPersisted(false)}
-      />
+      </button>
     </div>,
     document.body,
   );
