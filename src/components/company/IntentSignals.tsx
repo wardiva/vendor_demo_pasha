@@ -382,34 +382,91 @@ function AgainstTheScore({ views, company }: { views: View[]; company: string })
   );
 }
 
-/* ── 6 · Band columns ───────────────────────────────────────────────
+/**
+ * "Viewed Pricing" → "Pricing".
+ *
+ * Local to the columns, and a display transform rather than a rename: the
+ * signal's name is its identity everywhere else — it is the key the triggered
+ * set is built on and the string the other variations print — so nothing in
+ * the data moves to make one arrangement read better.
+ *
+ * It earns its place here and nowhere else. A column is already headed by the
+ * band, so every name under it shares the one verb, and "Viewed" repeated down
+ * a narrow column is the word the eye has to skip past four times to reach the
+ * word that differs. Dropping it turns three columns of phrases into three
+ * columns of nouns.
+ */
+const shortLabel = (label: string) => label.replace(/^Viewed\s+/, "");
+
+/* ── 11 · Band columns ──────────────────────────────────────────────
    The banded arrangement turned on its side: the bands are columns, their
-   signals stacked inside. It is the shortest of the six — the section is only
-   as tall as the busiest band — and it reads as a small matrix, which suits
-   someone comparing prospects rather than studying one. The cost is that the
-   columns are uneven, so the eye has no single line to run along. */
+   signals stacked inside. It is the shortest of them — as tall as the busiest
+   band and no taller — and it reads as a small matrix, which suits someone
+   comparing prospects rather than studying one.
+
+   Rebuilt on the Activity tab's own scale rather than a smaller one of its
+   own. It was set at 10 and 10.5 on 15, with 3px gaps and a 9px mark, which
+   is a second type system inside a card whose neighbours are all 12 on 20 —
+   small enough that the distinction between a ticked name and an unticked one
+   was carried by colour alone. Now: 12 on 20 for both the band and its
+   signals, the tab's 8 between a mark and its name and 12 between columns,
+   and the 10px tick the rest of the section uses.
+
+   The columns are a grid rather than three flexed boxes, so the rules under
+   the headings are the same width and land on one line across the card — the
+   thing that makes this read as a table instead of three lists standing next
+   to each other. Bands with nothing in them are dropped before the grid is
+   sized, so the remaining ones still divide the full width.
+
+   Triggered is ink at medium behind a tick; untriggered is faint behind a
+   hollow ring. Two differences, weight and mark, so the state survives being
+   read at a glance rather than resting on a colour. */
 function BandColumns({ views }: { views: View[] }) {
+  /* Ascending, so the columns read left to right as intent rises. */
+  const columns = [...INTENT_BANDS]
+    .reverse()
+    .map(band => ({ band, items: views.filter(v => v.signal.range === band.range) }))
+    .filter(c => c.items.length > 0);
+
   return (
     <Panel>
       <Summary views={views} />
-      <div className="flex gap-[10px] w-full" style={{ marginTop: 7 }}>
-        {INTENT_BANDS.slice().reverse().map(band => {
-          const items = views.filter(v => v.signal.range === band.range);
-          if (!items.length) return null;
+      <div
+        className="grid w-full"
+        style={{
+          marginTop: 12,
+          gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
+          columnGap: 12,
+        }}
+      >
+        {columns.map(({ band, items }) => {
           const anyLive = items.some(v => v.live);
           return (
-            <div key={band.range} className="flex flex-col gap-[3px] min-w-px" style={{ flex: 1 }}>
+            <div key={band.range} className="content-stretch flex flex-col items-start min-w-px">
+              {/* The heading and its rule, 8 above the first name — the same
+                  interval the tab puts between a card's blocks. */}
               <span
-                className="font-['Inter',sans-serif] font-medium leading-[15px] text-[10px] whitespace-nowrap"
-                style={{ color: anyLive ? LIVE : FAINT, borderBottom: `1px solid ${HAIR}`, paddingBottom: 3 }}
+                className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px] w-full whitespace-nowrap"
+                style={{
+                  color: anyLive ? LIVE : FAINT,
+                  borderBottom: `1px solid ${HAIR}`,
+                  paddingBottom: 8,
+                  marginBottom: 8,
+                }}
               >
                 {band.range}
               </span>
               {items.map(v => (
-                <span key={v.signal.label} className="content-stretch flex gap-[4px] items-start min-w-px">
-                  <span style={{ marginTop: 3 }}>{v.live ? <Tick size={9} /> : <Hollow size={9} />}</span>
-                  <span className="min-w-px">
-                    <Name view={v} size={10.5} wrap />
+                <span
+                  key={v.signal.label}
+                  className="content-stretch flex gap-[8px] h-[20px] items-center min-w-px shrink-0 w-full"
+                >
+                  {v.live ? <Tick /> : <Hollow />}
+                  <span
+                    className="font-['Inter',sans-serif] leading-[20px] min-w-px overflow-hidden text-[12px] text-ellipsis whitespace-nowrap"
+                    style={{ color: v.live ? INK : FAINT, fontWeight: v.live ? 500 : 400 }}
+                  >
+                    {shortLabel(v.signal.label)}
                   </span>
                 </span>
               ))}
