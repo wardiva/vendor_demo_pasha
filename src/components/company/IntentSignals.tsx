@@ -1817,20 +1817,28 @@ function ActivityChips({ views, company }: { views: View[]; company: string }) {
 
           {/* The number itself, on the mark rather than at the end of the
               row: what it labels is a position, and a value parked in the
-              margin makes the reader carry it back. */}
+              margin makes the reader carry it back.
+
+              It sat on white with a hairline and a drop shadow, which lifted
+              it off the card as though it were a tooltip that had happened to
+              land there. It is not a tooltip, it is the reading — so it takes
+              the neutral chip grey the rest of the app puts behind a small
+              value and sits flat on the card, and the mark below it is left
+              to be the only thing pointing. */}
           <span
             className="absolute flex items-center justify-center rounded-[100px] whitespace-nowrap"
             style={{
               left: markLeft,
               bottom: "calc(100% + 6px)",
               transform: "translateX(-50%)",
-              background: "#ffffff",
-              border: "1px solid #fafafa",
-              filter: "drop-shadow(3px 3px 6px rgba(12,10,21,0.12))",
-              padding: "2px 5px",
+              background: "#eeedf0",
+              padding: "3px 5px",
             }}
           >
-            <span className="font-['Inter',sans-serif] font-semibold text-[10px]" style={{ color: LIVE }}>
+            <span
+              className="font-['Inter',sans-serif] font-semibold leading-[12px] text-[10px]"
+              style={{ color: INK }}
+            >
               {`${score}%`}
             </span>
           </span>
