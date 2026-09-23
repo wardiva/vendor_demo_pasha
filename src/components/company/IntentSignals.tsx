@@ -125,13 +125,13 @@ function Summary({ views }: { views: View[] }) {
  * for. A heading that restates its own contents is a heading competing with
  * them.
  */
-function SignalsHeading() {
+function SignalsHeading({ children = "Signals Triggered" }: { children?: string }) {
   return (
     <p
       className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[13px] w-full"
       style={{ color: INK }}
     >
-      Signals Triggered
+      {children}
     </p>
   );
 }
@@ -1475,7 +1475,19 @@ function FiveColumns({ views }: { views: View[] }) {
 
   return (
     <Panel>
-      <Summary views={views} />
+      {/* The heading and the count are a pair, 2 apart — the interval the tab
+          puts between "Visited" and the location under it, and between a
+          summary card's label and its value. The columns are the next block
+          and take the card's own 12.
+
+          That is the whole hierarchy: two lines that belong together, then
+          the thing they are about. Setting the count 12 below the heading
+          would have made three blocks out of two and cost a line's height to
+          say something the 2 already says. */}
+      <SignalsHeading>Viewed Summary</SignalsHeading>
+      <div style={{ marginTop: 2, width: "100%" }}>
+        <Summary views={views} />
+      </div>
       <div
         className="grid w-full"
         style={{
