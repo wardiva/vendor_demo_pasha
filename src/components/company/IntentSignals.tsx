@@ -108,29 +108,27 @@ function Summary({ views }: { views: View[] }) {
 }
 
 /**
- * The count on its own, for the variation that wants only the count.
+ * The section's heading, set the way the Activity tab sets every heading.
  *
- * A label and a value rather than a sentence. The sentence carried two
- * facts — how many fired and what the best of them was worth — and the
- * second one is drawn directly underneath: the bands are listed strongest
- * first, so the topmost band holding a tick is the strongest, and saying it
- * again in words above was the same claim twice.
+ * 13 on 20, medium, in the tab's full ink — the same three values "First
+ * Seen", "Last Seen", "Total Time" and "Visited" are set in, so this card
+ * is headed like the cards around it rather than in a scale of its own.
  *
- * What is left is a reading, so it is set as one: the label quiet at the
- * tab's secondary size, the value at its primary size in full ink. Both on
- * 20px leading, so the row is the 20px every other row in this card is.
+ * It says what the block under it is and stops. The count it used to carry
+ * was a total of something already itemised directly beneath — six rows,
+ * each either ticked or not — so the reader could either take the summary's
+ * word for it or read the rows, and the rows are the evidence they came
+ * for. A heading that restates its own contents is a heading competing with
+ * them.
  */
-function CountSummary({ views }: { views: View[] }) {
-  const live = views.filter(v => v.live).length;
+function SignalsHeading() {
   return (
-    <div className="content-stretch flex gap-[8px] items-baseline shrink-0 w-full">
-      <span className="font-['Inter',sans-serif] leading-[20px] text-[12px]" style={{ color: MUTED }}>
-        Signals triggered
-      </span>
-      <span className="font-['Inter',sans-serif] font-medium leading-[20px] text-[13px]" style={{ color: INK }}>
-        {`${live}/${views.length}`}
-      </span>
-    </div>
+    <p
+      className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[13px] w-full"
+      style={{ color: INK }}
+    >
+      Signals triggered
+    </p>
   );
 }
 
@@ -1090,9 +1088,9 @@ function ScoreAndBands({
      variation now shows no indicator row at all. Everything else in this
      component is identical whichever is passed. */
   bar: IntentBarVariant | "none";
-  /* The sentence, or the count on its own. The ladder variation takes the
-     count; the other two keep the sentence they were compared with. */
-  summary?: "sentence" | "count";
+  /* The sentence, or a plain heading. The ladder variation takes the
+     heading; the other two keep the sentence they were compared with. */
+  summary?: "sentence" | "heading";
 }) {
   const score = scoreOf(company);
   const here = bandOfScore(score);
@@ -1117,7 +1115,7 @@ function ScoreAndBands({
           <div style={{ height: 12 }} />
         </>
       )}
-      {summary === "count" ? <CountSummary views={views} /> : <Summary views={views} />}
+      {summary === "heading" ? <SignalsHeading /> : <Summary views={views} />}
       <div className="flex flex-col w-full" style={{ marginTop: 12 }}>
         {rows.map((band, i) => {
           const items = views.filter(v => v.signal.range === band.range);
@@ -1367,7 +1365,7 @@ const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: 
      is the approved design, from the same component. */
   { label: "1 · Bar: segmented", render: (v, c) => <ScoreAndBands views={v} company={c} bar="segmented" /> },
   { label: "2 · Bar: scale", render: (v, c) => <ScoreAndBands views={v} company={c} bar="scale" /> },
-  { label: "3 · Bar: ladder", render: (v, c) => <ScoreAndBands views={v} company={c} bar="none" summary="count" /> },
+  { label: "3 · Bar: ladder", render: (v, c) => <ScoreAndBands views={v} company={c} bar="none" summary="heading" /> },
 
   /* The other section designs, and the eleven behind them. */
   { label: "4 · Six chips", render: (v, c) => <SixChips views={v} company={c} /> },
