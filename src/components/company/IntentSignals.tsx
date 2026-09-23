@@ -1424,6 +1424,101 @@ function OneScale({ views, company }: { views: View[]; company: string }) {
   );
 }
 
+/* ── 17 · Five columns ──────────────────────────────────────────────
+   Band columns transposed: a column per signal rather than a column per
+   band, so the five sit on one line and none of them is buried three deep
+   inside the busiest group.
+
+   That is the flaw in the parent concept. Grouping by band puts one signal
+   under 30–50, three under 51–70 and one under 71%+, so the columns are
+   uneven, the eye has no single line to run along, and a reader looking for
+   Reviews has to know which band it belongs to before they can find it.
+   Here every signal has the same place every time — the order is fixed and
+   rising, Category through Pricing — so the same signal is in the same
+   column on every prospect and two prospects can be read against each other
+   straight across.
+
+   The cell keeps the parent's shape: a heading, a rule, then what is under
+   it. Only what heads the column changes. With one signal to a column the
+   signal is the heading and the band becomes the qualifier beneath it,
+   sitting beside the mark it belongs to.
+
+   It fits because it was measured to: at 424 of content and 12 between
+   columns each one is 75 wide, "Alternatives" is 69 at this size and the
+   mark with the longest band beside it is 60. Nothing here wraps, truncates
+   or is set smaller than the tab to make room.
+
+   The shortest arrangement of the seventeen — 113px, against 148 for the
+   banded rows and 196 for the ladder. */
+
+/**
+ * The columns, in the order they are read, with the name each one carries.
+ *
+ * Named here rather than derived. The short forms are not a rule applied to
+ * the labels — "Viewed Category Page" becomes "Category", not "Category
+ * Page" — so they are written out, and the full label stays the key that
+ * finds the signal. Anything the data no longer holds simply does not draw.
+ */
+const FIVE_COLUMNS: ReadonlyArray<{ label: string; short: string }> = [
+  { label: "Viewed Category Page", short: "Category" },
+  { label: "Viewed Product Profile", short: "Profile" },
+  { label: "Viewed Reviews", short: "Reviews" },
+  { label: "Viewed Alternatives", short: "Alternatives" },
+  { label: "Viewed Pricing", short: "Pricing" },
+];
+
+function FiveColumns({ views }: { views: View[] }) {
+  const columns = FIVE_COLUMNS.map(c => ({
+    ...c,
+    view: views.find(v => v.signal.label === c.label),
+  })).filter((c): c is typeof c & { view: View } => Boolean(c.view));
+
+  return (
+    <Panel>
+      <Summary views={views} />
+      <div
+        className="grid w-full"
+        style={{
+          marginTop: 12,
+          gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
+          columnGap: 12,
+        }}
+      >
+        {columns.map(({ short, view }) => (
+          <div key={short} className="content-stretch flex flex-col items-start min-w-px">
+            {/* The signal names the column, on the rule the parent concept
+                draws under its heading. 12 on 20, the tab's own. */}
+            <span
+              className="font-['Inter',sans-serif] leading-[20px] overflow-hidden shrink-0 text-[12px] text-ellipsis w-full whitespace-nowrap"
+              style={{
+                color: view.live ? INK : FAINT,
+                fontWeight: view.live ? 500 : 400,
+                borderBottom: `1px solid ${HAIR}`,
+                paddingBottom: 8,
+                marginBottom: 8,
+              }}
+              title={view.signal.label}
+            >
+              {short}
+            </span>
+            {/* What it is worth, beside whether it fired — the two facts the
+                column exists to pair. */}
+            <span className="content-stretch flex gap-[6px] h-[20px] items-center min-w-px shrink-0 w-full">
+              {view.live ? <Tick /> : <Hollow />}
+              <span
+                className="font-['Inter',sans-serif] leading-[20px] text-[11px] whitespace-nowrap"
+                style={{ color: view.live ? LIVE : FAINT }}
+              >
+                {view.signal.range}
+              </span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
 /* ── the section ───────────────────────────────────────────────────── */
 
 /**
@@ -1458,6 +1553,7 @@ const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: 
   { label: "14 · Score first", render: (v, c) => <ScoreFirst views={v} company={c} /> },
   { label: "15 · Reached / not yet", render: (v, c) => <ReachedAndNotYet views={v} company={c} /> },
   { label: "16 · Six on the scale", render: (v, c) => <SixOnTheScale views={v} company={c} /> },
+  { label: "17 · Five columns", render: v => <FiveColumns views={v} /> },
 ];
 
 /* ── the concepts panel ─────────────────────────────────────────────
