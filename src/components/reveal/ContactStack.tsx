@@ -336,23 +336,36 @@ export function ContactStackModal({
                 onRevealRequest={flow.reveal}
                 layout="modal"
                 className="w-full"
+                reveal={
+                  /* On the face of the stack, not under it — the same slot and
+                     the same centring the prospect row already uses, so one
+                     button sits on the thing it unlocks in both places.
+
+                     Below the stack it was a second object to find, and it
+                     left a band of empty panel between the cards and itself
+                     that read as the tab having run out of content. Inside
+                     the front card that space closes on its own; nothing here
+                     sets a height.
+
+                     The card behind the front one keeps no button of its own:
+                     the reveal is the company's, one press for all of them,
+                     so only i === 0 is given it. */
+                  i === 0 && flow.locked ? (
+                    <RevealCta
+                      flow={flow}
+                      count={count}
+                      label={revealAllCountLabel(count)}
+                      tone="primary"
+                      size="md"
+                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[3]"
+                    />
+                  ) : undefined
+                }
               />
             </div>
           );
         })}
       </div>
-
-      {flow.locked && (
-        <div className="content-stretch flex gap-[10px] items-center justify-center relative shrink-0 w-full">
-          <RevealCta
-            flow={flow}
-            count={count}
-            label={revealAllCountLabel(count)}
-            tone="primary"
-            size="md"
-          />
-        </div>
-      )}
     </div>
   );
 }
