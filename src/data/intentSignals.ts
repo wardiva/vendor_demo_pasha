@@ -4,10 +4,14 @@ import { LEADS } from "@/data/leads";
 /**
  * The signals a prospect's intent score is built from.
  *
- * Six of them, each standing for one thing a buyer did and the band of intent
- * that behaviour evidences. The names and the bands are the product's, fixed:
- * nothing here derives a range, invents a seventh signal, or re-scores a
- * prospect. This only says which of the six a given company has produced.
+ * Five of them, each standing for one thing a buyer did and the band of
+ * intent that behaviour evidences. The names and the bands are the product's,
+ * fixed: nothing here derives a range, invents a signal, or re-scores a
+ * prospect. This only says which of the five a given company has produced.
+ *
+ * There were six. "Compared Products" is gone — the competitor flag it read
+ * is still counted by the Signals page and still selectable in the Prospects
+ * filter; it just no longer stands as an intent signal of its own.
  */
 
 export type IntentSignal = {
@@ -24,11 +28,10 @@ export const INTENT_SIGNALS: readonly IntentSignal[] = [
   { label: "Viewed Product Profile", range: "51–70%", min: 51, max: 70 },
   { label: "Viewed Pricing", range: "71%+", min: 71, max: 100 },
   { label: "Viewed Alternatives", range: "51–70%", min: 51, max: 70 },
-  { label: "Compared Products", range: "51–70%", min: 51, max: 70 },
   { label: "Viewed Reviews", range: "51–70%", min: 51, max: 70 },
 ];
 
-/** The three bands the six signals fall into, strongest first. */
+/** The three bands the five signals fall into, strongest first. */
 export const INTENT_BANDS: ReadonlyArray<{ range: string; min: number; max: number }> = [
   { range: "71%+", min: 71, max: 100 },
   { range: "51–70%", min: 51, max: 70 },
@@ -36,16 +39,15 @@ export const INTENT_BANDS: ReadonlyArray<{ range: string; min: number; max: numb
 ];
 
 /**
- * Which of the six this company has actually produced.
+ * Which of the five this company has actually produced.
  *
  * One question, asked of the activity and of nothing else: did the prospect
  * do this?
  *
- * Four of the six are a page in the Activity tab's own sessions, matched on
+ * Four of the five are a page in the Activity tab's own sessions, matched on
  * its path, so what this section claims is visible in the timeline beneath
- * it. The other two, "looked at your profile" and "compared you against
- * someone", have no page of their own and come from the company-level
- * research flags the Signals page counts.
+ * it. The fifth, "looked at your profile", has no page of its own and comes
+ * from the company-level research flag the Signals page counts.
  *
  * Pricing used to be either: the page, or the flag. That OR was the bug.
  * Ironclad Construction carries `pricing: true` and has never opened a
@@ -87,27 +89,24 @@ export function getTriggeredSignals(company: string): ReadonlySet<string> {
 
   const triggered = new Set<string>();
 
-  /* Four of the six are a page in the timeline below, matched on its own
+  /* Four of the five are a page in the timeline below, matched on its own
      path, so a tick here is something the reader can scroll down and see. */
   if (visitedCategory) triggered.add("Viewed Category Page");
   if (visited("pricing")) triggered.add("Viewed Pricing");
   if (visited("alternatives")) triggered.add("Viewed Alternatives");
   if (visited("reviews")) triggered.add("Viewed Reviews");
 
-  /* The other two have no page to match. The seven page shapes the sessions
-     are built from are the category listing, pricing, reviews, buyers-guide,
+  /* The fifth has no page to match. The seven page shapes the sessions are
+     built from are the category listing, pricing, reviews, buyers-guide,
      alternatives, demo and implementation — there is no product-profile page
-     and no compare page — so these stay on the company-level research
-     signals, which is where "looked at your profile" and "compared you
-     against someone" are actually recorded and what the Signals page counts
-     and the Prospects filter selects on.
+     — so this one stays on the company-level research flag, which is where
+     "looked at your profile" is actually recorded and what the Signals page
+     counts and the Prospects filter selects on.
 
-     Note that the category listing is titled "Best X Software - Compared for
-     2026". It is not a compare event and is not read as one: it is already
-     the category page, and matching "Compared Products" off a word in a
-     title would be inventing evidence rather than finding it. */
+     The competitor flag is still read elsewhere — the Signals page counts it
+     and the Prospects filter selects on it — it simply no longer produces an
+     intent signal of its own. */
   if (lead?.signals.profile) triggered.add("Viewed Product Profile");
-  if (lead?.signals.competitor) triggered.add("Compared Products");
 
   return triggered;
 }
@@ -131,12 +130,12 @@ export function getTriggeredSignals(company: string): ReadonlySet<string> {
  * what put it there.
  *
  * Where it sits inside the band is how much else corroborates it. One signal
- * lands on the floor of its band; each further signal moves it up a sixth of
- * the band's width. Six of six reaches 95 rather than 100, because a scoring
- * model that can be maxed out has stopped discriminating at the top.
+ * lands on the floor of its band; each further signal moves it up a fifth of
+ * the band's width. Five of five reaches 96 rather than 100, because a
+ * scoring model that can be maxed out has stopped discriminating at the top.
  *
  * No signals is no score. It is not 30: 30 is the floor of a band a prospect
- * earns by doing something, and a prospect who has done none of the six has
+ * earns by doing something, and a prospect who has done none of the five has
  * not earned it.
  */
 export function getIntentScore(company: string): number {

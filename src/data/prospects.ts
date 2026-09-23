@@ -121,7 +121,7 @@ type ProspectSeed = {
 
 const SEEDS: ProspectSeed[] = [
   {
-    company: "Meridian Supply Co.", industry: "Manufacturing", intentPct: 90, date: "Jul 18, 2026",
+    company: "Meridian Supply Co.", industry: "Manufacturing", intentPct: 88, date: "Jul 18, 2026",
     contact: { avatar: avatarElena, name: "Elena Vasquez", jobTitle: "VP of Procurement", phone: "+1 312-555-4091", variant: "verified" },
     alsoAt: [
       { avatar: avatarDaniel, name: "Owen Brady", jobTitle: "Director of Operations", variant: "recommended" },
@@ -129,14 +129,14 @@ const SEEDS: ProspectSeed[] = [
     ],
   },
   {
-    company: "Northvane Technologies", industry: "Cloud Infrastructure", intentPct: 57, date: "Aug 02, 2026",
+    company: "Northvane Technologies", industry: "Cloud Infrastructure", intentPct: 55, date: "Aug 02, 2026",
     contact: { avatar: avatarJames, name: "James Whitfield", jobTitle: "Chief Revenue Officer", phone: "+1 628-555-7320", variant: "verified" },
     alsoAt: [
       { avatar: avatarNadia, name: "Sonia Patel", jobTitle: "VP of Engineering", variant: "recommended" },
     ],
   },
   {
-    company: "Bowline Freight", industry: "Logistics & Shipping", intentPct: 54, date: "Jun 25, 2026",
+    company: "Bowline Freight", industry: "Logistics & Shipping", intentPct: 55, date: "Jun 25, 2026",
     contact: { avatar: avatarPriya, name: "Callum Ridley", jobTitle: "Director of Fleet Operations", phone: "+1 704-555-8126", variant: "verified" },
     alsoAt: [
       { avatar: avatarRachel, name: "Greta Olsen", jobTitle: "Head of Logistics", variant: "recommended" },
@@ -146,19 +146,19 @@ const SEEDS: ProspectSeed[] = [
   {
     /* One contact and no more — what a card, a modal and a reveal control all
        have to read correctly when the company holds a single person. */
-    company: "Canopy Health Group", industry: "Healthcare Services", intentPct: 64, date: "Aug 11, 2026",
+    company: "Canopy Health Group", industry: "Healthcare Services", intentPct: 62, date: "Aug 11, 2026",
     contact: { avatar: avatarMarcus, name: "Marcus Lindgren", jobTitle: "Head of Business Dev", phone: "+1 206-555-9243", variant: "verified" },
   },
   {
     /* AI recommended only — the modal shows no verified section for this one. */
-    company: "Stratos Analytics", industry: "Data & Analytics", intentPct: 61, date: "May 30, 2026",
+    company: "Stratos Analytics", industry: "Data & Analytics", intentPct: 59, date: "May 30, 2026",
     contact: { avatar: avatarNadia, name: "Nadia Okoro", jobTitle: "Senior Account Executive", phone: "+1 917-555-6158", variant: "recommended" },
     alsoAt: [
       { avatar: avatarJames, name: "Theo Bright", jobTitle: "Director of Data Platform", variant: "recommended" },
     ],
   },
   {
-    company: "Ironclad Construction", industry: "Construction", intentPct: 54, date: "Jul 03, 2026",
+    company: "Ironclad Construction", industry: "Construction", intentPct: 55, date: "Jul 03, 2026",
     contact: { avatar: avatarDaniel, name: "Daniel Reeves", jobTitle: "General Manager", phone: "+1 503-555-3402", variant: "verified" },
     alsoAt: [
       { avatar: avatarElena, name: "Wanda Cole", jobTitle: "Procurement Director", variant: "recommended" },
@@ -166,14 +166,14 @@ const SEEDS: ProspectSeed[] = [
     ],
   },
   {
-    company: "Summit Ridge Energy", industry: "Renewable Energy", intentPct: 90, date: "Jul 09, 2026",
+    company: "Summit Ridge Energy", industry: "Renewable Energy", intentPct: 94, date: "Jul 09, 2026",
     contact: { avatar: avatarTobias, name: "Tobias Engström", jobTitle: "Business Development Manager", phone: "+1 858-555-4637", variant: "verified" },
     alsoAt: [
       { avatar: avatarNadia, name: "Ingrid Solberg", jobTitle: "Head of Grid Strategy", variant: "recommended" },
     ],
   },
   {
-    company: "Pinehurst Media", industry: "Digital Advertising", intentPct: 81, date: "Aug 21, 2026",
+    company: "Pinehurst Media", industry: "Digital Advertising", intentPct: 83, date: "Aug 21, 2026",
     contact: { avatar: avatarRachel, name: "Rachel Townsend", jobTitle: "Head of Client Strategy", phone: "+1 646-555-2190", variant: "verified" },
   },
 
@@ -189,7 +189,7 @@ const SEEDS: ProspectSeed[] = [
      still reads them, and the phones — like every contact's email — are
      completed below rather than written out here. */
   {
-    company: "Apex Logistics Group", industry: "Supply Chain", intentPct: 86, date: "Aug 01, 2026",
+    company: "Apex Logistics Group", industry: "Supply Chain", intentPct: 83, date: "Aug 01, 2026",
     contact: { avatar: avatarFigma, name: "Carlos Mendez", jobTitle: "Regional Sales Director", variant: "verified" },
     alsoAt: [
       { avatar: avatarElena, name: "Renata Diaz", jobTitle: "VP of Supply Chain", variant: "recommended" },
@@ -197,7 +197,7 @@ const SEEDS: ProspectSeed[] = [
     ],
   },
   {
-    company: "Meridian Health Systems", industry: "Healthcare IT", intentPct: 57, date: "Jul 28, 2026",
+    company: "Meridian Health Systems", industry: "Healthcare IT", intentPct: 59, date: "Jul 28, 2026",
     contact: { avatar: avatarFigma, name: "Priya Sharma", jobTitle: "VP of Procurement", variant: "verified" },
     alsoAt: [
       { avatar: avatarJames, name: "Alan Whitaker", jobTitle: "Chief Information Officer", variant: "recommended" },
@@ -206,7 +206,7 @@ const SEEDS: ProspectSeed[] = [
   {
     /* 221:2275 — the one card the node draws already disclosed. Company-level
        now, so every contact it holds opens with it. */
-    company: "NovaTech Solutions", industry: "Cloud Infrastructure", intentPct: 61, date: "Jul 30, 2026",
+    company: "NovaTech Solutions", industry: "Cloud Infrastructure", intentPct: 59, date: "Jul 30, 2026",
     contact: { avatar: avatarFigma, name: "James Whitfield", jobTitle: "Chief Technology Officer", variant: "verified", revealedByDefault: true },
     alsoAt: [
       { avatar: avatarPriya, name: "Dana Cho", jobTitle: "Head of Platform", variant: "recommended", revealedByDefault: true },
@@ -214,14 +214,14 @@ const SEEDS: ProspectSeed[] = [
   },
   {
     /* AI recommended — the node marks this card with the recommended glyph. */
-    company: "Pinnacle Financial Group", industry: "Financial Services", intentPct: 86, date: "Aug 02, 2026",
+    company: "Pinnacle Financial Group", industry: "Financial Services", intentPct: 88, date: "Aug 02, 2026",
     contact: { avatar: avatarFigma, name: "Sarah Chen", jobTitle: "Head of Partnerships", variant: "recommended" },
     alsoAt: [
       { avatar: avatarTobias, name: "Victor Hale", jobTitle: "Director of Partnerships", variant: "recommended" },
     ],
   },
   {
-    company: "Vanguard Manufacturing", industry: "Industrial IoT", intentPct: 90, date: "Jul 25, 2026",
+    company: "Vanguard Manufacturing", industry: "Industrial IoT", intentPct: 88, date: "Jul 25, 2026",
     contact: { avatar: avatarFigma, name: "Marcus Johnson", jobTitle: "Director of Operations", variant: "verified" },
     alsoAt: [
       { avatar: avatarRachel, name: "Lena Fischer", jobTitle: "Plant Operations Lead", variant: "recommended" },
@@ -229,25 +229,25 @@ const SEEDS: ProspectSeed[] = [
     ],
   },
   {
-    company: "Clearview Analytics", industry: "Data & AI", intentPct: 61, date: "Aug 03, 2026",
+    company: "Clearview Analytics", industry: "Data & AI", intentPct: 59, date: "Aug 03, 2026",
     contact: { avatar: avatarFigma, name: "Elena Kovacs", jobTitle: "Chief Data Officer", variant: "verified" },
     alsoAt: [
       { avatar: avatarJames, name: "Noah Bennett", jobTitle: "VP of Analytics", variant: "recommended" },
     ],
   },
   {
-    company: "Summit Energy Corp", industry: "Clean Energy", intentPct: 81, date: "Jul 22, 2026",
+    company: "Summit Energy Corp", industry: "Clean Energy", intentPct: 83, date: "Jul 22, 2026",
     contact: { avatar: avatarFigma, name: "David Park", jobTitle: "VP of Business Dev", variant: "verified" },
   },
   {
-    company: "Bridgeport Consulting", industry: "Management Consulting", intentPct: 57, date: "Aug 05, 2026",
+    company: "Bridgeport Consulting", industry: "Management Consulting", intentPct: 55, date: "Aug 05, 2026",
     contact: { avatar: avatarFigma, name: "Amara Okafor", jobTitle: "Senior Partner", variant: "verified" },
     alsoAt: [
       { avatar: avatarNadia, name: "Grace Lim", jobTitle: "Engagement Director", variant: "recommended" },
     ],
   },
   {
-    company: "Hyperion Aerospace", industry: "Defense & Aerospace", intentPct: 86, date: "Jul 19, 2026",
+    company: "Hyperion Aerospace", industry: "Defense & Aerospace", intentPct: 88, date: "Jul 19, 2026",
     contact: { avatar: avatarFigma, name: "Robert Fischer", jobTitle: "Program Director", variant: "verified" },
     alsoAt: [
       { avatar: avatarElena, name: "Iris Navarro", jobTitle: "Head of Procurement", variant: "recommended" },
@@ -255,7 +255,7 @@ const SEEDS: ProspectSeed[] = [
     ],
   },
   {
-    company: "Solaris Biotech", industry: "Life Sciences", intentPct: 95, date: "Aug 07, 2026",
+    company: "Solaris Biotech", industry: "Life Sciences", intentPct: 94, date: "Aug 07, 2026",
     contact: { avatar: avatarFigma, name: "Hannah Reeves", jobTitle: "VP of R&D", variant: "verified" },
     alsoAt: [
       { avatar: avatarDaniel, name: "Felix Moreau", jobTitle: "Director of Clinical Ops", variant: "recommended" },
@@ -264,7 +264,7 @@ const SEEDS: ProspectSeed[] = [
   {
     /* The node repeats the company name in this card's industry slot; the
        category the name states is used instead. See the profile in companies. */
-    company: "Onyx Cybersecurity", industry: "Cybersecurity", intentPct: 64, date: "Jul 31, 2026",
+    company: "Onyx Cybersecurity", industry: "Cybersecurity", intentPct: 62, date: "Jul 31, 2026",
     contact: { avatar: avatarFigma, name: "Leo Tanaka", jobTitle: "Head of Sales Engineering", variant: "recommended" },
     alsoAt: [
       { avatar: avatarNadia, name: "Dana Whitlock", jobTitle: "Director of Security Operations", variant: "verified" },
