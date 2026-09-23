@@ -35,6 +35,8 @@ import {
   type LeadsFilters,
 } from "@/data/leads";
 import { PROSPECTS, getProspect, getProspectById } from "@/data/prospects";
+import { auditIntentFixtures } from "@/data/intentSignals";
+import { IS_LOCAL } from "@/lib/environment";
 import { ProspectsPageProvider, type ProspectsView } from "@/context/ProspectsPageContext";
 import {
   LeadsTableProvider,
@@ -103,6 +105,19 @@ const SIGNAL_CARD_FILTERS: Record<string, LeadSignalOption | undefined> = {
 type Page = "signals" | "leads";
 
 /* ─────────────────────────── main component ─────────────────────────── */
+
+/* The prospects' scores against what their own activity scores to, once, on
+   local hosts. The fixtures are generated from the scorer but stored, so this
+   is what stops them drifting back apart — see auditIntentFixtures. */
+if (IS_LOCAL) {
+  const drifted = auditIntentFixtures(PROSPECTS);
+  if (drifted.length) {
+    console.error(
+      `[intent] ${drifted.length} prospect${drifted.length === 1 ? "" : "s"} whose stored intentPct no longer matches their activity:\n` +
+        drifted.map(d => `  ${d.name}: stored ${d.fixture}, activity scores ${d.derived}`).join("\n"),
+    );
+  }
+}
 
 export default function App() {
   const containerRef = useRef<HTMLDivElement>(null);

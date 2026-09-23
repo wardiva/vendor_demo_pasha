@@ -111,3 +111,65 @@ export function getTriggeredSignals(company: string): ReadonlySet<string> {
 
   return triggered;
 }
+
+/**
+ * The score those signals add up to.
+ *
+ * This is the step that was missing. The signals were read off the activity
+ * and the score was written by hand beside it, so the two were free to
+ * disagree and did — Summit Ridge Energy opened a pricing page and carried a
+ * 40, which is a 71%+ signal on a prospect the product called low intent.
+ * Nothing reconciled them because nothing computed one from the other.
+ *
+ * Two rules, both of them the product's own:
+ *
+ * The band is the strongest signal that fired. A signal's range is what it is
+ * worth, so the best evidence sets the floor: a prospect who opened pricing is
+ * in 71%+ and one who only saw the category page is in 30–50. This is what
+ * makes the section and the score consistent by construction — the score can
+ * no longer sit below a band whose signal is ticked, because that band is
+ * what put it there.
+ *
+ * Where it sits inside the band is how much else corroborates it. One signal
+ * lands on the floor of its band; each further signal moves it up a sixth of
+ * the band's width. Six of six reaches 95 rather than 100, because a scoring
+ * model that can be maxed out has stopped discriminating at the top.
+ *
+ * No signals is no score. It is not 30: 30 is the floor of a band a prospect
+ * earns by doing something, and a prospect who has done none of the six has
+ * not earned it.
+ */
+export function getIntentScore(company: string): number {
+  const triggered = getTriggeredSignals(company);
+  if (triggered.size === 0) return 0;
+
+  const fired = INTENT_SIGNALS.filter(s => triggered.has(s.label));
+  const band = fired.reduce((best, s) => (s.min > best.min ? s : best), fired[0]);
+  const corroboration = (triggered.size - 1) / INTENT_SIGNALS.length;
+  return band.min + Math.round((band.max - band.min) * corroboration);
+}
+
+
+/**
+ * The fixtures against the scorer, on local hosts only.
+ *
+ * The prospect cards, the tables and the modal header all read `intentPct`
+ * off the fixtures rather than calling the scorer, because the data modules
+ * they come from sit upstream of the activity and cannot import it without a
+ * cycle. Those numbers are generated from `getIntentScore` — but generated
+ * once, which is exactly how they drifted in the first place: the signals
+ * moved and the scores stayed where somebody had typed them.
+ *
+ * So the agreement is checked rather than assumed. Editing a session, a
+ * research flag, a band or the scoring rule and leaving a fixture behind now
+ * says so in the console on the next load, naming every prospect that no
+ * longer adds up, instead of showing a 40% prospect with a 71%+ signal ticked
+ * and waiting for somebody to notice.
+ */
+export function auditIntentFixtures(
+  prospects: ReadonlyArray<{ name: string; intentPct: number }>,
+): Array<{ name: string; fixture: number; derived: number }> {
+  return prospects
+    .map(p => ({ name: p.name, fixture: p.intentPct, derived: getIntentScore(p.name) }))
+    .filter(r => r.fixture !== r.derived);
+}

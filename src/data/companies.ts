@@ -155,7 +155,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: "facebook.com/meridiansupply",
     x: "@meridiansupply",
     instagram: "@meridiansupplyco",
-    intentPct: 80,
+    intentPct: 90,
   },
   {
     name: "Northvane Technologies",
@@ -169,7 +169,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: "facebook.com/northvane",
     x: "@northvane",
     instagram: "@northvanetech",
-    intentPct: 75,
+    intentPct: 57,
   },
   {
     name: "Bowline Freight",
@@ -183,7 +183,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: "facebook.com/bowlinefreight",
     x: "@bowlinefreight",
     instagram: "@bowlinefreight",
-    intentPct: 65,
+    intentPct: 54,
   },
   {
     name: "Canopy Health Group",
@@ -197,7 +197,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: "facebook.com/canopyhealth",
     x: "@canopyhealth",
     instagram: "@canopyhealthgroup",
-    intentPct: 62,
+    intentPct: 64,
   },
   {
     name: "Stratos Analytics",
@@ -211,7 +211,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: "facebook.com/stratosanalytics",
     x: "@stratosdata",
     instagram: "@stratosanalytics",
-    intentPct: 52,
+    intentPct: 61,
   },
   {
     name: "Ironclad Construction",
@@ -225,7 +225,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: "facebook.com/ironcladbuilt",
     x: "@ironcladbuilt",
     instagram: "@ironcladbuilt",
-    intentPct: 50,
+    intentPct: 54,
   },
   {
     name: "Summit Ridge Energy",
@@ -239,7 +239,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: "facebook.com/summitridgeenergy",
     x: "@summitridgenrg",
     instagram: "@summitridgeenergy",
-    intentPct: 40,
+    intentPct: 90,
   },
   {
     name: "Pinehurst Media",
@@ -253,7 +253,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: "facebook.com/pinehurstmedia",
     x: "@pinehurstmedia",
     instagram: "@pinehurstmedia",
-    intentPct: 32,
+    intentPct: 81,
   },
   /* ─────────────── Added from Figma 221:2126 ───────────────
      Name, logo, industry and intent score are the node's. The node carries no
@@ -274,7 +274,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: UNKNOWN,
     x: UNKNOWN,
     instagram: UNKNOWN,
-    intentPct: 85,
+    intentPct: 86,
   },
   {
     name: "Meridian Health Systems",
@@ -288,7 +288,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: UNKNOWN,
     x: UNKNOWN,
     instagram: UNKNOWN,
-    intentPct: 70,
+    intentPct: 57,
   },
   {
     name: "NovaTech Solutions",
@@ -302,7 +302,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: UNKNOWN,
     x: UNKNOWN,
     instagram: UNKNOWN,
-    intentPct: 91,
+    intentPct: 61,
   },
   {
     name: "Pinnacle Financial Group",
@@ -316,7 +316,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: UNKNOWN,
     x: UNKNOWN,
     instagram: UNKNOWN,
-    intentPct: 68,
+    intentPct: 86,
   },
   {
     name: "Vanguard Manufacturing",
@@ -330,7 +330,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: UNKNOWN,
     x: UNKNOWN,
     instagram: UNKNOWN,
-    intentPct: 79,
+    intentPct: 90,
   },
   {
     name: "Clearview Analytics",
@@ -344,7 +344,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: UNKNOWN,
     x: UNKNOWN,
     instagram: UNKNOWN,
-    intentPct: 88,
+    intentPct: 61,
   },
   {
     name: "Summit Energy Corp",
@@ -358,7 +358,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: UNKNOWN,
     x: UNKNOWN,
     instagram: UNKNOWN,
-    intentPct: 64,
+    intentPct: 81,
   },
   {
     name: "Bridgeport Consulting",
@@ -372,7 +372,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: UNKNOWN,
     x: UNKNOWN,
     instagram: UNKNOWN,
-    intentPct: 50,
+    intentPct: 57,
   },
   {
     name: "Hyperion Aerospace",
@@ -386,7 +386,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: UNKNOWN,
     x: UNKNOWN,
     instagram: UNKNOWN,
-    intentPct: 44,
+    intentPct: 86,
   },
   {
     name: "Solaris Biotech",
@@ -400,7 +400,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: UNKNOWN,
     x: UNKNOWN,
     instagram: UNKNOWN,
-    intentPct: 56,
+    intentPct: 95,
   },
   {
     /* The node repeats the company name in this card's industry slot, which
@@ -417,7 +417,7 @@ const PROFILES: CompanyProfile[] = [
     facebook: UNKNOWN,
     x: UNKNOWN,
     instagram: UNKNOWN,
-    intentPct: 61,
+    intentPct: 64,
   },
 ];
 

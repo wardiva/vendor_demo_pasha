@@ -1,7 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { INTENT_BANDS, INTENT_SIGNALS, getTriggeredSignals, type IntentSignal } from "@/data/intentSignals";
-import { getCompanyProfile } from "@/data/companies";
+import {
+  INTENT_BANDS,
+  INTENT_SIGNALS,
+  getIntentScore,
+  getTriggeredSignals,
+  type IntentSignal,
+} from "@/data/intentSignals";
 import { IS_LOCAL } from "@/lib/environment";
 
 /**
@@ -322,7 +327,7 @@ function StrongestFirst({ views }: { views: View[] }) {
    there, and which band are they short of. The score is the one the modal's
    header is already showing, so the two cannot disagree. */
 function AgainstTheScore({ views, company }: { views: View[]; company: string }) {
-  const score = getCompanyProfile(company)?.intentPct ?? 0;
+  const score = getIntentScore(company);
   const at = (n: number) => `${Math.max(0, Math.min(100, ((n - 30) / 70) * 100))}%`;
   return (
     <Panel>
@@ -426,8 +431,15 @@ function BandColumns({ views }: { views: View[] }) {
 /** Where a number sits on the 30-to-100 the signals are scored against. */
 const at = (n: number) => Math.max(0, Math.min(100, ((n - 30) / 70) * 100));
 
-/** The score this company carries — the one the modal's header shows. */
-const scoreOf = (company: string) => getCompanyProfile(company)?.intentPct ?? 0;
+/**
+ * The score this company carries.
+ *
+ * Computed from the activity, not read off the fixture beside it. The fixture
+ * now holds the same number — it is generated from this function — but the
+ * section reads the function, so the one place that draws the signals and the
+ * score together cannot be fed a stale figure.
+ */
+const scoreOf = (company: string) => getIntentScore(company);
 
 /** The band a score falls in, so a row can say "this is where they are". */
 const bandOfScore = (score: number) =>
