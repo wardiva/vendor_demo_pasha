@@ -1076,11 +1076,14 @@ function ScoreAndBands({
           are, so that is the first line now, and the count beneath it is
           what it rests on — what, then why.
 
-          The intervals are unchanged and so is the total: the indicator and
-          the sentence are one pair 8 apart, the rows are the next block at
-          12. Only the order of the first two moved. */}
+          Everything inside this card is now one interval apart — 12, the
+          only gap the Activity tab uses between the blocks of a card and
+          between the rows of the Visited timeline. The indicator and the
+          sentence were 8, which is the tab's gap between separate cards, not
+          within one; nothing else in the card was at 8, so it read as the
+          two of them being pushed together. */}
       <IntentBar score={score} variant={bar} />
-      <div style={{ marginTop: 8, width: "100%" }}>
+      <div style={{ marginTop: 12, width: "100%" }}>
         <Summary views={views} />
       </div>
       <div className="flex flex-col w-full" style={{ marginTop: 12 }}>
@@ -1093,14 +1096,16 @@ function ScoreAndBands({
           return (
             <div
               key={band.range}
-              /* 8 above and below every rule, so a row is the same distance
-                 from the one over it as from the one under it. 12 between the
-                 band and its signals, the same interval the tab puts between
-                 a card's blocks. */
+              /* 12 above and below every rule — the card's one interval
+                 again — so a rule sits the same distance from the content
+                 over it as from the content under it, and two bands are 24
+                 apart rather than 16. At 8 the rules were closer to their
+                 rows than the rows were to anything else, which is what made
+                 three groups read as one block of text with lines in it. */
               className="content-stretch flex gap-[12px] items-start relative shrink-0 w-full"
               style={{
-                paddingTop: first ? 0 : 8,
-                paddingBottom: last ? 0 : 8,
+                paddingTop: first ? 0 : 12,
+                paddingBottom: last ? 0 : 12,
                 boxShadow: last ? undefined : `inset 0 -1px 0 0 ${HAIR}`,
               }}
             >
@@ -1116,23 +1121,30 @@ function ScoreAndBands({
                   style={{
                     left: -8,
                     right: -8,
-                    top: first ? -4 : 2,
-                    bottom: last ? -4 : 2,
+                    top: first ? -6 : 4,
+                    bottom: last ? -6 : 4,
                     background: "rgba(7,41,41,0.05)",
                   }}
                 />
               )}
               {/* 12 on 20, the size and leading the tab's own secondary text
                   is set in, so the band, its signals and the summary above
-                  them all sit on one 20px line. 48 holds "51–70%" with the
-                  ragged edge of the three ranges still aligned left. */}
+                  them all sit on one 20px line.
+
+                  48 wide, and the gap after it stays 12 — the widest
+                  interval the Activity tab uses anywhere. Widening the
+                  column to buy more air between a range and a signal name
+                  costs a wrapped line on four prospects at 56 and two at 52,
+                  which is a worse trade than the four pixels is worth. The
+                  Intent row above uses the same 48, so the bar and the
+                  signals start on one line. */}
               <span
                 className="font-['Inter',sans-serif] font-medium leading-[20px] relative shrink-0 text-[12px] w-[48px] whitespace-nowrap"
                 style={{ color: anyLive ? LIVE : FAINT }}
               >
                 {band.range}
               </span>
-              <div className="flex flex-wrap gap-x-[12px] min-w-px relative">
+              <div className="flex flex-wrap gap-x-[12px] gap-y-[8px] min-w-px relative">
                 {items.map(v => (
                   <span key={v.signal.label} className="content-stretch flex gap-[8px] items-center shrink-0">
                     {v.live ? <Tick /> : <Hollow />}
