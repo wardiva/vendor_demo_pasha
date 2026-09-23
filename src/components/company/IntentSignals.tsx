@@ -1058,34 +1058,35 @@ function ScoreAndBands({
 }: {
   views: View[];
   company: string;
-  /* The one thing that varies between the three. Everything else in this
-     component — the sentence, the band rows, the tinted row, the spacing —
-     is the approved design and is identical whichever is passed. */
-  bar: IntentBarVariant;
+  /* The one thing that varies between the three, plus "none" — the ladder
+     variation now shows no indicator row at all. Everything else in this
+     component is identical whichever is passed. */
+  bar: IntentBarVariant | "none";
 }) {
   const score = scoreOf(company);
   const here = bandOfScore(score);
   const rows = bandRows(views);
   return (
     <Panel>
-      {/* The answer, then the working.
+      {/* The indicator row, where there is one.
 
-          The score led nothing before: the section opened by counting
-          signals, which is evidence for a conclusion the reader had not been
-          given yet. A prospect is opened to find out how interested they
-          are, so that is the first line now, and the count beneath it is
-          what it rests on — what, then why.
+          The ladder variation carries none: the score is on the modal header
+          two inches above this card, so the section can be the evidence
+          alone. Where a row is shown it leads, because a prospect is opened
+          to find out how interested they are and the count beneath is what
+          that rests on — what, then why.
 
-          Everything inside this card is now one interval apart — 12, the
-          only gap the Activity tab uses between the blocks of a card and
-          between the rows of the Visited timeline. The indicator and the
-          sentence were 8, which is the tab's gap between separate cards, not
-          within one; nothing else in the card was at 8, so it read as the
-          two of them being pushed together. */}
-      <IntentBar score={score} variant={bar} />
-      <div style={{ marginTop: 12, width: "100%" }}>
-        <Summary views={views} />
-      </div>
+          Blocks inside this card are one interval apart, 12 — the only gap
+          the Activity tab uses between the blocks of a card and between the
+          rows of the Visited timeline. With no indicator the sentence is the
+          first block and takes the card's own padding instead. */}
+      {bar !== "none" && (
+        <>
+          <IntentBar score={score} variant={bar} />
+          <div style={{ height: 12 }} />
+        </>
+      )}
+      <Summary views={views} />
       <div className="flex flex-col w-full" style={{ marginTop: 12 }}>
         {rows.map((band, i) => {
           const items = views.filter(v => v.signal.range === band.range);
@@ -1335,7 +1336,7 @@ const CONCEPTS: ReadonlyArray<{ label: string; render: (views: View[], company: 
      is the approved design, from the same component. */
   { label: "1 · Bar: segmented", render: (v, c) => <ScoreAndBands views={v} company={c} bar="segmented" /> },
   { label: "2 · Bar: scale", render: (v, c) => <ScoreAndBands views={v} company={c} bar="scale" /> },
-  { label: "3 · Bar: ladder", render: (v, c) => <ScoreAndBands views={v} company={c} bar="ladder" /> },
+  { label: "3 · Bar: ladder", render: (v, c) => <ScoreAndBands views={v} company={c} bar="none" /> },
 
   /* The other section designs, and the eleven behind them. */
   { label: "4 · Six chips", render: (v, c) => <SixChips views={v} company={c} /> },
