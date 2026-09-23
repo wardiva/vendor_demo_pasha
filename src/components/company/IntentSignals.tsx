@@ -7,7 +7,6 @@ import {
   getTriggeredSignals,
   type IntentSignal,
 } from "@/data/intentSignals";
-import { IS_LOCAL } from "@/lib/environment";
 
 /**
  * Intent Signals — what the prospect's score is built from.
@@ -1879,16 +1878,22 @@ export default function IntentSignals({ company }: { company: string }) {
     <div className="content-stretch flex flex-col gap-[6px] items-start relative shrink-0 w-full" data-name="Intent Signals">
       {CONCEPTS[concept].render(views, company)}
 
-      {/* Beside the modal, not inside it — see ConceptsPanel. */}
-      {IS_LOCAL && (
-        <ConceptsPanel
-          concept={concept}
-          onPick={setConcept}
-          /* Functional, so a held arrow key walks the list instead of moving
-             once: every repeat resolves against the concept as it is then. */
-          onStep={d => setConcept(c => (c + d + CONCEPTS.length) % CONCEPTS.length)}
-        />
-      )}
+      {/* Beside the modal, not inside it — see ConceptsPanel.
+
+          Shown wherever the app runs, which is the point of it: this is a
+          version history, and the people it is for read the deployed link
+          rather than the dev server. It was gated to local hosts, so the one
+          audience that could reach it was the one that did not need it — the
+          same mistake the Profile and Pricing cards made in the other
+          direction. The contact-reveal history beside it has never been
+          gated; now the two agree. */}
+      <ConceptsPanel
+        concept={concept}
+        onPick={setConcept}
+        /* Functional, so a held arrow key walks the list instead of moving
+           once: every repeat resolves against the concept as it is then. */
+        onStep={d => setConcept(c => (c + d + CONCEPTS.length) % CONCEPTS.length)}
+      />
     </div>
   );
 }
