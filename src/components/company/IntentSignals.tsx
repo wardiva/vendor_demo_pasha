@@ -1788,7 +1788,7 @@ function ActivityChips({ views, company }: { views: View[]; company: string }) {
     <Panel face={{ paddingBottom: 16 }}>
       <SignalsHeading>Buyer Intelligence Activity</SignalsHeading>
 
-      <div className="content-stretch flex gap-[40px] items-center w-full" style={{ marginTop: 12 }}>
+      <div className="content-stretch flex gap-[20px] items-center w-full" style={{ marginTop: 12 }}>
         <span
           className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px]"
           style={{ color: INK }}
