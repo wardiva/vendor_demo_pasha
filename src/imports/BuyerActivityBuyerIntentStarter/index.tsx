@@ -311,90 +311,12 @@ function Frame136() {
   );
 }
 
-const TREND_COLORS = { up: "#24B364", down: "#FF4C51", flat: "rgba(47,43,61,0.6)" } as const;
-
-/* The two glyph sizes the design uses: the first summary card is slightly
- * smaller than the three signal cards. */
-const TREND_VARIANTS = {
-  sm: {
-    line: { inset: { top: "-10.29%", bottom: "-10.29%", left: "-5.71%", right: "-5.71%" }, w: 11.7, h: 7.03333, path: svgPaths.p1bb22f00 },
-    head: { inset: { top: "-14.69%", bottom: "-14.69%", left: "-14.69%", right: "-14.69%" }, size: 5.28333, path: "M0.6 0.6H4.68333V4.68333" },
-    stroke: 1.2,
-  },
-  md: {
-    line: { inset: { top: "-12.86%", bottom: "-12.86%", left: "-7.14%", right: "-7.14%" }, w: 12, h: 7.33333, path: svgPaths.p26a35900 },
-    head: { inset: { top: "-18.37%", bottom: "-18.37%", left: "-18.37%", right: "-18.37%" }, size: 5.58333, path: "M0.75 0.75H4.83333V4.83333" },
-    stroke: 1.5,
-  },
-} as const;
-
-/**
- * Change against the previous reporting period, recomputed from whatever the
- * current filters select. Uses the design's trending-up mark, mirrored for a
- * decline and replaced by a dash when there is no baseline to compare against.
- */
-function TrendIndicator({ stat, variant }: { stat: SummaryStat; variant: "sm" | "md" }) {
-  const { deltaPct } = stat;
-  const direction = deltaPct === null || Math.abs(deltaPct) < 0.05 ? "flat" : deltaPct > 0 ? "up" : "down";
-  const color = TREND_COLORS[direction];
-  const label =
-    deltaPct === null ? "—" : direction === "flat" ? "0%" : `${Math.abs(deltaPct).toFixed(1)}%`;
-  const v = TREND_VARIANTS[variant];
-  const textCls = variant === "sm" ? "text-[13px]" : "text-[14px]";
-  const leadCls = variant === "sm" ? "leading-[19px]" : "leading-[22px]";
-
-  return (
-    <div className="content-stretch flex gap-[4px] items-center relative shrink-0" data-name="Percentage">
-      <div
-        className="relative shrink-0 size-[14px]"
-        data-name={direction === "down" ? "trending-down" : direction === "up" ? "trending-up" : "trending-flat"}
-      >
-        {direction === "flat" ? (
-          <svg className="absolute block inset-0 size-full" fill="none" viewBox="0 0 14 14">
-            <path d="M3 7H11" stroke={color} strokeWidth={v.stroke} strokeLinecap="round" />
-          </svg>
-        ) : (
-          /* A decline is the same mark flipped, so both directions stay on-design. */
-          <div className="absolute inset-0" style={direction === "down" ? { transform: "scaleY(-1)" } : undefined}>
-            <div className="absolute inset-[29.17%_12.5%]" data-name="Path">
-              <div className="absolute" style={v.line.inset}>
-                <svg className="block size-full" fill="none" height={v.line.h} preserveAspectRatio="none" viewBox={`0 0 ${v.line.w} ${v.line.h}`} width={v.line.w}>
-                  <path d={v.line.path} stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={v.stroke} />
-                </svg>
-              </div>
-            </div>
-            <div className="absolute inset-[29.17%_12.5%_41.67%_58.33%]" data-name="Path">
-              <div className="absolute" style={v.head.inset}>
-                <svg className="block size-full" fill="none" height={v.head.size} preserveAspectRatio="none" viewBox={`0 0 ${v.head.size} ${v.head.size}`} width={v.head.size}>
-                  <path d={v.head.path} stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={v.stroke} />
-                </svg>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      <div
-        className={`[word-break:break-word] flex flex-col font-['Inter',sans-serif] font-medium justify-center leading-[0] not-italic relative shrink-0 whitespace-nowrap ${textCls}`}
-        style={{ color }}
-      >
-        <p className={leadCls}>{label}</p>
-      </div>
-    </div>
-  );
-}
-
-function Percentage() {
-  return <TrendIndicator stat={useSignalsAnalytics().stats.buyers} variant="sm" />;
-}
-
 function Frame52() {
   return (
     <div className="content-stretch flex gap-[4px] items-end relative shrink-0">
       <div className="[word-break:break-word] capitalize flex flex-col font-['Inter',sans-serif] font-medium justify-center leading-[0] not-italic relative shrink-0 text-[#2f2b3d] text-[28px] whitespace-nowrap">
-        {/* Only the figure counts; the trend beside it is untouched. */}
         <p className="leading-[36px]"><AnimatedMetric value={useSignalsAnalytics().stats.buyers.value} /></p>
       </div>
-      <Percentage />
     </div>
   );
 }
@@ -619,17 +541,12 @@ function Frame55() {
   );
 }
 
-function Percentage3() {
-  return <TrendIndicator stat={useSignalsAnalytics().stats.competitor} variant="md" />;
-}
 function Frame56() {
   return (
     <div className="content-stretch flex gap-[4px] items-end relative shrink-0">
       <div className="[word-break:break-word] capitalize flex flex-col font-['Inter',sans-serif] font-medium justify-center leading-[0] not-italic relative shrink-0 text-[#2f2b3d] text-[28px] whitespace-nowrap">
-        {/* Only the figure counts; the trend beside it is untouched. */}
         <p className="leading-[36px]"><AnimatedMetric value={useSignalsAnalytics().stats.competitor.value} /></p>
       </div>
-      <Percentage3 />
     </div>
   );
 }
