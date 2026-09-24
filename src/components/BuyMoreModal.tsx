@@ -74,29 +74,60 @@ export default function BuyMoreModal({ onClose }: { onClose: () => void }) {
           <div className="flex flex-col gap-[16px]">
             <div className="flex flex-col gap-[12px]">
 
-              {/* Option cards */}
-              <div className="flex gap-[12px]">
-                {OPTIONS.map((o, i) => (
-                  <button
-                    key={o.label}
-                    onClick={() => setSelectedIdx(i)}
-                    className={`flex-1 flex flex-col gap-[12px] items-start px-[16px] py-[12px] rounded-[12px] text-left transition-all cursor-pointer bg-[#f4f2f0] ${
-                      selectedIdx === i
-                        ? /* The selected stroke is 1.2px; the ring is drawn
-                             outside the box, so the card's own size, padding
-                             and radius are unaffected by its weight. */
-                          "ring-[1.2px] ring-[#072929]"
-                        : "hover:ring-1 hover:ring-[rgba(7,41,41,0.25)]"
-                    }`}
-                  >
-                    <p className="font-['Inter',sans-serif] font-medium leading-[24px] text-[#2f2b3d] whitespace-nowrap text-[18px]">
-                      {o.label}
-                    </p>
-                    <p className="font-['Inter',sans-serif] font-normal leading-[20px] text-[14px] text-[#2f2b3d]">
-                      {o.subLabel}
-                    </p>
-                  </button>
-                ))}
+              {/* Option cards — Figma 47:4977.
+
+                  Three 80px cards on a 12px gutter, each carrying its price
+                  and a radio on one line with the contact count under it. The
+                  radio is what the node adds: choosing a tier used to be said
+                  by the card's own outline alone, which is a state you can
+                  only read by comparing all three. A mark that is either
+                  filled or not is readable on the one card you are looking at.
+
+                  Selected: white behind a 1px #072929 edge, the radio a 4px
+                  ring of the same ink around a white centre.
+                  Unselected: the #f4f2f0 fill, no edge, and a hairline ring.
+
+                  Every card carries the 1px border whether or not it is
+                  selected — transparent when it is not — so choosing one
+                  changes its colour and never the geometry of the row. */}
+              <div className="flex gap-[12px]" role="radiogroup" aria-label="Contact reveal bundles">
+                {OPTIONS.map((o, i) => {
+                  const on = selectedIdx === i;
+                  return (
+                    <button
+                      key={o.label}
+                      role="radio"
+                      aria-checked={on}
+                      onClick={() => setSelectedIdx(i)}
+                      className={`flex-1 flex flex-col gap-[12px] items-start px-[16px] py-[12px] rounded-[12px] text-left transition-colors cursor-pointer border border-solid ${
+                        on
+                          ? "bg-white border-[#072929]"
+                          : "bg-[#f4f2f0] border-transparent hover:border-[rgba(7,41,41,0.25)]"
+                      }`}
+                    >
+                      <div className="flex w-full gap-[12px] items-center justify-between">
+                        <p className="font-['Inter',sans-serif] font-medium leading-[24px] text-[#2f2b3d] whitespace-nowrap text-[18px]">
+                          {o.label}
+                        </p>
+                        {/* 16px, and the ink is carried by the border rather
+                            than a nested dot: at a 4px weight on a 16px box
+                            the white that is left in the middle is the 8px
+                            centre the node draws. */}
+                        <span
+                          aria-hidden
+                          className="block shrink-0 size-[16px] rounded-[100px] bg-white border-solid transition-[border] box-border"
+                          style={{
+                            borderWidth: on ? 4 : 1,
+                            borderColor: on ? "#072929" : "rgba(47,43,61,0.20)",
+                          }}
+                        />
+                      </div>
+                      <p className="font-['Inter',sans-serif] font-normal leading-[20px] text-[14px] text-[#2f2b3d]">
+                        {o.subLabel}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
 
 
