@@ -608,14 +608,156 @@ function Row() {
       data-name="Row"
       data-summary-cards
     >
-      {/* Buyers in Market, then Competitor: the whole audience, then what it
-          looked at. Profile Signals and Pricing Signals are gone — they were
-          shown on deployments and held back locally, which is the one
-          arrangement where nobody reviewing the page ever saw them. Their
-          filter options are untouched and still on the Filters panel. */}
+      {/* Buyers in Market, then the two page signals it breaks down into, then
+          Competitor — the whole audience first, then what it looked at.
+
+          All four, on every host. They were once behind `!IS_LOCAL`, which
+          showed them on deployments and hid them from the one place anybody
+          was reviewing the page; that gate is not coming back. Each card takes
+          an equal share of the line and asks for 220px before it wraps, so no
+          layout rule here knows how many cards there are — four across is the
+          width they were drawn for, and the row needs nothing said to it. */}
       <MemoryUsage />
+      <MemoryUsageProfile />
+      <MemoryUsagePricing />
       <MemoryUsage3 />
     </div>
+  );
+}
+
+/**
+ * The buyer companies behind a research signal, and how many are not shown.
+ *
+ * Read off the dataset rather than written down: a company is in the stack
+ * when its account actually produces that signal, and the logos are the ones
+ * the Prospects page and the Competitors filter already draw for it, so the
+ * faces on the card are the same companies named everywhere else. Six slots,
+ * as the two cards beside them have — five logos and a sixth carrying the
+ * overflow count over a dimmed logo.
+ */
+function signalStack(kind: "profile" | "pricing") {
+  const carrying = PROSPECT_COMPANIES.filter(
+    c => COMPANIES.find(account => account.name === c.name)?.signals[kind],
+  );
+  return { slots: carrying.slice(0, 6).map(c => c.logo), more: Math.max(0, carrying.length - 5) };
+}
+
+const SIGNAL_STACKS = { profile: signalStack("profile"), pricing: signalStack("pricing") };
+
+/**
+ * The avatar group on the Profile and Pricing cards.
+ *
+ * The geometry the other two groups use — 28px circles overlapping by 4px, a
+ * white ring on each, the last dimmed under its count — and the same
+ * data-name="Friends", which is what the hover spring and the click through to
+ * the Prospects page key on, so all four cards behave alike.
+ */
+function FriendsSignal({ kind }: { kind: "profile" | "pricing" }) {
+  const { slots, more } = SIGNAL_STACKS[kind];
+  const slot =
+    "border border-solid border-white mr-[-4px] overflow-hidden relative rounded-[100px] shrink-0 size-[28px]";
+  const mark = "absolute block inset-0 max-w-none object-cover size-full";
+  const [lead, overflow] = [slots.slice(0, 5), slots[5]];
+  return (
+    <div className="content-stretch flex items-center relative shrink-0" data-name="Friends">
+      {lead.map((logo, i) => (
+        <div key={i} className={slot}>
+          <img alt="" className={mark} height="28" src={logo} width="28" />
+        </div>
+      ))}
+      {more > 0 && (
+        <div className={slot} data-name="Frame">
+          <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[100px]">
+            {overflow && (
+              <img alt="" className="absolute max-w-none object-cover rounded-[100px] size-full" src={overflow} />
+            )}
+            <div className="absolute bg-[rgba(0,0,0,0.6)] inset-0 rounded-[100px]" />
+          </div>
+          <div className="content-stretch flex items-center justify-center overflow-clip relative rounded-[inherit] size-full">
+            <p className="[word-break:break-word] font-['Inter',sans-serif] font-medium leading-[20px] not-italic relative shrink-0 text-[13px] text-white whitespace-nowrap">
+              +{more}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Profile Signals and Pricing Signals.
+ *
+ * Built to the spec of Competitor Signals beside them: the same white 186px
+ * card at 12px radius, the same 20px padding, the same title-and-info row over
+ * a 28px figure, and the same 11px caption over the avatar stack. Only the
+ * words, the figure and the faces differ, so the four read as one set.
+ *
+ * No trend beside the figure. The two cards these are built to match no longer
+ * carry one either — the cards state a count for the current range and nothing
+ * sets a range to compare it against — and a delta on two of four would be the
+ * odd thing rather than the informative one.
+ */
+function SignalSummaryCard({
+  title,
+  caption,
+  stat,
+  kind,
+}: {
+  title: string;
+  caption: string;
+  stat: SummaryStat;
+  kind: "profile" | "pricing";
+}) {
+  return (
+    <div className="bg-white flex-[1_1_220px] h-[186px] min-w-px relative rounded-[12px]" data-name="Memory Usage">
+      <div className="flex flex-col justify-center size-full">
+        <div className="content-stretch flex flex-col items-start justify-between p-[20px] relative size-full">
+          <div className="content-stretch flex flex-col items-start relative shrink-0 w-full">
+            <div className="content-stretch flex flex-col gap-[6px] items-start relative shrink-0 w-full">
+              <div className="content-stretch flex gap-[8px] items-center relative shrink-0 w-full">
+                <div className="[word-break:break-word] flex flex-col font-['Inter',sans-serif] font-medium justify-center leading-[0] not-italic relative shrink-0 text-[#2f2b3d] text-[16px] whitespace-nowrap">
+                  <p className="leading-[24px]">{title}</p>
+                </div>
+                <InfoIcon />
+              </div>
+              <div className="content-stretch flex gap-[4px] items-end relative shrink-0">
+                <div className="[word-break:break-word] capitalize flex flex-col font-['Inter',sans-serif] font-medium justify-center leading-[0] not-italic relative shrink-0 text-[#2f2b3d] text-[28px] whitespace-nowrap">
+                  <p className="leading-[36px]"><AnimatedMetric value={stat.value} /></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-[197.5px]">
+            <div className="[word-break:break-word] flex flex-col font-['Inter',sans-serif] font-medium justify-center leading-[0] not-italic relative shrink-0 text-[11px] text-[rgba(47,43,61,0.6)] w-full">
+              <p className="leading-[15px]">{caption}</p>
+            </div>
+            <FriendsSignal kind={kind} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MemoryUsageProfile() {
+  return (
+    <SignalSummaryCard
+      title="Profile Signals"
+      caption="Visited your product profile."
+      stat={useSignalsAnalytics().signalBuyers.profile}
+      kind="profile"
+    />
+  );
+}
+
+function MemoryUsagePricing() {
+  return (
+    <SignalSummaryCard
+      title="Pricing Signals"
+      caption="Visited your pricing page."
+      stat={useSignalsAnalytics().signalBuyers.pricing}
+      kind="pricing"
+    />
   );
 }
 

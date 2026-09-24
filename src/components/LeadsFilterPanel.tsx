@@ -1,6 +1,5 @@
 import { OptionFilterCard } from "@/components/filters/FilterPrimitives";
 import { LEAD_SIGNAL_OPTIONS, type LeadSignalOption } from "@/data/leads";
-import { IS_LOCAL } from "@/lib/environment";
 
 /**
  * Prospects page Signals filter panel.
@@ -11,20 +10,16 @@ import { IS_LOCAL } from "@/lib/environment";
  */
 
 /**
- * The two page-signal options travel with their cards. On the Signals page,
- * Profile Signals and Pricing Signals are held back on local hosts; each of
- * those cards' avatar stacks opens the option of the same name here, and an
- * option for a card that is not on screen is a dead end. So the same gate
- * takes the two options off this list locally and leaves them on the
- * deployment, where the cards are. Nothing is removed beneath: the options
- * stay in LEAD_SIGNAL_OPTIONS and their matching rule stays in `leads`, so a
- * selection arriving from a card on the deployment still filters as before.
+ * Every option, on every host.
+ *
+ * Profile Signals and Pricing Signals used to be filtered out of this list
+ * locally, because their cards were. The rule was sound — each card's avatar
+ * stack opens the option of the same name, and an option for a card that is
+ * not on screen is a dead end — but the cards are now drawn everywhere, so
+ * the gate would invert it: the option would be missing on exactly the host
+ * where the card sits above it asking to be clicked.
  */
-const HELD_LOCALLY: readonly LeadSignalOption[] = ["Profile Signals", "Pricing Signals"];
-
-const SIGNAL_OPTIONS: LeadSignalOption[] = LEAD_SIGNAL_OPTIONS.filter(
-  option => !(IS_LOCAL && HELD_LOCALLY.includes(option)),
-);
+const SIGNAL_OPTIONS: LeadSignalOption[] = [...LEAD_SIGNAL_OPTIONS];
 
 export default function LeadsFilterPanel({
   onApply,
