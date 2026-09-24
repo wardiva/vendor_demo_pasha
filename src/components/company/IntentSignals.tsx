@@ -1702,6 +1702,12 @@ const FIVE_COLUMNS: ReadonlyArray<{ label: string; short: string }> = [
   { label: "Viewed Reviews", short: "Reviews" },
   { label: "Viewed Alternatives", short: "Alternatives" },
   { label: "Viewed Pricing", short: "Pricing" },
+  /* Sixth, from Figma 50:5227. Last because the order is the order the
+     research happens in, roughly — the category listing, then the product,
+     then the comparing, then the price, and a walkthrough only once all of
+     that has been done. The row divides by however many columns there are,
+     so nothing else needed telling. */
+  { label: "Viewed Demo", short: "Demo" },
 ];
 
 /**
@@ -1845,40 +1851,62 @@ function ActivityChips({ views, company }: { views: View[]; company: string }) {
         </div>
       </div>
 
-      <div className="relative w-full" style={{ marginTop: 12 }}>
-        {/* On the boundaries, 32 of the row's 44 — short of both ends, so it
-            separates the columns without ruling the block off. */}
-        {Array.from({ length: Math.max(0, n - 1) }, (_, k) => (
-          <span
-            key={k}
-            aria-hidden
-            className="absolute"
-            style={{ left: `calc(${k + 1} * 100% / ${n})`, top: 6, bottom: 6, width: 1, background: TRACK_RULE }}
-          />
-        ))}
+      <div
+        className="content-stretch flex items-start justify-between w-full"
+        style={{ marginTop: 12 }}
+      >
+        {/* Not equal columns.
 
-        <div className="grid" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
-          {columns.map(({ short, view }) => (
+            50:5212 sizes every column to its own label — Category 54, Profile
+            37, Alternatives 69, Demo 34 — and spreads the six across the row,
+            which puts its rules at 68, 134, 210, 307, 376 rather than on the
+            even sixths a grid would give. The effect is that each mark sits
+            under its own word instead of in the middle of a track the word is
+            only part of, and "Alternatives" stops being the one column whose
+            text nearly fills its cell while "Demo" rattles around in an
+            identical one.
+
+            The rules are zero-width items in the same distribution, so the
+            free space falls into ten equal gaps and each rule ends up with
+            half a gap either side — the node's 14.3, which reads as 28.6
+            between one column and the next. Giving them a real width would
+            take those five pixels out of the columns' share and pull every
+            mark off the word above it. */}
+        {columns.flatMap(({ short, view }, i) => {
+          const column = (
             <div
               key={short}
-              className="content-stretch flex flex-col gap-[6px] items-center min-w-px overflow-hidden"
+              className="content-stretch flex flex-col gap-[6px] items-center shrink-0"
             >
               {/* Weight alone carries the state in the name — the mark under
                   it is unambiguous, so dimming the word as well would be the
                   third time this column says the same thing. */}
               <span
-                className="font-['Inter',sans-serif] leading-[20px] max-w-full overflow-hidden text-[12px] text-ellipsis whitespace-nowrap"
+                className="font-['Inter',sans-serif] leading-[20px] text-[12px] whitespace-nowrap"
                 style={{ color: INK, fontWeight: view.live ? 500 : 400 }}
                 title={view.signal.label}
               >
                 {short}
               </span>
-              <span className="content-stretch flex h-[18px] items-center justify-center w-full">
+              {/* 24 wide in the node, centred under the name rather than
+                  filling anything — the column has no width of its own for it
+                  to fill any more. */}
+              <span className="content-stretch flex h-[18px] items-center justify-center rounded-[6px] shrink-0 w-[24px]">
                 {view.live ? <CircleTick /> : <Hollow size={12} />}
               </span>
             </div>
-          ))}
-        </div>
+          );
+          if (i === 0) return [column];
+          return [
+            <span key={`rule-${short}`} aria-hidden className="relative self-stretch shrink-0 w-0">
+              <span
+                className="absolute bottom-[6px] top-[6px] w-px"
+                style={{ background: TRACK_RULE, left: -0.5 }}
+              />
+            </span>,
+            column,
+          ];
+        })}
       </div>
     </Panel>
   );

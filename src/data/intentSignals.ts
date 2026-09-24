@@ -29,6 +29,10 @@ export const INTENT_SIGNALS: readonly IntentSignal[] = [
   { label: "Viewed Pricing", range: "71%+", min: 71, max: 100 },
   { label: "Viewed Alternatives", range: "51–70%", min: 51, max: 70 },
   { label: "Viewed Reviews", range: "51–70%", min: 51, max: 70 },
+  /* Booking a walkthrough is the strongest thing in this table — it is the
+     only one that asks for a person's time rather than a page — so it sits in
+     the top band with pricing. */
+  { label: "Viewed Demo", range: "71%+", min: 71, max: 100 },
 ];
 
 /** The three bands the five signals fall into, strongest first. */
@@ -89,14 +93,15 @@ export function getTriggeredSignals(company: string): ReadonlySet<string> {
 
   const triggered = new Set<string>();
 
-  /* Four of the five are a page in the timeline below, matched on its own
+  /* Five of the six are a page in the timeline below, matched on its own
      path, so a tick here is something the reader can scroll down and see. */
   if (visitedCategory) triggered.add("Viewed Category Page");
   if (visited("pricing")) triggered.add("Viewed Pricing");
   if (visited("alternatives")) triggered.add("Viewed Alternatives");
   if (visited("reviews")) triggered.add("Viewed Reviews");
+  if (visited("demo")) triggered.add("Viewed Demo");
 
-  /* The fifth has no page to match. The seven page shapes the sessions are
+  /* The sixth has no page to match. The seven page shapes the sessions are
      built from are the category listing, pricing, reviews, buyers-guide,
      alternatives, demo and implementation — there is no product-profile page
      — so this one stays on the company-level research flag, which is where
