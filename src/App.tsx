@@ -101,8 +101,10 @@ const SIGNAL_CARD_FILTERS: Record<string, LeadSignalOption | undefined> = {
      matched every prospect, so selecting it narrowed nothing — the card still
      opens the Prospects page, now with the list unfiltered, which is the same
      thing it always showed. */
-  "Profile Signals": "Profile Signals",
-  "Pricing Signals": "Pricing Signals",
+  /* The key is the card's title, the value is the filter option — and the two
+     stopped being the same word when the option was shortened. */
+  "Profile Signals": "Profile",
+  "Pricing Signals": "Pricing",
   "Competitor Signals": "Competitor",
 };
 
