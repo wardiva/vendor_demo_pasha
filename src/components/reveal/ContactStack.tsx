@@ -2,6 +2,7 @@ import { useEffect, useState, type KeyboardEvent, type MouseEvent } from "react"
 import ContactPreviewCard from "@/components/contacts/ContactPreviewCard";
 import { useCompanyRevealFlow } from "@/components/reveal/useCompanyRevealFlow";
 import type { ProspectContact } from "@/data/prospects";
+import StackCount from "./StackCount";
 import { GroupHeading, RevealCta, RevealedBadge, revealAllCountLabel } from "./variations/parts";
 
 /**
@@ -62,6 +63,11 @@ const TAG_SEALED = {
   /* The tag is pinned by its right edge, and that edge moves by two between
      the two states. Transitioning it is what carries the mark across rather
      than teleporting it there while the word is still closing. */
+  /* 3, not the node's own 6. The node's tag box is 16 tall and starts at 6, so
+     its contents centre on 14; this one is 22 tall, because the label's line
+     box is 20 rather than the node's 11. Matching the box tops would put the
+     mark three pixels below where the design has it — what has to agree is
+     the centre line, and 3 is what puts it on 14. */
   className: "absolute right-[8px] top-[3px] transition-[right] duration-[300ms] ease-[cubic-bezier(0.4,0.05,0.2,1)]",
 };
 const TAG_OPEN = {
@@ -86,6 +92,34 @@ const TAG_OPEN = {
  */
 const EASE = "cubic-bezier(0.4, 0.05, 0.2, 1)";
 const DUR = 300;
+
+/**
+ * What each layer is filled and edged with, from Figma 32:1414.
+ *
+ * The node draws the depth rather than implying it. Every card in the deck is
+ * the same 310-wide card with a 2px frame; what changes with depth is what is
+ * inside the frame, and it darkens as the layer recedes — so the two slivers
+ * showing at the left are two distinct greys, not one edge repeated. The
+ * front card is the only one whose contents are drawn at all.
+ *
+ *   sealed    slot 0  #f4f2f0 behind a 2px white ring
+ *             slot 1  #efefef
+ *             slot 2  #e7e7e7
+ *   revealed  slot 0  #f4f2f0 at 60%   (the card's own rim, already drawn)
+ *             slot 1  #ebebeb at 80%
+ *             slot 2  #d8d8d8 at 60%
+ *
+ * Slot 0 is absent from this table in both states because the card draws its
+ * own interior — the veil while sealed, the rim once open. Everything behind
+ * it is a flat panel, which is also why the deck costs nothing to render: two
+ * of the three cards are never read.
+ */
+const DEPTH_FILL: ReadonlyArray<{ sealed: string; open: string } | null> = [
+  null,
+  { sealed: "#efefef", open: "rgba(235,235,235,0.8)" },
+  { sealed: "#e7e7e7", open: "rgba(216,216,216,0.6)" },
+];
+
 
 const slotStyle = (slot: number, open: boolean) => ({
   width: PANEL_W,
@@ -157,6 +191,14 @@ function StackedCard({
       /* The page's click delegate runs on the capture phase and would open the
          Prospect Details modal before this card's own handler ran. */
       data-contact-select={open ? "" : undefined}
+      /* Every sealed card's face is the flat #f4f2f0 — a lone one (32:1618) as
+         much as the front of a deck (32:1537). What only the deck's front card
+         takes is the white ring, and with it the 14 radius and the frost inset
+         4, so the two cases are told apart by value rather than by presence.
+         The layers behind are filled pure white, which is what makes the 2px
+         rim past the grey panel read as the edge between them. See index.css. */
+      data-stack-front={front && flow.locked ? (count > 1 ? "deck" : "lone") : undefined}
+      data-stack-behind={!front ? "" : undefined}
       className={`absolute rounded-[12px] ${open ? "cursor-pointer" : ""}`}
       style={{ ...slotStyle(slot, open), zIndex: count - slot }}
     >
@@ -187,6 +229,48 @@ function StackedCard({
           ) : undefined
         }
       />
+
+      {/* The layer's own interior, over the contact rather than under it: the
+          node draws no content on the cards behind the front one, only a flat
+          panel darkening with depth. Inset 2 at radius 10 is the frame the
+          design gives every card — the same 2 and the same 10 the revealed
+          card's rim already uses, so the edge showing at the left is the
+          card's white and the panel is what sits in it. */}
+      {!front && DEPTH_FILL[slot] && (
+        <span
+          aria-hidden
+          className="absolute inset-[2px] pointer-events-none rounded-[10px]"
+          style={{
+            background: open ? DEPTH_FILL[slot]!.open : DEPTH_FILL[slot]!.sealed,
+            zIndex: 5,
+          }}
+        />
+      )}
+
+      {/* The one stroke in the whole stack.
+
+          Every card in 32:1414 carries a 1px rgba(47,43,61,0.2) stroke that is
+          switched off — `visible: false` on all of them, back layers and
+          revealed cards alike. Read the stroke array without checking that
+          flag and you draw a dozen hairlines the design does not have, which
+          on a revealed card reads as a doubled outline around the contact.
+          The only strokes actually painted are 2px white: on the front of a
+          three-card stack (32:1537), the front of a two-card stack (32:2277),
+          and the count badge. A lone sealed card (32:1618) has none.
+
+          So this is not "the card's border" — it is the cut between the front
+          card and the layers showing past its left edge, which is why a
+          company with nothing behind it does not get one.
+
+          Drawn here rather than on the card so the veil and the hover stroke
+          underneath are untouched. */}
+      {front && flow.locked && count > 1 && (
+        <span
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{ border: "2px solid #ffffff", borderRadius: 14, zIndex: 6 }}
+        />
+      )}
     </div>
   );
 }
@@ -259,6 +343,17 @@ export default function ContactStack({
           />
         );
       })}
+
+      {/* How many cards are in the deck, on the deck. Drawn last so it sits
+          over every layer, and positioned against the stack's own geometry
+          rather than the panel's — see StackCount. */}
+      <StackCount count={count} open={open} />
+
+      {/* The treatments are decorative to a screen reader, which cannot see a
+          stack at all. The button used to carry the number — "Reveal all 3
+          contacts" — and no longer does, so the fact is stated here instead of
+          being lost with the label. */}
+      {count > 1 && <span className="sr-only">{`${count} contacts at this company`}</span>}
     </div>
   );
 }
@@ -316,6 +411,17 @@ export function ContactStackModal({
             <div
               key={contact.name}
               className="relative w-full"
+              /* 43:3335's own treatment, and it is the row's argument again at
+                 the modal's scale: the front card takes the flat #f4f2f0 and a
+                 2px white ring, and the layers behind take a flat grey that
+                 darkens with depth. The ring is the reason the front card's
+                 contents start 4 in rather than 2 — 2 for the ring and 2 for
+                 the band beside it — which is what puts its avatar on the
+                 node's own x of 14. Only while stacked: opened, the cards fall
+                 into a plain list and there is no deck left to cut away from.
+                 See index.css. */
+              data-modal-front={stacked && !behind ? "" : undefined}
+              data-modal-behind={stacked && behind ? Math.min(i, 2) : undefined}
               style={{
                 width: stacked && behind ? `calc(100% - ${i * MODAL_NARROW}px)` : "100%",
                 marginLeft: stacked && behind ? (i * MODAL_NARROW) / 2 : 0,

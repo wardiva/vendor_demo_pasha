@@ -383,6 +383,10 @@ export default function ContactPreviewCard({
       {rim && (
         <span
           aria-hidden
+          /* No stroke. 32:1756 carries one in its stroke array and it is
+             `visible: false`, like every other hairline in that node — the
+             revealed card is a tint inside the card's own white, with nothing
+             drawn around it. */
           className="absolute bg-[rgba(244,242,240,0.6)] inset-[2px] pointer-events-none rounded-[10px]"
         />
       )}

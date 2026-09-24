@@ -68,6 +68,7 @@ import {
   type RevealVariation,
 } from "@/context/RevealVariationContext";
 import RevealVariationBar from "@/components/reveal/RevealVariationBar";
+import StackCountBar from "@/components/reveal/StackCountBar";
 import { COMPANY_REVEAL_ALLOWANCE } from "@/data/revealPlans";
 import {
   EMPTY_FILTERS,
@@ -1165,6 +1166,10 @@ export default function App() {
         total={COMPANY_REVEAL_ALLOWANCE.total}
         onSetUsed={setCompanyRevealsUsed}
       />
+
+      {/* The stack count treatments, on the bottom edge between the other two
+          histories' corners. */}
+      <StackCountBar />
     </div>
     </ProspectRevealProvider>
     </CompanyRevealProvider>

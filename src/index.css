@@ -287,6 +287,123 @@ body,
   border-radius: 10px;
 }
 
+/* ── The sealed card at the front of a deck ────────────────────────────
+   Figma 32:1452's own front card, 32:1537, and it differs from every other
+   sealed card in the product on three counts — all of them consequences of
+   the 2px white ring it wears against the layers showing past its left edge:
+
+     radius 14, not 12   the ring is drawn inside the card, so the fill's
+                         corner has to open up to keep the same curve showing
+                         outside it
+     fill #f4f2f0 flat   not the 60% tint over white every other card uses.
+                         It only became visible when the frost moved inward —
+                         the 2px band between the ring and the frost is the
+                         one place the raw fill is ever seen
+     frost inset 4       2 for the ring and 2 for that band. A lone sealed
+                         card (32:1618) wears no ring and insets its frost 2,
+                         which is the same arithmetic with no ring to pay for
+
+   The frost's radius, amount and behaviour are untouched: this moves where it
+   starts, nothing else. Scoped to the attribute so no other surface — the
+   modal's cards, the one-contact rows, every reveal variation — is reached. */
+/* The face, both cases. 32:1537 and 32:1618 are both filled a flat #f4f2f0
+   rather than the 60% tint over white — and 32:1618 proves the fill is not a
+   consequence of the ring, since it wears none. */
+[data-stack-front] .lead-contact-card {
+  background-color: #f4f2f0;
+  background-image: none;
+}
+
+/* The deck's front card only. A lone sealed card keeps 12 and its frost at 2,
+   because both of those were opened up to make room for a ring it does not
+   have. */
+[data-stack-front="deck"] {
+  border-radius: 14px;
+}
+
+[data-stack-front="deck"] .lead-contact-card {
+  border-radius: 14px;
+}
+
+/* ── The layers behind it ──────────────────────────────────────────────
+   32:1453 and 32:1495 are filled pure #ffffff, not the 60% ash tint every
+   sealed card otherwise carries. It matters for exactly two pixels: the flat
+   grey panel covers each layer from its inset 2 inward, so the only part of
+   the card's own fill ever seen is the rim around it — and that rim is what
+   reads as the stroke separating one layer from the next. Tinted, the whole
+   stack greys together and the steps stop being legible as separate cards. */
+[data-stack-behind] .lead-contact-card {
+  background-color: #ffffff;
+  background-image: none;
+}
+
+/* ── The modal's stack ─────────────────────────────────────────────────
+   Figma 43:3335. The same structure as the prospect row's deck, at the
+   modal's 452 x 75: the front card flat #f4f2f0 behind a 2px white ring, the
+   layers behind it pure white under a flat grey that darkens with depth.
+
+   The ring is what moves the contents. 43:3409 sets its frost and its content
+   frame at 4 rather than the 2 every other framed card uses — 2 for the ring
+   and 2 for the band beside it — and that 2px is exactly what stood between
+   this card's avatar at 12 and the node's 14. Padding the frame to 4 carries
+   the avatar, the name, the title and the channels onto the node's own x in
+   one move, rather than nudging four things separately.
+
+   Strength and behaviour of the frost are untouched; only its box moves. */
+[data-modal-front] .lead-contact-card {
+  background-color: #f4f2f0;
+  background-image: none;
+  padding: 4px;
+  /* 43:3409's 2px white stroke, drawn inside. As a shadow rather than a
+     border so it costs the box nothing — a real border would eat two of the
+     four pixels of padding and carry the contents straight back off the
+     node's x, which is the whole thing the padding was set to fix. */
+  box-shadow: inset 0 0 0 2px #ffffff;
+}
+
+[data-modal-front] .lead-contact-card.lead-card-locked::before {
+  inset: 4px;
+  border-radius: 8px;
+}
+
+/* 43:3410, the white card the contact is set on, is radius 8 inside the
+   container's 12 — concentric with a 4px inset where 10 would be with 2. */
+[data-modal-front] .lead-contact-card > .rounded-\[10px\] {
+  border-radius: 8px;
+}
+
+[data-modal-behind] .lead-contact-card {
+  background-color: #ffffff;
+  background-image: none;
+}
+
+/* 43:3405 and 43:3369 — the layers carry no contact, only a flat panel, and
+   it darkens as the layer recedes. Opaque, so the frost beneath is moot. */
+[data-modal-behind] .lead-contact-card.lead-card-locked::before {
+  background: #ebebeb;
+  opacity: 0.8;
+  backdrop-filter: none;
+}
+
+[data-modal-behind="2"] .lead-contact-card.lead-card-locked::before {
+  background: #e7e7e7;
+  opacity: 1;
+}
+
+/* 43:3372 sets the label 11px on its own 13px box; ours is on 20, which
+   centred the 11px mark four and a half pixels below the node's y. */
+[data-modal-front] .lead-tag-label p,
+[data-modal-behind] .lead-tag-label p {
+  line-height: 13px;
+}
+
+/* Specific enough to beat `.lead-contact-card.lead-card-locked::before` further
+   down, which sets the frost's usual 2 — same weight, later in the file. */
+[data-stack-front="deck"] .lead-contact-card.lead-card-locked::before {
+  inset: 4px;
+  border-radius: 10px;
+}
+
 
 /* ── Contact card hover stroke ─────────────────────────────────────────
    A gradient that travels the card's whole perimeter on hover.
