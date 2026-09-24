@@ -22,7 +22,6 @@ export type LeadType = (typeof LEAD_TYPES)[number];
  * and in what they match.
  */
 export const LEAD_SIGNAL_OPTIONS = [
-  "Buyers in Market",
   "Profile Signals",
   "Pricing Signals",
   "Competitor",
@@ -174,7 +173,6 @@ export function hasActiveLeadsFilters(f: LeadsFilters): boolean {
  * showed.
  */
 const SIGNAL_OPTION_TEST: Record<LeadSignalOption, (lead: Lead) => boolean> = {
-  "Buyers in Market": () => true,
   "Profile Signals": lead => lead.signals.profile,
   "Pricing Signals": lead => lead.signals.pricing,
   Competitor: lead => lead.signals.competitor,

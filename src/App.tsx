@@ -97,7 +97,10 @@ const isFiltersControl = (el: Element) => Boolean(el.querySelector("[data-filter
  *  own logic. Profile and Pricing were absent while their cards were not
  *  rendered; their avatar stacks open the option of the same name. */
 const SIGNAL_CARD_FILTERS: Record<string, LeadSignalOption | undefined> = {
-  "Buyers in Market": "Buyers in Market",
+  /* Buyers in Market has no option of its own. The one it used to open
+     matched every prospect, so selecting it narrowed nothing — the card still
+     opens the Prospects page, now with the list unfiltered, which is the same
+     thing it always showed. */
   "Profile Signals": "Profile Signals",
   "Pricing Signals": "Pricing Signals",
   "Competitor Signals": "Competitor",
