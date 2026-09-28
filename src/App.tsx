@@ -68,7 +68,7 @@ import {
   type RevealVariation,
 } from "@/context/RevealVariationContext";
 import RevealVariationBar from "@/components/reveal/RevealVariationBar";
-import StackCountBar from "@/components/reveal/StackCountBar";
+import ProspectsAccessBar from "@/components/prospects/ProspectsAccessBar";
 import { COMPANY_REVEAL_ALLOWANCE } from "@/data/revealPlans";
 import {
   EMPTY_FILTERS,
@@ -1172,9 +1172,9 @@ export default function App() {
         onSetUsed={setCompanyRevealsUsed}
       />
 
-      {/* The stack count treatments, on the bottom edge between the other two
-          histories' corners. */}
-      <StackCountBar />
+      {/* The Prospects tab's review switch — unlocked or locked (Figma
+          61:1394). Bottom edge, between the two histories' corners. */}
+      <ProspectsAccessBar />
     </div>
     </ProspectRevealProvider>
     </CompanyRevealProvider>

@@ -15,6 +15,8 @@ import InfoIcon from "@/components/InfoIcon";
 import { useState } from "react";
 import ProspectsEmptyState from "@/components/prospects/ProspectsEmptyState";
 import ProspectsPrototypeBar, { type ProspectsPrototypeView } from "@/components/prospects/ProspectsPrototypeBar";
+import ProspectsLockedOverlayV2 from "@/components/prospects/ProspectsLockedOverlayV2";
+import { useProspectsAccess, useProspectsLocked } from "@/lib/prospectsAccess";
 import { IS_LOCAL } from "@/lib/environment";
 
 /** Counts the prospects actually listed below it, filters and search included. */
@@ -246,13 +248,25 @@ function Frame79() {
 }
 
 function Frame63() {
+  const locked = useProspectsLocked();
   return (
     /* In normal flow rather than absolutely positioned, so the list's height is
        the page's height. The margins are the offsets the design gave it —
        371/71/84, and the 36px it left below the content — so the column sits
        exactly where it did, but the page now grows as prospects are added to
        it and the backgrounds painted to its bottom edge follow. */
-    <div className="content-stretch flex flex-col gap-[20px] items-start mb-[36px] ml-[371px] mr-[71px] mt-[84px] min-w-0 relative">
+    <div
+      className="content-stretch flex flex-col gap-[20px] items-start mb-[36px] ml-[371px] mr-[71px] mt-[84px] min-w-0 relative"
+      /* Locked (Figma 61:1394), the column is blurred 4px here rather than by a
+         backdrop-filter on the frost above it. The page is ~1,700px tall, and a
+         backdrop-filter that size is not blurred evenly — Chrome samples it
+         coarser the further down it runs, so the lower rows came through
+         sharper than the top ones. A filter on the content itself is a true
+         4px Gaussian on every pixel, the same at the foot of the list as at
+         its head. The frost's 80% white is composited over it exactly as the
+         node's background blur would be. */
+      style={locked ? { filter: "blur(4px)" } : undefined}
+    >
       <Frame62 />
       <Frame79 />
     </div>
@@ -936,6 +950,8 @@ function Menu() {
 }
 
 export default function BuyerActivityLeads() {
+  const access = useProspectsAccess();
+  const locked = access !== "unlocked";
   return (
     <div className="bg-[#dde8e5] grow relative w-full" data-name="Buyer Activity / Leads">
       {/* First, so it paints beneath the panels rather than over them.
@@ -946,7 +962,14 @@ export default function BuyerActivityLeads() {
           between them. Underneath, every panel starts at the same edge. */}
       <VerticalNavbarScroll />
       <div className="absolute bg-[#fbfaf9] border-[rgba(47,43,61,0.1)] border-l border-solid border-t bottom-0 left-[301px] top-[54px] right-0" />
-      <Frame63 />
+      {/* Locked, the page is still drawn — the frost over it is the design —
+          but it is inert: nothing under the lock can be clicked, focused or
+          reached from the keyboard. `display: contents` so the wrapper adds
+          no box and the page's own absolute layout is untouched. */}
+      <div style={{ display: "contents" }} inert={locked || undefined}>
+        <Frame63 />
+      </div>
+      {access === "locked-v2" && <ProspectsLockedOverlayV2 />}
       <div className="absolute bottom-0 left-0 top-[54px] w-[80px]" data-name="Menu">
         <div className="overflow-clip rounded-[inherit] size-full">
           <div className="content-stretch flex flex-col items-start relative size-full">

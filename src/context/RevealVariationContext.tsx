@@ -28,7 +28,26 @@ export type RevealVariation =
   | "v10"
   | "v11"
   | "v12"
-  | "v13";
+  | "v13"
+  /* The eight stack studies — one interaction, eight ways of drawing depth.
+     See variations/stackStyles. */
+  | "s1"
+  | "s2"
+  | "s3"
+  | "s4"
+  | "s5"
+  | "s6"
+  | "s7"
+  | "s8"
+  /* The eight finished stacks — see variations/stackRefined. */
+  | "r1"
+  | "r2"
+  | "r3"
+  | "r4"
+  | "r5"
+  | "r6"
+  | "r7"
+  | "r8";
 
 export const REVEAL_VARIATIONS: ReadonlyArray<{
   key: RevealVariation;
@@ -42,6 +61,27 @@ export const REVEAL_VARIATIONS: ReadonlyArray<{
     label: "Final — Figma",
     description: "The signed-off stack: 1:50, 3:52, 0:1817, 3:53",
   },
+  /* The finished stacks, straight after the design they are variations of.
+     Every one steps left only, stays inside the main card's height, and draws
+     no count. */
+  { key: "r1", label: "Variation 1 · Sage steps", description: "Stepped layers in the page's own sage, crisp white edges" },
+  { key: "r2", label: "Variation 2 · Deep teal", description: "Dark product-teal layers — contrast as the cue" },
+  { key: "r3", label: "Variation 3 · Lime edge", description: "White hairline layers, the deck's spine in brand lime" },
+  { key: "r4", label: "Variation 4 · Editorial outline", description: "Line, not fill — nested teal strokes, tight steps" },
+  { key: "r5", label: "Variation 5 · Elevated", description: "Near-white layers, each casting its shadow left" },
+  { key: "r6", label: "Variation 6 · Brand gradient", description: "Sage at the edge, fading into the card" },
+  { key: "r7", label: "Variation 7 · Index tabs", description: "Full-height layers, a solid block of filed cards" },
+  { key: "r8", label: "Variation 8 · Staircase", description: "Foot-anchored layers descending like treads" },
+  /* The first round of stack studies, kept for reference. Lettered rather than
+     numbered so "Variation 1" means exactly one thing on this list. */
+  { key: "s1", label: "Draft A · Colored stack", description: "First round — shipped geometry, depth in the product's ink" },
+  { key: "s2", label: "Draft B · Bound spine", description: "First round — tight step held by a left rule" },
+  { key: "s3", label: "Draft C · Elevated", description: "First round — no edges, depth as stacked shadow" },
+  { key: "s4", label: "Draft D · Fanned", description: "First round — layers turned a degree" },
+  { key: "s5", label: "Draft E · Stepped", description: "First round — wide, rimmed steps" },
+  { key: "s6", label: "Draft F · Underlay", description: "First round — layers drop beneath like a pad" },
+  { key: "s7", label: "Draft G · Corner fold", description: "First round — layers surface at the top-left corner" },
+  { key: "s8", label: "Draft H · Variant rail", description: "First round — a rail, one segment per contact" },
   { key: "current", label: "Current", description: "Shipped before the model changed" },
   { key: "v1", label: "1 · Company unlock", description: "Primary contact, one company action" },
   { key: "v2", label: "2 · Grouped", description: "All contacts as one group card" },

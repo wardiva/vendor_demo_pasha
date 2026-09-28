@@ -1,8 +1,8 @@
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from "react";
 import ContactPreviewCard from "@/components/contacts/ContactPreviewCard";
+import avatarUnrevealed from "@/components/contacts/assets/avatar-unrevealed.svg";
 import { useCompanyRevealFlow } from "@/components/reveal/useCompanyRevealFlow";
 import type { ProspectContact } from "@/data/prospects";
-import StackCount from "./StackCount";
 import { GroupHeading, RevealCta, RevealedBadge, revealAllCountLabel } from "./variations/parts";
 
 /**
@@ -40,10 +40,22 @@ import { GroupHeading, RevealCta, RevealedBadge, revealAllCountLabel } from "./v
 /* ── the nodes' geometry ── */
 const CARD_H = 59;
 const PANEL_W = 310;
-/** 1:50 and 3:52 step 6; 3:53 steps 7, the disclosed stack opening a little. */
-const STEP_SEALED = 6;
-const STEP_OPEN = 7;
-const SHRINK = 5;
+/**
+ * 57:693 (sealed) and 57:305 (revealed): every layer steps 12 left of the one
+ * in front, is 6 shorter, and sits 3 lower — so 59, 53, 47 tall at tops 0, 3,
+ * 6, centred on the front card, and a 12px strip of each showing at the left.
+ *
+ * The two states now step the same 12. The earlier nodes opened the deck a
+ * pixel on reveal (6 to 7); these draw the revealed stack at exactly the
+ * sealed geometry, so it no longer moves sideways as it opens — the reveal
+ * itself, the frost lifting and the photographs arriving, is untouched.
+ *
+ * A company with one contact has only slot 0, which none of these reach: it
+ * stays the single card it always was.
+ */
+const STEP_SEALED = 12;
+const STEP_OPEN = 12;
+const SHRINK = 6;
 const DROP = 3;
 
 /**
@@ -114,10 +126,15 @@ const DUR = 300;
  * it is a flat panel, which is also why the deck costs nothing to render: two
  * of the three cards are never read.
  */
+/* 57:693 and 57:305 — the inner panel of each layer behind, by state:
+ *
+ *   sealed    slot 1  #efefef           slot 2  #e3e3e3 at 80%
+ *   revealed  slot 1  #efefef           slot 2  #e9e9e9
+ */
 const DEPTH_FILL: ReadonlyArray<{ sealed: string; open: string } | null> = [
   null,
-  { sealed: "#efefef", open: "rgba(235,235,235,0.8)" },
-  { sealed: "#e7e7e7", open: "rgba(216,216,216,0.6)" },
+  { sealed: "#efefef", open: "#efefef" },
+  { sealed: "rgba(227,227,227,0.8)", open: "#e9e9e9" },
 ];
 
 
@@ -239,12 +256,26 @@ function StackedCard({
       {!front && DEPTH_FILL[slot] && (
         <span
           aria-hidden
-          className="absolute inset-[2px] pointer-events-none rounded-[10px]"
+          className="absolute content-stretch flex inset-[2px] items-center pl-[4px] pointer-events-none rounded-[10px]"
           style={{
             background: open ? DEPTH_FILL[slot]!.open : DEPTH_FILL[slot]!.sealed,
             zIndex: 5,
           }}
-        />
+        >
+          {/* The one thing a layer behind shows: its own contact's face, 35
+              square at the layer's x 6 and centred on its height — so six of
+              its pixels clear the card in front and the stack reads as more
+              people rather than more panels. The placeholder while sealed and
+              the photograph once revealed, exactly as the front card swaps
+              them, and in the same 35px circle. */}
+          <span className="relative block overflow-hidden rounded-[100px] shrink-0 size-[35px]">
+            <img
+              alt=""
+              className={`absolute inset-0 max-w-none size-full ${open ? "object-cover" : ""}`}
+              src={open ? contact.avatar : avatarUnrevealed}
+            />
+          </span>
+        </span>
       )}
 
       {/* The one stroke in the whole stack.
@@ -344,15 +375,14 @@ export default function ContactStack({
         );
       })}
 
-      {/* How many cards are in the deck, on the deck. Drawn last so it sits
-          over every layer, and positioned against the stack's own geometry
-          rather than the panel's — see StackCount. */}
-      <StackCount count={count} open={open} />
+      {/* No count is drawn. The stack's depth is what says there is more than
+          one contact; a printed number on top of it was retired in favour of
+          letting the layers carry that alone. StackCount is kept, unrendered,
+          in case the direction comes back.
 
-      {/* The treatments are decorative to a screen reader, which cannot see a
-          stack at all. The button used to carry the number — "Reveal all 3
-          contacts" — and no longer does, so the fact is stated here instead of
-          being lost with the label. */}
+          A screen reader cannot see a stack at all, though, and the button no
+          longer carries the number either — so the fact is stated here rather
+          than lost with the label. */}
       {count > 1 && <span className="sr-only">{`${count} contacts at this company`}</span>}
     </div>
   );

@@ -15,6 +15,8 @@
  * things that should ever cover it.
  */
 
+import { createPortal } from "react-dom";
+
 export type ProspectsPrototypeView = "prospects" | "empty";
 
 const OPTIONS: ReadonlyArray<{ key: ProspectsPrototypeView; label: string }> = [
@@ -29,7 +31,13 @@ export default function ProspectsPrototypeBar({
   view: ProspectsPrototypeView;
   onChange: (view: ProspectsPrototypeView) => void;
 }) {
-  return (
+  /* Portaled to the body. It is fixed to the window, but it is rendered from
+     inside the page column — and while the Prospects tab is locked that column
+     carries a CSS filter, which would make the column its containing block,
+     blur it with the page and carry it off to the column's own corner. From
+     the body it is fixed to the window whatever its origin does. Nothing about
+     where it sits changes otherwise: no ancestor was transformed before. */
+  return createPortal(
     <div
       className="fixed bottom-[24px] right-[24px] z-[9000] flex items-center gap-[2px] rounded-[10px] bg-white p-[3px]"
       data-name="Prototype Switch"
@@ -61,6 +69,7 @@ export default function ProspectsPrototypeBar({
           </button>
         );
       })}
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -14,6 +14,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import iconSignals from "./assets/icon-signals.svg";
 import iconProspects from "./assets/icon-prospects.svg";
+import { useProspectsLocked } from "@/lib/prospectsAccess";
 
 /** Which module page the user is on; drives both navs' active state. */
 export type BuyerIntelligencePage = "signals" | "prospects" | "integrations";
@@ -181,7 +182,40 @@ function PlugIcon({ stroke }: { stroke: string }) {
  * 16%-alpha fill and the label switches to #072929, which is what Prospects
  * already looked like when it was the selected child.
  */
-function NavRow({ label, active, icon }: { label: string; active: boolean; icon: ReactNode }) {
+/**
+ * The mark on a locked page's row — Figma 61:2568, exported from the node.
+ * 16px, the product's ink with a white jewel, pinned to the row's right edge
+ * inside its 12px padding, which is where the node puts it (x 169 in a 197
+ * row). A crown rather than a padlock: the page is not broken or forbidden,
+ * it is on a higher plan, and the mark should read as an upgrade.
+ */
+function CrownIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="block shrink-0">
+      <path
+        d="M2.14233 6.87314C1.88363 6.15711 1.75427 5.79911 1.80943 5.5697C1.86976 5.31878 2.04821 5.12316 2.27629 5.05791C2.48483 4.99824 2.80923 5.14242 3.45803 5.43078C4.03189 5.68584 4.31883 5.81337 4.58842 5.80628C4.88525 5.79846 5.17079 5.67943 5.39794 5.46881C5.60424 5.27752 5.74261 4.97269 6.01936 4.36303L6.62927 3.01944C7.13874 1.8971 7.39347 1.33594 7.79687 1.33594C8.20027 1.33594 8.45501 1.8971 8.96447 3.01944L9.57441 4.36303C9.85114 4.97269 9.98954 5.27752 10.1958 5.46881C10.4229 5.67943 10.7085 5.79846 11.0053 5.80628C11.2749 5.81337 11.5619 5.68584 12.1357 5.43078C12.7845 5.14242 13.1089 4.99824 13.3175 5.05791C13.5455 5.12316 13.724 5.31878 13.7843 5.5697C13.8395 5.79911 13.7101 6.15711 13.4514 6.87307L12.3394 9.95074C11.8637 11.2673 11.6259 11.9255 11.1281 12.2974C10.6303 12.6693 9.98714 12.6693 8.70074 12.6693H6.89301C5.6066 12.6693 4.96339 12.6693 4.46564 12.2974C3.9679 11.9255 3.73005 11.2673 3.25435 9.95074L2.14233 6.87314Z"
+        fill={ACTIVE}
+        stroke={ACTIVE}
+        strokeWidth="1.13313"
+      />
+      <path d="M7.79688 9.33594H7.80087" stroke="white" strokeWidth="1.51085" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4.46875 14.6641H11.1354" stroke={ACTIVE} strokeWidth="1.13313" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function NavRow({
+  label,
+  active,
+  icon,
+  locked = false,
+}: {
+  label: string;
+  active: boolean;
+  icon: ReactNode;
+  /** A page on a higher plan: the row carries the crown at its right edge. */
+  locked?: boolean;
+}) {
   return (
     <div
       className={`content-stretch flex items-center px-[12px] py-[8px] relative rounded-[6px] shrink-0 w-full${
@@ -200,6 +234,7 @@ function NavRow({ label, active, icon }: { label: string; active: boolean; icon:
             {label}
           </p>
         </div>
+        {locked && <CrownIcon />}
       </div>
     </div>
   );
@@ -211,10 +246,18 @@ function NavRow({ label, active, icon }: { label: string; active: boolean; icon:
  * active item instead — so these rows sit at the top level of the drawer.
  */
 export default function BuyerIntelligenceSubNav({ active }: { active: BuyerIntelligencePage }) {
+  /* Read here rather than passed down, so the crown appears on the Prospects
+     row from whichever page the drawer is drawn on. */
+  const prospectsLocked = useProspectsLocked();
   return (
     <div className="content-stretch flex flex-col gap-[2px] items-start relative shrink-0 w-full" data-name="Applications">
       <NavRow label="Signals" active={active === "signals"} icon={<SignalsIcon active={active === "signals"} />} />
-      <NavRow label="Prospects" active={active === "prospects"} icon={<ProspectsIcon active={active === "prospects"} />} />
+      <NavRow
+        label="Prospects"
+        active={active === "prospects"}
+        icon={<ProspectsIcon active={active === "prospects"} />}
+        locked={prospectsLocked}
+      />
       <NavRow
         label="Integrations"
         active={active === "integrations"}

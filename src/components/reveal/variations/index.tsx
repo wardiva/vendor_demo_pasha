@@ -13,7 +13,33 @@ import Variation10DeckInteractive from "./Variation10DeckInteractive";
 import Variation11LeftStack from "./Variation11LeftStack";
 import Variation12Fan from "./Variation12Fan";
 import Variation13Rail from "./Variation13Rail";
+import StackStyleVariation, { type StackStyle } from "./stackStyles";
+import RefinedStackVariation, { type RefinedStack } from "./stackRefined";
+
+/** The eight finished stacks, keyed as the switch names them. */
+const REFINED: Record<string, RefinedStack> = {
+  r1: "sage",
+  r2: "teal",
+  r3: "lime",
+  r4: "outline",
+  r5: "elevated",
+  r6: "gradient",
+  r7: "tabs",
+  r8: "staircase",
+};
 import type { RevealPanelProps } from "./parts";
+
+/** The eight stack studies, keyed as the switch names them. */
+const STACK_STUDIES: Record<string, StackStyle> = {
+  s1: "colored",
+  s2: "spine",
+  s3: "elevated",
+  s4: "fanned",
+  s5: "stepped",
+  s6: "underlay",
+  s7: "fold",
+  s8: "rail",
+};
 
 /**
  * The company's contacts, drawn by whichever concept is selected.
@@ -41,6 +67,12 @@ export default function CompanyContactsReveal(props: RevealPanelProps) {
       <ContactStackModal company={props.company} contacts={props.contacts} />
     );
   }
+
+  const refined = REFINED[variation];
+  if (refined) return <RefinedStackVariation {...props} kind={refined} />;
+
+  const study = STACK_STUDIES[variation];
+  if (study) return <StackStyleVariation {...props} style={study} />;
 
   switch (variation) {
     case "current":

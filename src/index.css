@@ -956,3 +956,156 @@ body,
   .reveal-chevron { transition: none; }
   .reveal-skeleton { animation: none; }
 }
+
+/* ── Locked Prospects: the unlock animation (ProspectsUnlockAnimation) ─────
+   Two keyframes and nothing else; every other move in it is a transition on
+   state, so the whole piece is driven by one timeline in the component. */
+
+/* A slow sheen across the skeleton while the company is still anonymous — the
+   one sign that something is being worked out. Slow and faint on purpose: it
+   sits beside a price. */
+.bi-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  transform: translateX(-100%);
+  animation: bi-sheen 1.6s cubic-bezier(0.4, 0.05, 0.2, 1) infinite;
+}
+
+@keyframes bi-sheen {
+  to { transform: translateX(100%); }
+}
+
+/* An identified prospect arriving at the top of the list. */
+.bi-row-in {
+  animation: bi-row-in 520ms cubic-bezier(0.4, 0.05, 0.2, 1) both;
+}
+
+@keyframes bi-row-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bi-sheen::after,
+  .bi-row-in { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Locked V2 — the five animation concepts (components/prospects/animations).
+   Short, one-shot entrances keyed on the element; the concepts' own state
+   changes ride CSS transitions instead.
+   --------------------------------------------------------------------------- */
+
+/* The live dot's breath. */
+.bi-ping { animation: bi-ping 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+@keyframes bi-ping {
+  0% { transform: scale(1); opacity: 0.55; }
+  70%, 100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* A signal falling from a page into the prospect card below it. */
+.bi-drop { animation: bi-drop 600ms cubic-bezier(0.55, 0, 0.75, 0.2) both; }
+@keyframes bi-drop {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  18% { transform: translateY(4px) scale(1); opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translateY(30px) scale(0.9); opacity: 0; }
+}
+
+/* A visit arriving at the top of the feed. */
+.bi-feed-in { animation: bi-feed-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes bi-feed-in {
+  from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Folded visits resolving into one named prospect. */
+.bi-resolve { animation: bi-resolve 620ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes bi-resolve {
+  from { opacity: 0.4; transform: scale(0.97); filter: blur(2px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+/* A tag or logo popping into place. */
+.bi-pop { animation: bi-pop 460ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes bi-pop {
+  from { opacity: 0; transform: translateY(4px) scale(0.85); }
+  to { opacity: 1; transform: none; }
+}
+
+/* A number stepping up. */
+.bi-count { display: inline-block; animation: bi-count 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes bi-count {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Your profile acknowledging a thread. */
+.bi-ring { animation: bi-ring 900ms cubic-bezier(0.16, 1, 0.3, 1) 520ms both; }
+@keyframes bi-ring {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(1.7); opacity: 0; }
+}
+
+/* Companies drifting out in the field. */
+.bi-float { animation: bi-float 6s ease-in-out infinite; }
+@keyframes bi-float {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: -5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bi-ping, .bi-drop, .bi-feed-in, .bi-resolve, .bi-pop, .bi-count, .bi-ring, .bi-float { animation: none; }
+}
+
+/* Orbit · Intent field — signals streaming in along each company's thread. */
+.bi-stream {
+  offset-rotate: 0deg;
+  offset-anchor: center;
+  animation: bi-stream 2.6s linear infinite;
+}
+@keyframes bi-stream {
+  0% { offset-distance: 0%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bi-stream { animation: none; opacity: 0; }
+}
+
+/* Orbit · Spaces — waves off a company while it researches you. */
+.bi-wave { animation: bi-wave 1.4s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+@keyframes bi-wave {
+  from { transform: scale(1); opacity: 0.7; }
+  to { transform: scale(2.1); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bi-wave { animation: none; opacity: 0; }
+}
+
+/* Locked prospects — the monitoring ring's sweep, and a detection travelling down to the card. */
+.bi-sweep { animation: bi-sweep 2.4s linear infinite; transform-origin: 50% 50%; }
+@keyframes bi-sweep { to { transform: rotate(360deg); } }
+.bi-detect { animation: bi-detect 420ms cubic-bezier(0.55, 0, 0.45, 1) both; }
+@keyframes bi-detect {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(var(--travel)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bi-sweep, .bi-detect { animation: none; }
+}
+
+/* Vaporize, polished — the native card surfacing, on the same curve and timing as the canvas card. */
+.bi-card-in { animation: bi-card-in 650ms cubic-bezier(0.33, 1, 0.68, 1) both; }
+@keyframes bi-card-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bi-card-in { animation: none; }
+}
