@@ -15,10 +15,8 @@ import InfoIcon from "@/components/InfoIcon";
 import { useState } from "react";
 import ProspectsEmptyState from "@/components/prospects/ProspectsEmptyState";
 import ProspectsPrototypeBar, { type ProspectsPrototypeView } from "@/components/prospects/ProspectsPrototypeBar";
-import ProspectsLockedOverlayV2 from "@/components/prospects/ProspectsLockedOverlayV2";
 import ProspectsLockedOverlayV3 from "@/components/prospects/ProspectsLockedOverlayV3";
-import { useProspectsAccess, useProspectsLocked } from "@/lib/prospectsAccess";
-import { IS_LOCAL } from "@/lib/environment";
+import { useProspectsLocked } from "@/lib/prospectsAccess";
 
 /** Counts the prospects actually listed below it, filters and search included. */
 function ChipBgLabelSuccess() {
@@ -199,13 +197,11 @@ function Frame78() {
  * Which the list slot shows while prototyping: the real prospects, or the
  * empty state in their place. Remembered for the tab so a reload while
  * evaluating the loop comes back where it was, and forgotten when the tab
- * closes. Read only on local hosts — on the deployment the switch is not
- * rendered and the slot always shows the prospects.
+ * closes.
  */
 const PROTOTYPE_KEY = "prospects-prototype-view";
 
 function readPrototypeView(): ProspectsPrototypeView {
-  if (!IS_LOCAL) return "prospects";
   try {
     return sessionStorage.getItem(PROTOTYPE_KEY) === "empty" ? "empty" : "prospects";
   } catch {
@@ -224,7 +220,7 @@ function Frame79() {
     }
   };
 
-  const showEmptyState = IS_LOCAL && prototype === "empty";
+  const showEmptyState = prototype === "empty";
 
   return (
     <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
@@ -239,11 +235,10 @@ function Frame79() {
           <Frame78 />
         </>
       )}
-      {/* The prototype switch, local hosts only. Fixed to the window's
-          bottom-right, so it takes no room here; everything the page
-          computes stays exactly as it is, and only what is drawn in this
-          column is swapped. */}
-      {IS_LOCAL && <ProspectsPrototypeBar view={prototype} onChange={choose} />}
+      {/* The prototype switch. Fixed to the window's right edge, so it takes
+          no room here; everything the page computes stays exactly as it is,
+          and only what is drawn in this column is swapped. */}
+      <ProspectsPrototypeBar view={prototype} onChange={choose} />
     </div>
   );
 }
@@ -951,8 +946,7 @@ function Menu() {
 }
 
 export default function BuyerActivityLeads() {
-  const access = useProspectsAccess();
-  const locked = access !== "unlocked";
+  const locked = useProspectsLocked();
   return (
     <div className="bg-[#dde8e5] grow relative w-full" data-name="Buyer Activity / Leads">
       {/* First, so it paints beneath the panels rather than over them.
@@ -970,8 +964,7 @@ export default function BuyerActivityLeads() {
       <div style={{ display: "contents" }} inert={locked || undefined}>
         <Frame63 />
       </div>
-      {access === "locked-v2" && <ProspectsLockedOverlayV2 />}
-      {access === "locked-v3" && <ProspectsLockedOverlayV3 />}
+      {locked && <ProspectsLockedOverlayV3 />}
       <div className="absolute bottom-0 left-0 top-[54px] w-[80px]" data-name="Menu">
         <div className="overflow-clip rounded-[inherit] size-full">
           <div className="content-stretch flex flex-col items-start relative size-full">

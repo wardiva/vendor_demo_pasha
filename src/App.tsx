@@ -67,8 +67,6 @@ import {
   RevealVariationProvider,
   type RevealVariation,
 } from "@/context/RevealVariationContext";
-import RevealVariationBar from "@/components/reveal/RevealVariationBar";
-import ProspectsAccessBar from "@/components/prospects/ProspectsAccessBar";
 import { COMPANY_REVEAL_ALLOWANCE } from "@/data/revealPlans";
 import {
   EMPTY_FILTERS,
@@ -201,24 +199,8 @@ export default function App() {
       ),
   );
   const [companyRevealsUsed, setCompanyRevealsUsed] = useState(COMPANY_REVEAL_ALLOWANCE.used);
-  /* Which contact-reveal concept is on screen. A review control: the choice is
-     remembered for the tab so a reload comes back on the same concept. */
-  const [revealVariation, setRevealVariation] = useState<RevealVariation>(() => {
-    try {
-      const stored = sessionStorage.getItem("reveal-variation");
-      return (stored as RevealVariation | null) ?? DEFAULT_REVEAL_VARIATION;
-    } catch {
-      return DEFAULT_REVEAL_VARIATION;
-    }
-  });
-  const chooseVariation = useCallback((v: RevealVariation) => {
-    setRevealVariation(v);
-    try {
-      sessionStorage.setItem("reveal-variation", v);
-    } catch {
-      /* Storage unavailable — the choice still holds for this render. */
-    }
-  }, []);
+  /* The signed-off contact-reveal design. */
+  const revealVariation: RevealVariation = DEFAULT_REVEAL_VARIATION;
   const [toast, setToast] = useState<string | null>(null);
 
   const showToast = useCallback((msg: string) => {
@@ -1161,20 +1143,6 @@ export default function App() {
         </div>
       )}
 
-      {/* The concept switch. Fixed to the window's bottom-left — the opposite
-          corner from the Prospects page's own prototype switch — so it takes no
-          room from either page and the two never overlap. */}
-      <RevealVariationBar
-        variation={revealVariation}
-        onChange={chooseVariation}
-        used={companyRevealsUsed}
-        total={COMPANY_REVEAL_ALLOWANCE.total}
-        onSetUsed={setCompanyRevealsUsed}
-      />
-
-      {/* The Prospects tab's review switch — unlocked or locked (Figma
-          61:1394). Bottom edge, between the two histories' corners. */}
-      <ProspectsAccessBar />
     </div>
     </ProspectRevealProvider>
     </CompanyRevealProvider>

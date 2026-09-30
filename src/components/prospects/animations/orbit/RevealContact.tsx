@@ -50,9 +50,8 @@ import { INK } from "./ProspectCards";
 const MUTE = "rgba(47,43,61,0.62)";
 /** Software Finder's violet — the "verified" colour in the reveal bundles. */
 const VIOLET = "#8C57FF";
-/** The status pill's elevation, used for the cards: soft, no border. */
-const ELEVATION = "0 4px 14px -6px rgba(7,41,41,0.18)";
-const ELEVATION_UP = "0 10px 24px -10px rgba(7,41,41,0.26)";
+/** The company card's lift under the cursor: a touch more air, still Calendly-quiet. */
+const ELEVATION_UP = "0 4px 12px -4px rgba(7,41,41,0.10)";
 
 const PW = 389;
 const MID = 264;
@@ -72,11 +71,16 @@ const BACK_SCALE = 0.96;
 /* The company tag in BambooHR's own colours: the wordmark green for the text, a pale tint
    of the app-icon green behind it. */
 const COMPANY_TAG = { tint: "rgba(140,198,63,0.18)", text: "#599D15" };
-const RIM_SHADOW = "0 10px 30px -16px rgba(7,41,41,0.22), 0 1px 4px -1px rgba(7,41,41,0.05)";
-/* The front card of the pair, to Calendly's measure: an ambient shadow that reaches a few
-   pixels up onto the card behind (about 12 levels at the seam, gone within 10px), and a
-   fuller drop below, so it reads as lifted clear of the one behind. */
-const FRONT_SHADOW = "0 -2px 10px -2px rgba(7,41,41,0.10), 0 12px 28px -12px rgba(7,41,41,0.26), 0 2px 6px -2px rgba(7,41,41,0.06)";
+/* The shadows, to Calendly's measure — one language for all three cards. Their cards throw
+   almost nothing onto the gradient (two or three levels, gone within a few pixels); what
+   keeps each card off the background is a low, even halo at its edge, and the one shadow
+   that does more is the front card's onto the card behind it — about 12 levels at the seam,
+   fading over 16px — which alone separates the pair. So every card carries the same halo,
+   and the front card adds only that upward ambient, so it is the layering that differs and
+   never the card. On our pale gradient the halo sits a few levels above theirs, since the
+   white has far less to stand off from than their blue. */
+const CARD_SHADOW = "0 1px 6px -1px rgba(7,41,41,0.08), 0 0 2px 0 rgba(7,41,41,0.05)";
+const FRONT_SHADOW = `${CARD_SHADOW}, 0 -3px 12px -3px rgba(7,41,41,0.10)`;
 const PAIR_TOP = MID - (2 * CONTACT_H - OVER) / 2;
 
 const LOOP = 5900;
@@ -223,7 +227,7 @@ function ContactBody({ c, company }: { c: Contact; company: string }) {
 }
 
 /** A card's shell: the white card, and the rim that grows around it as it becomes a contact. */
-function Shell({ rim, shadow, tone = 0, children }: { rim: number; shadow: string; /** A faint tone over the card, for the one behind. */ tone?: number; children: ReactNode }) {
+function Shell({ rim, shadow, children }: { rim: number; shadow: string; children: ReactNode }) {
   const pad = RIM * rim;
   return (
     <span
@@ -241,7 +245,6 @@ function Shell({ rim, shadow, tone = 0, children }: { rim: number; shadow: strin
         style={{ inset: pad, boxShadow: `0 1px 3px 0 rgba(7,41,41,${(0.06 * rim).toFixed(3)})` }}
       >
         {children}
-        {tone > 0 && <span className="pointer-events-none absolute inset-0 block" style={{ background: `rgba(7,41,41,${(0.018 * tone).toFixed(4)})` }} />}
       </span>
     </span>
   );
@@ -293,7 +296,7 @@ export default function RevealContact() {
           zIndex: 20,
         }}
       >
-        <Shell rim={1} shadow={hover > 0.01 && morph <= 0 ? `${RIM_SHADOW}, ${ELEVATION_UP}` : RIM_SHADOW} tone={settle}>
+        <Shell rim={1} shadow={hover > 0.01 && morph <= 0 ? `${CARD_SHADOW}, ${ELEVATION_UP}` : CARD_SHADOW}>
           {outP < 1 && (
             <span className="absolute inset-0 block" style={{ opacity: 1 - outP, transform: `translateY(${(-8 * outP).toFixed(2)}px)` }}>
               <ProspectBody p={p} />

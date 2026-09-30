@@ -1,10 +1,9 @@
 /**
- * The locked Prospects tab, third design — Figma 83:7790.
+ * The locked Prospects tab — Locked V3, Final (Figma 83:7790).
  *
- * Kept beside Locked V2 (64:7354) so the two can be compared; the review switch
- * picks which one draws. Same frost, same copy, same lock. What differs is the
- * dialog's height and its right-hand panel, which here is a still illustration
- * rather than an animation. Geometry, read off the node:
+ * The frost, the copy and the lock over the page; the dialog, with its gradient
+ * panel carrying the "reveal the contact" animation. Geometry, read off the
+ * node:
  *
  *   dialog  Dialog/Notes   880 x 576; white, radius 16, padding 24 all round,
  *                          drop shadow 0 4 18 #2f2b3d at 16% (shadow-lg).
@@ -39,39 +38,9 @@ import panelSurface from "@/assets/locked-v3/panel-surface.svg";
 import blobInk from "@/assets/locked-v3/blob-ink.svg";
 import blobLime from "@/assets/locked-v3/blob-lime.svg";
 import blobTeal from "@/assets/locked-v3/blob-teal.svg";
-import { setLockedV3Look, useLockedV3Look, type LockedV3Look } from "@/lib/prospectsAccess";
-import CaptureStage from "./animations/orbit/CaptureStage";
-import ProspectSignal from "./animations/orbit/ProspectSignal";
+import { setProspectsLocked } from "@/lib/prospectsAccess";
 import RevealContact from "./animations/orbit/RevealContact";
-import VariationHistory from "./VariationHistory";
 
-/** What the gradient panel can carry; the history lists them in this order. */
-const LOOKS: ReadonlyArray<{ key: LockedV3Look; label: string; description: string; Scene: (() => ReactNode) | null }> = [
-  {
-    key: "staged",
-    label: "Variation 1 — Final Animation, staged",
-    description: "The approved Locked V2 animation, composed for the gradient",
-    Scene: CaptureStage,
-  },
-  {
-    key: "signal",
-    label: "Variation 2 — Signal to prospect",
-    description: "A visitor's intent on Software Finder, identified and delivered as a prospect",
-    Scene: ProspectSignal,
-  },
-  {
-    key: "reveal",
-    label: "Variation 3 — Reveal the contact",
-    description: "Your sales team opens a prospect; it turns into the two contacts behind it",
-    Scene: RevealContact,
-  },
-  {
-    key: "figma",
-    label: "Figma — Gradient only",
-    description: "Figma 83:7790 as delivered, without an animation",
-    Scene: null,
-  },
-];
 
 const INK = "#2f2b3d";
 const MUTED = "rgba(47,43,61,0.7)";
@@ -80,8 +49,6 @@ const DIALOG = { w: 880, h: 576 };
 const PANEL = { w: 389, h: 528 };
 /** Rectangle 6380: the panel with its 1px outline outside it. */
 const SURFACE = { w: 391, h: 530 };
-/** The dialog's top edge in the page column, as Locked V2's; and the least room beside it. */
-const TOP = 163;
 const GUTTER = 24;
 
 const FEATURES = [
@@ -111,22 +78,47 @@ const BLOBS = [
   { key: "teal", src: blobTeal, x: 64.709, y: 160.563, w: 232.416, h: 637.707, pad: 30, opacity: 0.28, soften: 50 },
 ] as const;
 
-/** Keeps the whole dialog, at its own proportions, inside the column. */
+/**
+ * Keeps the whole dialog, at its own proportions, inside the column, and
+ * centres it in the part of the column that is on screen.
+ *
+ * The column runs to the foot of the page, which is far taller than the
+ * window, so centring on the column itself would put the dialog below the
+ * fold. What the eye centres on is the part of the column in the window —
+ * under the header while the page is at its top, the whole window once it has
+ * scrolled — so the dialog is fixed to the window and centred in that band,
+ * and re-measured whenever the page scrolls or the window changes size.
+ */
 function useFit(ref: RefObject<HTMLDivElement | null>) {
-  const [scale, setScale] = useState(1);
+  const [fit, setFit] = useState({ scale: 1, top: GUTTER, left: 0 });
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const fit = () => {
-      const { width, height } = el.getBoundingClientRect();
-      setScale(Math.min(1, (width - 2 * GUTTER) / DIALOG.w, (height - TOP - GUTTER) / DIALOG.h));
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      const top = Math.max(r.top, 0);
+      const bottom = Math.min(r.bottom, window.innerHeight);
+      const left = Math.max(r.left, 0);
+      const right = Math.min(r.right, window.innerWidth);
+      const scale = Math.max(0.5, Math.min(1, (right - left - 2 * GUTTER) / DIALOG.w, (bottom - top - 2 * GUTTER) / DIALOG.h));
+      setFit({
+        scale,
+        top: Math.max(top + GUTTER, (top + bottom) / 2 - (DIALOG.h * scale) / 2),
+        left: (left + right) / 2,
+      });
     };
-    fit();
-    const ro = new ResizeObserver(fit);
+    measure();
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
   }, [ref]);
-  return Math.max(0.5, scale);
+  return fit;
 }
 
 /** 83:7863 — the illustration: the white panel, and the shapes clipped to the group's mask (Rectangle 6380). */
@@ -177,24 +169,23 @@ function Illustration({ children }: { children?: ReactNode }) {
 
 export default function ProspectsLockedOverlayV3() {
   const frame = useRef<HTMLDivElement>(null);
-  const look = useLockedV3Look();
-  const Scene = (LOOKS.find(l => l.key === look) ?? LOOKS[0]).Scene;
-  const scale = useFit(frame);
+  const { scale, top, left } = useFit(frame);
   return (
     <div
       ref={frame}
       /* The same frost as the other designs: #FFFFFF at 80% over the page
          column, which carries the 4px blur itself (see Frame63). */
       className="absolute bottom-0 left-[302px] right-0 top-[60px] z-[5] rounded-[10px] bg-[rgba(255,255,255,0.8)]"
-      data-name="Prospects / Locked V3"
+      data-name="Prospects / Locked V3 — Final"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="prospects-locked-v3-title"
-        className="absolute left-1/2 flex items-stretch overflow-hidden rounded-[16px] bg-white p-[24px]"
+        className="fixed flex items-stretch overflow-hidden rounded-[16px] bg-white p-[24px]"
         style={{
-          top: TOP,
+          top,
+          left,
           width: DIALOG.w,
           height: DIALOG.h,
           transform: `translateX(-50%) scale(${scale})`,
@@ -246,9 +237,11 @@ export default function ProspectsLockedOverlayV3() {
             </div>
           </div>
 
-          {/* 83:7855 "Default Button". The node's text is "view plans" set in title case. */}
+          {/* 83:7855 "Default Button". The node's text is "view plans" set in title case.
+              No plans exist yet, so for review it opens the tab: the unlocked prospects. */}
           <button
             type="button"
+            onClick={() => setProspectsLocked(false)}
             className="flex h-[42px] w-[155px] cursor-pointer items-center justify-center gap-[10px] rounded-[12px] bg-[#072929] px-[26px] font-['Inter',sans-serif] font-medium leading-[26px] text-[15px] text-white transition-colors hover:bg-[#0b3b3b]"
             style={{ boxShadow: "0px 1px 6px 0px rgba(19,17,32,0.16)" }}
           >
@@ -261,17 +254,10 @@ export default function ProspectsLockedOverlayV3() {
         </div>
 
         {/* 83:7863 — the illustration. */}
-        <Illustration>{Scene && <Scene key={look} />}</Illustration>
+        <Illustration>
+          <RevealContact />
+        </Illustration>
       </div>
-      <VariationHistory
-        title="History — Variations of Locked V3"
-        label="Locked V3 illustration"
-        items={LOOKS}
-        current={look}
-        onSelect={setLockedV3Look}
-        storageKey="locked-v3-bar"
-        marker="data-locked-v3-bar"
-      />
     </div>
   );
 }

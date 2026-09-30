@@ -35,18 +35,21 @@ function TooltipTrigger({ ...props }: React.ComponentProps<typeof TooltipPrimiti
 
 function TooltipContent({
   className,
+  side,
+  align,
   sideOffset = 8,
   children,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Popup> & {
-  sideOffset?: React.ComponentProps<typeof TooltipPrimitive.Positioner>["sideOffset"];
-}) {
+}: React.ComponentProps<typeof TooltipPrimitive.Popup> &
+  Pick<React.ComponentProps<typeof TooltipPrimitive.Positioner>, "side" | "align" | "sideOffset">) {
   return (
     <TooltipPrimitive.Portal>
       {/* Figma 227:3150 carries the shadow on the frame around both the body
           and its caret, so it sits here rather than on the body — a shadow on
           the body alone would stop at the caret's shoulder. */}
       <TooltipPrimitive.Positioner
+        side={side}
+        align={align}
         sideOffset={sideOffset}
         className="z-50 drop-shadow-[0px_2px_4px_rgba(47,43,61,0.12)]"
       >
@@ -72,8 +75,13 @@ function TooltipContent({
               draws beneath the body — the column of body-then-caret that
               227:3151 lays out. The export points up, so it is turned over when
               the tooltip sits above its trigger and left alone when it flips
-              below. */}
-          <TooltipPrimitive.Arrow className="h-[6px] w-[12px] data-[side=bottom]:-translate-y-full data-[side=top]:translate-y-full data-[side=top]:rotate-180">
+              below. Beside its trigger, the positioner sets only the caret's
+              height along the edge and leaves it where it falls across, so it
+              is pinned to the edge facing the trigger here; then it is turned a
+              quarter — the 12x6 box turns about its centre into 6x12 — and
+              carried 9px (half of 12 plus half of 6) to hang off that edge the
+              same way. */}
+          <TooltipPrimitive.Arrow className="h-[6px] w-[12px] data-[side=bottom]:-translate-y-full data-[side=top]:translate-y-full data-[side=top]:rotate-180 data-[side=left]:right-0 data-[side=left]:translate-x-[9px] data-[side=left]:rotate-90 data-[side=right]:left-0 data-[side=right]:-translate-x-[9px] data-[side=right]:-rotate-90">
             <img alt="" className="block max-w-none size-full" src={tooltipArrow} />
           </TooltipPrimitive.Arrow>
         </TooltipPrimitive.Popup>
