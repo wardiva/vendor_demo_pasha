@@ -17,17 +17,18 @@ import { useSyncExternalStore } from "react";
  * reviewing comes back where it was.
  */
 
-/* "locked-v2" is the locked design (Figma 64:7354). The first locked design,
-   "locked" (Figma 61:1394), has been retired; a session that still remembers
-   it opens unlocked. */
-export type ProspectsAccess = "unlocked" | "locked-v2";
+/* "locked-v2" (Figma 64:7354) and "locked-v3" (Figma 83:7790) are the locked
+   designs, kept side by side so they can be compared; both lock the tab the
+   same way, only the dialog differs. The first locked design, "locked" (Figma
+   61:1394), has been retired; a session that still remembers it opens unlocked. */
+export type ProspectsAccess = "unlocked" | "locked-v2" | "locked-v3";
 
 const KEY = "prospects-access";
 
 let current: ProspectsAccess = (() => {
   try {
     const saved = sessionStorage.getItem(KEY);
-    return saved === "locked-v2" ? saved : "unlocked";
+    return saved === "locked-v2" || saved === "locked-v3" ? saved : "unlocked";
   } catch {
     return "unlocked";
   }
@@ -99,5 +100,48 @@ export function useLockedAnimation(): LockedAnimation {
     },
     () => animation,
     () => "o15",
+  );
+}
+
+/**
+ * What the Locked V3 dialog's gradient panel carries — a review choice between
+ * the Figma design as delivered (the gradient alone) and the variations that
+ * set a prospect animation inside it. Remembered for the tab session.
+ */
+export type LockedV3Look = "staged" | "signal" | "reveal" | "figma";
+
+const V3_KEY = "locked-v3-look";
+const V3_LOOKS: readonly LockedV3Look[] = ["staged", "signal", "reveal", "figma"];
+
+let v3Look: LockedV3Look = (() => {
+  try {
+    const saved = sessionStorage.getItem(V3_KEY) as LockedV3Look | null;
+    return saved && V3_LOOKS.includes(saved) ? saved : "staged";
+  } catch {
+    return "staged";
+  }
+})();
+
+const v3Listeners = new Set<() => void>();
+
+export function setLockedV3Look(next: LockedV3Look) {
+  if (next === v3Look) return;
+  v3Look = next;
+  try {
+    sessionStorage.setItem(V3_KEY, next);
+  } catch {
+    /* Storage unavailable — the choice still holds for this session. */
+  }
+  v3Listeners.forEach(fn => fn());
+}
+
+export function useLockedV3Look(): LockedV3Look {
+  return useSyncExternalStore(
+    fn => {
+      v3Listeners.add(fn);
+      return () => v3Listeners.delete(fn);
+    },
+    () => v3Look,
+    () => "staged",
   );
 }

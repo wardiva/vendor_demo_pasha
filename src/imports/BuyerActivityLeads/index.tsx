@@ -16,6 +16,7 @@ import { useState } from "react";
 import ProspectsEmptyState from "@/components/prospects/ProspectsEmptyState";
 import ProspectsPrototypeBar, { type ProspectsPrototypeView } from "@/components/prospects/ProspectsPrototypeBar";
 import ProspectsLockedOverlayV2 from "@/components/prospects/ProspectsLockedOverlayV2";
+import ProspectsLockedOverlayV3 from "@/components/prospects/ProspectsLockedOverlayV3";
 import { useProspectsAccess, useProspectsLocked } from "@/lib/prospectsAccess";
 import { IS_LOCAL } from "@/lib/environment";
 
@@ -970,6 +971,7 @@ export default function BuyerActivityLeads() {
         <Frame63 />
       </div>
       {access === "locked-v2" && <ProspectsLockedOverlayV2 />}
+      {access === "locked-v3" && <ProspectsLockedOverlayV3 />}
       <div className="absolute bottom-0 left-0 top-[54px] w-[80px]" data-name="Menu">
         <div className="overflow-clip rounded-[inherit] size-full">
           <div className="content-stretch flex flex-col items-start relative size-full">

@@ -22,6 +22,7 @@ import { setProspectsAccess, useProspectsAccess, type ProspectsAccess } from "@/
 const OPTIONS: ReadonlyArray<{ key: ProspectsAccess; label: string }> = [
   { key: "unlocked", label: "Unlocked" },
   { key: "locked-v2", label: "Locked V2" },
+  { key: "locked-v3", label: "Locked V3" },
 ];
 
 export default function ProspectsAccessBar() {
