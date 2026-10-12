@@ -81,7 +81,8 @@ const T = {
   exit: [7300, 7800] as const,
 };
 
-const PRESS_AT: Pt = { x: 236, y: MID + 4 };
+/** The Generate button, at the card's right: pressed there, not on the card. */
+const PRESS_AT: Pt = { x: 301, y: MID };
 /** The copy mark beside the token, while the key card is centred on its own. */
 const COPY_AT: Pt = { x: 238, y: MID + 4 };
 /** The CRM card's field, once the pair has settled at its first height. */
@@ -92,7 +93,7 @@ function cursorAt(t: number): Pt {
   if (t < T.cursorIn[0]) return REST;
   if (t < T.cursorIn[1]) {
     const p = easeInOut(seg(t, T.cursorIn[0], T.cursorIn[1]));
-    return bez(REST, { x: REST.x - 16, y: REST.y - 110 }, { x: PRESS_AT.x + 8, y: PRESS_AT.y + 64 }, PRESS_AT, p);
+    return bez(REST, { x: REST.x + 10, y: REST.y - 110 }, { x: PRESS_AT.x - 30, y: PRESS_AT.y + 70 }, PRESS_AT, p);
   }
   if (t < T.toCopy[0]) {
     const w = Math.sin(seg(t, T.cursorIn[1], T.press[0]) * Math.PI);
@@ -100,7 +101,7 @@ function cursorAt(t: number): Pt {
   }
   if (t < T.toCopy[1]) {
     const p = easeInOut(seg(t, T.toCopy[0], T.toCopy[1]));
-    return bez(PRESS_AT, { x: PRESS_AT.x + 10, y: PRESS_AT.y + 10 }, { x: COPY_AT.x - 8, y: COPY_AT.y + 6 }, COPY_AT, p);
+    return bez(PRESS_AT, { x: PRESS_AT.x - 20, y: PRESS_AT.y + 24 }, { x: COPY_AT.x + 16, y: COPY_AT.y + 16 }, COPY_AT, p);
   }
   if (t < T.carry[0]) return COPY_AT;
   if (t < T.carry[1]) {
@@ -123,11 +124,12 @@ function KeyGlyph() {
   );
 }
 
-function CrmGlyph() {
+/** HubSpot's sprocket, in white, for the orange tile its app icon sets it on. */
+const HUBSPOT_ORANGE = "#FF7A59";
+function HubSpotMark() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <rect x="3" y="3" width="14" height="14" rx="3" stroke={LIME} strokeWidth="1.6" />
-      <path d="M3 8h14M8 8v9" stroke={LIME} strokeWidth="1.6" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" aria-hidden className="block">
+      <path d="M18.164 7.93V5.084a2.198 2.198 0 001.267-1.978v-.067A2.2 2.2 0 0017.238.845h-.067a2.2 2.2 0 00-2.193 2.193v.067a2.196 2.196 0 001.252 1.973l.013.006v2.852a6.22 6.22 0 00-2.969 1.31l.012-.01-7.828-6.095A2.497 2.497 0 104.3 4.656l-.012.006 7.697 5.991a6.176 6.176 0 00-1.038 3.446c0 1.343.425 2.588 1.147 3.607l-.013-.02-2.342 2.343a1.968 1.968 0 00-.58-.095h-.002a2.033 2.033 0 102.033 2.033 1.978 1.978 0 00-.1-.595l.005.014 2.317-2.317a6.247 6.247 0 104.782-11.134l-.036-.005zm-.964 9.378a3.206 3.206 0 113.215-3.207v.002a3.206 3.206 0 01-3.207 3.207z" />
     </svg>
   );
 }
@@ -191,22 +193,27 @@ function Status({ glyph, children, style }: { glyph: React.ReactNode; children: 
   );
 }
 
-function Tile({ top, children }: { top: number; children: React.ReactNode }) {
+function Tile({ top, bg = INK, children }: { top: number; bg?: string; children: React.ReactNode }) {
   return (
-    <span className="absolute left-[20px] flex size-[40px] items-center justify-center rounded-[10px]" style={{ top, background: INK }}>
+    <span className="absolute left-[20px] flex size-[40px] items-center justify-center rounded-[10px]" style={{ top, background: bg }}>
       {children}
     </span>
   );
 }
 
-/** The integration, before a key exists: one row at the card's padding, Generate where Intent sits. */
-function IntegrationBody() {
+/** The integration, before a key exists: one row at the card's padding, Generate where Intent sits.
+    The button is the trigger, so it carries the hover and the press: the product's hover
+    colour under the cursor, and a short dip as it is pressed. */
+function IntegrationBody({ hover, press }: { hover: number; press: number }) {
   return (
     <>
       <Tile top={21}>
         <KeyGlyph />
       </Tile>
-      <span className="absolute right-[20px] top-[27px] flex h-[28px] items-center rounded-[9px] px-[12px]" style={{ background: INK }}>
+      <span
+        className="absolute right-[20px] top-[27px] flex h-[28px] items-center rounded-[9px] px-[12px]"
+        style={{ background: hover > 0.5 ? "#0b3b3b" : INK, transform: `scale(${(1 - 0.06 * press).toFixed(3)})`, transformOrigin: "50% 50%" }}
+      >
         <span className={`${FONT} whitespace-nowrap font-medium leading-[18px] text-[12px] text-white`}>Generate</span>
       </span>
       <span className="absolute left-[72px] right-[116px] top-[20px] flex flex-col gap-[2px]">
@@ -300,8 +307,8 @@ function CrmBody({ filled, connected, rows, synced }: { filled: number; connecte
       <Status glyph={<SparkleGlyph />} style={{ opacity: connected }}>
         {label}
       </Status>
-      <Tile top={48}>
-        <CrmGlyph />
+      <Tile top={48} bg={HUBSPOT_ORANGE}>
+        <HubSpotMark />
       </Tile>
       <span className={`${FONT} absolute left-[72px] top-[46px] whitespace-nowrap font-medium leading-[22px] text-[15px] tracking-[-0.2px]`} style={{ color: INK }}>
         Your CRM
@@ -389,7 +396,7 @@ export default function ConnectCrm() {
   const h2 = lerp(CONTACT_H, CRM_TALL, tall);
   const pairTop = MID - (CONTACT_H + h2 - OVER) / 2;
   const top1 = lerp(MID - h1 / 2, pairTop, settle) + (1 - enter) * 18 - exitA * 44 - 2 * hover;
-  const scale1 = (1 + 0.008 * hover - 0.015 * Math.min(1, pressed)) * lerp(1, BACK_SCALE, settle);
+  const scale1 = (1 + 0.008 * hover) * lerp(1, BACK_SCALE, settle);
   const top2 = lerp(pairTop + CONTACT_H - OVER + 46, pairTop + CONTACT_H - OVER, join) - exitB * 44;
 
   const cursor = cursorAt(t);
@@ -413,7 +420,7 @@ export default function ConnectCrm() {
         <Shell rim={1} shadow={hover > 0.01 && morph <= 0 ? `${CARD_SHADOW}, ${ELEVATION_UP}` : CARD_SHADOW}>
           {outP < 1 && (
             <span className="absolute inset-0 block" style={{ opacity: 1 - outP, transform: `translateY(${(-8 * outP).toFixed(2)}px)` }}>
-              <IntegrationBody />
+              <IntegrationBody hover={hover} press={Math.sin(seg(t, T.press[0], T.press[1]) * Math.PI)} />
             </span>
           )}
           {inP > 0 && (
@@ -449,7 +456,7 @@ export default function ConnectCrm() {
       {lift > 0 && drop < 1 && <KeyChip at={cursor} lift={lift} drop={drop} />}
 
       <div className="pointer-events-none absolute inset-0" style={{ zIndex: 200 }}>
-        <TeamCursor at={cursor} pressed={Math.min(1, pressed)} />
+        <TeamCursor at={cursor} pressed={Math.min(1, pressed)} labelSide="left" />
       </div>
     </div>
   );
