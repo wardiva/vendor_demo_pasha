@@ -57,8 +57,10 @@ const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
 
 /** The key, as the product masks it: the prefix, the first four, and the tail. */
 const KEY = "vpk_ffa1••••7d_";
-/** The CRM card, once the prospects are in: the field row and two prospect rows. */
-const CRM_TALL = 224;
+/** The CRM card, once the prospects are in: the field row, the hairline, two prospect rows,
+    and the card's own 20px below the last tile - the padding the company card keeps on every
+    side - in the 5px rim. */
+const CRM_TALL = 236;
 
 const LOOP = 8000;
 const REST_T = 6200;
