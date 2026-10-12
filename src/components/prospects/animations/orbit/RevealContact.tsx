@@ -130,7 +130,7 @@ function cursorAt(t: number): Pt {
 }
 
 /** The collaborative cursor: a violet pointer with its named label. */
-export function TeamCursor({ at, pressed, labelSide = "right" }: { at: Pt; pressed: number; /** Which side of the pointer the label sits: left, for a cursor that works near the panel's right edge. */ labelSide?: "right" | "left" }) {
+export function TeamCursor({ at, pressed, labelSide = "right", label = "Your Sales Team" }: { at: Pt; pressed: number; /** Which side of the pointer the label sits: left, for a cursor that works near the panel's right edge. */ labelSide?: "right" | "left"; /** Whose cursor it is. */ label?: string }) {
   const s = 1 - 0.12 * pressed;
   return (
     <span className="absolute block" style={{ left: at.x, top: at.y, transform: `scale(${s.toFixed(3)})`, transformOrigin: "0 0", zIndex: 200 }}>
@@ -147,7 +147,7 @@ export function TeamCursor({ at, pressed, labelSide = "right" }: { at: Pt; press
           <circle cx="11.4" cy="5.6" r="1.9" fill="white" opacity="0.75" />
           <path d="M10.2 9.2c2 .1 3.5 1.4 4 3.6" stroke="white" strokeWidth="1.4" strokeLinecap="round" opacity="0.75" />
         </svg>
-        Your Sales Team
+        {label}
       </span>
     </span>
   );

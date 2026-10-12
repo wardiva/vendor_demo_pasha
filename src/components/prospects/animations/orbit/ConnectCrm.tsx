@@ -7,7 +7,7 @@
  *
  *   0.0s  the API-key card rises to the middle — one row, like the company card:
  *         key tile, "API key / Connect your CRM", Generate where Intent sits
- *   0.9s  Your Sales Team's cursor comes in, hovers, presses the card
+ *   0.9s  Your RevOps Team's cursor comes in, hovers, presses Generate
  *   2.1s  the card grows in place into the key: Active, Never expires, the
  *         masked token with a copy mark beside it
  *   2.8s  the cursor moves to the copy mark and presses it: a tick, "Copied",
@@ -458,7 +458,8 @@ export default function ConnectCrm() {
       {lift > 0 && drop < 1 && <KeyChip at={cursor} lift={lift} drop={drop} />}
 
       <div className="pointer-events-none absolute inset-0" style={{ zIndex: 200 }}>
-        <TeamCursor at={cursor} pressed={Math.min(1, pressed)} labelSide="left" />
+        {/* The integration is RevOps' work: the team that owns the CRM and its tooling. */}
+        <TeamCursor at={cursor} pressed={Math.min(1, pressed)} labelSide="left" label="Your RevOps Team" />
       </div>
     </div>
   );
