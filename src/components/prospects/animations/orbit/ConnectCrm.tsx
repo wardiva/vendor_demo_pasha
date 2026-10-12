@@ -292,7 +292,11 @@ function ProspectRow({ p, top, at }: { p: Prospect; top: number; at: number }) {
           {p.industry}
         </span>
       </span>
-      <IntentTag score={p.intentPct} />
+      {/* Tabular figures, so two tags with two-digit scores are the same width and
+          stand as one column at the right, whatever their digits. */}
+      <span className="shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>
+        <IntentTag score={p.intentPct} />
+      </span>
     </span>
   );
 }

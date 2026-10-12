@@ -175,6 +175,8 @@ export function BuyerIntelligenceLockedDialog({
   title,
   subtitle,
   features,
+  footnote = "*Limits and availability vary by plan",
+  cta = "View Plans",
   children,
 }: {
   /** The overlay's data-name, so a capture can tell the two locks apart. */
@@ -183,6 +185,10 @@ export function BuyerIntelligenceLockedDialog({
   title: string;
   subtitle: string;
   features: readonly string[];
+  /** The line under the features; null for none. */
+  footnote?: string | null;
+  /** The button's label. */
+  cta?: string;
   /** What the gradient panel carries. */
   children: ReactNode;
 }) {
@@ -249,9 +255,11 @@ export function BuyerIntelligenceLockedDialog({
               </ul>
               {/* Contextual alternates off, as in Figma: otherwise Inter centres an asterisk
                   that stands before a capital. */}
-              <p className="font-['Inter',sans-serif] font-normal leading-[21px] text-[14px]" style={{ color: MUTED, fontFeatureSettings: "'calt' 0" }}>
-                *Limits and availability vary by plan
-              </p>
+              {footnote && (
+                <p className="font-['Inter',sans-serif] font-normal leading-[21px] text-[14px]" style={{ color: MUTED, fontFeatureSettings: "'calt' 0" }}>
+                  {footnote}
+                </p>
+              )}
             </div>
           </div>
 
@@ -263,7 +271,7 @@ export function BuyerIntelligenceLockedDialog({
             className="flex h-[42px] w-[155px] cursor-pointer items-center justify-center gap-[10px] rounded-[12px] bg-[#072929] px-[26px] font-['Inter',sans-serif] font-medium leading-[26px] text-[15px] text-white transition-colors hover:bg-[#0b3b3b]"
             style={{ boxShadow: "0px 1px 6px 0px rgba(19,17,32,0.16)" }}
           >
-            <span className="whitespace-nowrap">View Plans</span>
+            <span className="whitespace-nowrap">{cta}</span>
             {/* The arrow's 20px box overhangs its 14 x 22 slot by 3px each side. */}
             <span className="relative block h-[22px] w-[14px] shrink-0">
               <img alt="" src={arrowRight} width={20} height={20} className="absolute left-[-3px] top-[1px] block size-[20px] max-w-none" />
