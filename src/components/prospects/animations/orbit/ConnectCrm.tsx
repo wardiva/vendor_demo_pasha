@@ -46,7 +46,9 @@ import {
   type Pt,
 } from "./RevealContact";
 
-const LIME = "#B1FA63";
+/** The key's tile: the product's pale surface, the key in its secondary ink. */
+const KEY_TILE = "#F4F2F0";
+const KEY_INK = "#585164";
 const GREEN = COMPANY_TAG.text;
 const GREEN_TINT = COMPANY_TAG.tint;
 const GREY_TINT = "rgba(47,43,61,0.06)";
@@ -118,8 +120,8 @@ function cursorAt(t: number): Pt {
 function KeyGlyph() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <circle cx="7" cy="12" r="3.2" stroke={LIME} strokeWidth="1.6" />
-      <path d="M9.6 9.6 15.5 3.7M13 6.2l2 2M11 8.2l2 2" stroke={LIME} strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="7" cy="12" r="3.2" stroke={KEY_INK} strokeWidth="1.6" />
+      <path d="M9.6 9.6 15.5 3.7M13 6.2l2 2M11 8.2l2 2" stroke={KEY_INK} strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
@@ -207,7 +209,7 @@ function Tile({ top, bg = INK, children }: { top: number; bg?: string; children:
 function IntegrationBody({ hover, press }: { hover: number; press: number }) {
   return (
     <>
-      <Tile top={21}>
+      <Tile top={21} bg={KEY_TILE}>
         <KeyGlyph />
       </Tile>
       <span
@@ -236,7 +238,7 @@ function KeyBody({ copied }: { copied: number }) {
         Active
       </Tag>
       <Status glyph={<ShieldGlyph />}>Never expires</Status>
-      <Tile top={48}>
+      <Tile top={48} bg={KEY_TILE}>
         <KeyGlyph />
       </Tile>
       <span className="absolute left-[72px] right-[18px] top-[46px] flex flex-col gap-[2px]">
