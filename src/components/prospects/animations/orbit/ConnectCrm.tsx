@@ -313,7 +313,7 @@ function CrmBody({ filled, connected, rows, synced }: { filled: number; connecte
         <HubSpotMark />
       </Tile>
       <span className={`${FONT} absolute left-[72px] top-[46px] whitespace-nowrap font-medium leading-[22px] text-[15px] tracking-[-0.2px]`} style={{ color: INK }}>
-        Your CRM
+        HubSpot
       </span>
       <span
         className="absolute left-[72px] right-[20px] top-[72px] block h-[26px] overflow-hidden rounded-[8px]"
