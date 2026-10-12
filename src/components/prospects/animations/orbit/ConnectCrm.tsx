@@ -22,7 +22,7 @@
 
 import IntentTag from "@/components/IntentTag";
 import logoBambooHR from "./assets/logo-bamboohr.png";
-import logoNectarHR from "./assets/logo-nectarhr.svg";
+import logoPipefy from "./assets/logo-pipefy.svg";
 import { FONT } from "../shared";
 import { clamp01, easeInOut, easeOut, lerp, seg, useLoopClock } from "./kit";
 import { INK } from "./ProspectCards";
@@ -271,7 +271,7 @@ function KeyBody({ copied }: { copied: number }) {
 type Prospect = { logo: string; name: string; industry: string; intentPct: number };
 const PROSPECTS: readonly [Prospect, Prospect] = [
   { logo: logoBambooHR, name: "BambooHR", industry: "HR Software", intentPct: 90 },
-  { logo: logoNectarHR, name: "Nectar HR", industry: "HR Software", intentPct: 81 },
+  { logo: logoPipefy, name: "Pipefy", industry: "HR Software", intentPct: 81 },
 ];
 
 /** A prospect as it lands in the CRM: the list row, small. */
