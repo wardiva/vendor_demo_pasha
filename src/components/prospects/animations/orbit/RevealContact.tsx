@@ -133,7 +133,7 @@ function cursorAt(t: number): Pt {
 export function TeamCursor({ at, pressed, labelSide = "right", label = "Your Sales Team" }: { at: Pt; pressed: number; /** Which side of the pointer the label sits: left, for a cursor that works near the panel's right edge. */ labelSide?: "right" | "left"; /** Whose cursor it is. */ label?: string }) {
   const s = 1 - 0.12 * pressed;
   return (
-    <span className="absolute block" style={{ left: at.x, top: at.y, transform: `scale(${s.toFixed(3)})`, transformOrigin: "0 0", zIndex: 200 }}>
+    <span className="absolute left-0 top-0 block" style={{ transform: `translate3d(${at.x.toFixed(2)}px, ${at.y.toFixed(2)}px, 0) scale(${s.toFixed(3)})`, transformOrigin: "0 0", zIndex: 200 }}>
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden className="absolute" style={{ left: -2, top: -2, filter: "drop-shadow(0 2px 4px rgba(76,40,160,0.35))" }}>
         <path d="M2.5 2.2L15.4 7.3L9.6 9.2L7.5 15.1L2.5 2.2Z" fill={VIOLET} stroke="#ffffff" strokeWidth="1.3" strokeLinejoin="round" />
       </svg>
@@ -287,11 +287,11 @@ export default function RevealContact() {
         className="absolute"
         style={{
           left: CARD.x,
-          top: top1,
+          top: 0,
           width: CARD.w,
           height: h1,
           opacity: enter * (1 - exitA),
-          transform: `scale(${scale1.toFixed(4)})`,
+          transform: `translate3d(0, ${top1.toFixed(2)}px, 0) scale(${scale1.toFixed(4)})`,
           transformOrigin: "50% 0",
           zIndex: 20,
         }}
@@ -316,11 +316,11 @@ export default function RevealContact() {
           className="absolute"
           style={{
             left: CARD.x,
-            top: top2,
+            top: 0,
             width: CARD.w,
             height: CONTACT_H,
             opacity: clamp01(sp * 3) * (1 - exitB),
-            transform: `scale(${lerp(0.95, 1, clamp01(join)).toFixed(4)})`,
+            transform: `translate3d(0, ${top2.toFixed(2)}px, 0) scale(${lerp(0.95, 1, clamp01(join)).toFixed(4)})`,
             transformOrigin: "50% 100%",
             zIndex: 25,
           }}

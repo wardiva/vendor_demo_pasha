@@ -214,7 +214,7 @@ function IntegrationBody({ hover, press }: { hover: number; press: number }) {
       </Tile>
       <span
         className="absolute right-[20px] top-[27px] flex h-[28px] items-center rounded-[9px] px-[12px]"
-        style={{ background: hover > 0.5 ? "#0b3b3b" : INK, transform: `scale(${(1 - 0.06 * press).toFixed(3)})`, transformOrigin: "50% 50%" }}
+        style={{ background: `rgb(${(7 + 4 * hover).toFixed(1)}, ${(41 + 18 * hover).toFixed(1)}, ${(41 + 18 * hover).toFixed(1)})`, transform: `scale(${(1 - 0.06 * press).toFixed(3)})`, transformOrigin: "50% 50%" }}
       >
         <span className={`${FONT} whitespace-nowrap font-medium leading-[18px] text-[12px] text-white`}>Generate</span>
       </span>
@@ -318,7 +318,7 @@ function CrmBody({ filled, connected, rows, synced }: { filled: number; connecte
       <span
         className="absolute left-[72px] right-[20px] top-[72px] block h-[26px] overflow-hidden rounded-[8px]"
         style={{
-          border: `1px solid ${filled > 0.5 ? "rgba(7,41,41,0.22)" : "rgba(47,43,61,0.14)"}`,
+          border: `1px solid rgba(${(47 - 40 * filled).toFixed(0)}, ${(43 - 2 * filled).toFixed(0)}, ${(61 - 20 * filled).toFixed(0)}, ${(0.14 + 0.08 * filled).toFixed(3)})`,
           background: `rgba(47,43,61,${(0.025 * (1 - filled)).toFixed(4)})`,
         }}
       >
@@ -340,12 +340,10 @@ function CrmBody({ filled, connected, rows, synced }: { filled: number; connecte
 function KeyChip({ at, lift, drop }: { at: Pt; lift: number; drop: number }) {
   return (
     <span
-      className="absolute flex h-[24px] items-center rounded-[8px] bg-white px-[10px]"
+      className="absolute left-0 top-0 flex h-[24px] items-center rounded-[8px] bg-white px-[10px]"
       style={{
-        left: at.x - 110,
-        top: at.y + 12 + 6 * drop,
         opacity: lift * (1 - drop),
-        transform: `scale(${lerp(0.9, 1, lift).toFixed(3)})`,
+        transform: `translate3d(${(at.x - 110).toFixed(2)}px, ${(at.y + 12 + 6 * drop).toFixed(2)}px, 0) scale(${lerp(0.9, 1, lift).toFixed(3)})`,
         transformOrigin: "100% 0",
         boxShadow: "0 10px 24px -10px rgba(7,41,41,0.26), 0 1px 3px rgba(7,41,41,0.08)",
         zIndex: 40,
@@ -410,11 +408,11 @@ export default function ConnectCrm() {
         className="absolute"
         style={{
           left: CARD.x,
-          top: top1,
+          top: 0,
           width: CARD.w,
           height: h1,
           opacity: enter * (1 - exitA),
-          transform: `scale(${scale1.toFixed(4)})`,
+          transform: `translate3d(0, ${top1.toFixed(2)}px, 0) scale(${scale1.toFixed(4)})`,
           transformOrigin: "50% 0",
           zIndex: 20,
         }}
@@ -439,11 +437,11 @@ export default function ConnectCrm() {
           className="absolute"
           style={{
             left: CARD.x,
-            top: top2,
+            top: 0,
             width: CARD.w,
             height: h2,
             opacity: clamp01(sp * 3) * (1 - exitB),
-            transform: `scale(${lerp(0.95, 1, clamp01(join)).toFixed(4)})`,
+            transform: `translate3d(0, ${top2.toFixed(2)}px, 0) scale(${lerp(0.95, 1, clamp01(join)).toFixed(4)})`,
             transformOrigin: "50% 100%",
             zIndex: 25,
           }}
