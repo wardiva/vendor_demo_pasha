@@ -1,5 +1,5 @@
 import chevronDownGlyph from "@/components/nav/assets/icon-chevron-down.svg";
-import BuyerIntelligenceSubNav, { MainNavBuyerIntelligence } from "@/components/nav/BuyerIntelligenceNav";
+import BuyerIntelligenceSubNav, { MainNavBuyerIntelligence, type BuyerIntelligencePage } from "@/components/nav/BuyerIntelligenceNav";
 import ContactRevealsMeter from "@/components/ContactRevealsMeter";
 import svgPaths from "./svg-ry772luhk7";
 import ProspectCard from "@/components/prospects/ProspectCard";
@@ -12,7 +12,7 @@ import imgAvatar from "./148b1a6d07c50cdb128bc8e19f77df73c62e2be8.png";
 import { imgGroup, imgGroup1 } from "./svg-9f9zr";
 import { HelpControl } from "@/components/HelpIcon";
 import InfoIcon from "@/components/InfoIcon";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import ProspectsEmptyState from "@/components/prospects/ProspectsEmptyState";
 import ProspectsPrototypeBar, { type ProspectsPrototypeView } from "@/components/prospects/ProspectsPrototypeBar";
 import ProspectsLockedOverlayV3 from "@/components/prospects/ProspectsLockedOverlayV3";
@@ -910,45 +910,50 @@ function Logo() {
 
 
 
-function Applications1() {
+function Applications1({ active }: { active: BuyerIntelligencePage }) {
   return (
     <div className="content-stretch flex flex-col gap-[8px] items-start pb-[8px] relative shrink-0 w-full" data-name="Applications">
-      <BuyerIntelligenceSubNav active="prospects" />
+      <BuyerIntelligenceSubNav active={active} />
     </div>
   );
 }
 
-function MenuDrawer2() {
+function MenuDrawer2({ active }: { active: BuyerIntelligencePage }) {
   return (
     <div className="bg-[#f3f7f6] flex-[1_0_0] min-h-px relative w-full" data-name="Menu Drawer">
       <div className="content-stretch flex flex-col items-start px-[12px] py-[4px] relative size-full">
-        <Applications1 />
+        <Applications1 active={active} />
       </div>
     </div>
   );
 }
 
-function SemiDarkMenuDrawer() {
+function SemiDarkMenuDrawer({ active }: { active: BuyerIntelligencePage }) {
   return (
     <div className="content-stretch flex flex-col h-full items-start overflow-clip relative rounded-tl-[12px] shrink-0 w-[221px]" data-name="Semi Dark Menu Drawer">
       <Logo />
-      <MenuDrawer2 />
+      <MenuDrawer2 active={active} />
     </div>
   );
 }
 
-function Menu() {
+function Menu({ active }: { active: BuyerIntelligencePage }) {
   return (
     <div className="absolute bottom-0 content-stretch flex items-start left-[80px] top-[54px]" data-name="Menu">
-      <SemiDarkMenuDrawer />
+      <SemiDarkMenuDrawer active={active} />
     </div>
   );
 }
 
-export default function BuyerActivityLeads() {
-  const locked = useProspectsLocked();
+/**
+ * The Buyer Intelligence page shell: the top bar, the rail, the drawer with
+ * the given page active, the content surface, and — locked — the frost and
+ * dialog over the content. The Prospects page below and the Integrations page
+ * both draw themselves in it, so they can never differ around the content.
+ */
+export function PageShell({ name, active, locked, lock, children }: { name: string; active: BuyerIntelligencePage; locked: boolean; /** The lock to draw over the content while locked. */ lock: ReactNode; children: ReactNode }) {
   return (
-    <div className="bg-[#dde8e5] grow relative w-full" data-name="Buyer Activity / Leads">
+    <div className="bg-[#dde8e5] grow relative w-full" data-name={name}>
       {/* First, so it paints beneath the panels rather than over them.
           The bar is 60px tall and they all begin at 54, so drawn afterwards it
           laid a 6px band of its own green across their tops — but only across
@@ -962,9 +967,9 @@ export default function BuyerActivityLeads() {
           reached from the keyboard. `display: contents` so the wrapper adds
           no box and the page's own absolute layout is untouched. */}
       <div style={{ display: "contents" }} inert={locked || undefined}>
-        <Frame63 />
+        {children}
       </div>
-      {locked && <ProspectsLockedOverlayV3 />}
+      {locked && lock}
       <div className="absolute bottom-0 left-0 top-[54px] w-[80px]" data-name="Menu">
         <div className="overflow-clip rounded-[inherit] size-full">
           <div className="content-stretch flex flex-col items-start relative size-full">
@@ -972,7 +977,16 @@ export default function BuyerActivityLeads() {
           </div>
         </div>
       </div>
-      <Menu />
+      <Menu active={active} />
     </div>
+  );
+}
+
+export default function BuyerActivityLeads() {
+  const locked = useProspectsLocked();
+  return (
+    <PageShell name="Buyer Activity / Leads" active="prospects" locked={locked} lock={<ProspectsLockedOverlayV3 />}>
+      <Frame63 />
+    </PageShell>
   );
 }

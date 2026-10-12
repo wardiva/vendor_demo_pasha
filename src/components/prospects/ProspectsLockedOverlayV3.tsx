@@ -1,9 +1,11 @@
 /**
- * The locked Prospects tab — Locked V3, Final (Figma 83:7790).
+ * The locked tab — Locked V3, Final (Figma 83:7790).
  *
  * The frost, the copy and the lock over the page; the dialog, with its gradient
- * panel carrying the "reveal the contact" animation. Geometry, read off the
- * node:
+ * panel carrying an animation. BuyerIntelligenceLockedDialog is the design with
+ * the words and the animation left open; the Prospects lock at the foot of the
+ * file is its first use, and the Integrations lock its second, so the two can
+ * never drift apart. Geometry, read off the node:
  *
  *   dialog  Dialog/Notes   880 x 576; white, radius 16, padding 24 all round,
  *                          drop shadow 0 4 18 #2f2b3d at 16% (shadow-lg).
@@ -167,7 +169,23 @@ function Illustration({ children }: { children?: ReactNode }) {
   );
 }
 
-export default function ProspectsLockedOverlayV3() {
+export function BuyerIntelligenceLockedDialog({
+  name,
+  titleId,
+  title,
+  subtitle,
+  features,
+  children,
+}: {
+  /** The overlay's data-name, so a capture can tell the two locks apart. */
+  name: string;
+  titleId: string;
+  title: string;
+  subtitle: string;
+  features: readonly string[];
+  /** What the gradient panel carries. */
+  children: ReactNode;
+}) {
   const frame = useRef<HTMLDivElement>(null);
   const { scale, top, left } = useFit(frame);
   return (
@@ -176,12 +194,12 @@ export default function ProspectsLockedOverlayV3() {
       /* The same frost as the other designs: #FFFFFF at 80% over the page
          column, which carries the 4px blur itself (see Frame63). */
       className="absolute bottom-0 left-[302px] right-0 top-[60px] z-[5] rounded-[10px] bg-[rgba(255,255,255,0.8)]"
-      data-name="Prospects / Locked V3 — Final"
+      data-name={name}
     >
       <div
         role="dialog"
         aria-modal="true"
-        aria-labelledby="prospects-locked-v3-title"
+        aria-labelledby={titleId}
         className="fixed flex items-stretch overflow-hidden rounded-[16px] bg-white p-[24px]"
         style={{
           top,
@@ -199,22 +217,22 @@ export default function ProspectsLockedOverlayV3() {
           <div className="flex flex-col gap-[28px]">
             <div className="flex flex-col gap-[8px]">
               <h2
-                id="prospects-locked-v3-title"
+                id={titleId}
                 /* Nudged 1px down, out of the flow: the browser sets Inter 24/32 a pixel
                    higher in its line box than Figma does. */
                 className="relative top-[1px] font-['Inter',sans-serif] font-medium leading-[32px] text-[24px]"
                 style={{ color: INK }}
               >
-                Unlock Buyer Intelligence
+                {title}
               </h2>
               <p className="font-['Inter',sans-serif] font-normal leading-[21px] text-[14px]" style={{ color: MUTED }}>
-                See the companies researching your profile.
+                {subtitle}
               </p>
             </div>
 
             <div className="flex flex-col gap-[20px]">
               <ul className="flex flex-col gap-[12px]">
-                {FEATURES.map(f => (
+                {features.map(f => (
                   <li key={f} className="flex h-[20px] items-center gap-[8px]">
                     {/* The node's "state" slot: 14 x 18, the tick centred in it. */}
                     <span className="flex h-[18px] w-[14px] shrink-0 items-center justify-center">
@@ -254,10 +272,23 @@ export default function ProspectsLockedOverlayV3() {
         </div>
 
         {/* 83:7863 — the illustration. */}
-        <Illustration>
-          <RevealContact />
-        </Illustration>
+        <Illustration>{children}</Illustration>
       </div>
     </div>
+  );
+}
+
+/** The locked Prospects tab: the dialog with its own words, and the contact reveal in the panel. */
+export default function ProspectsLockedOverlayV3() {
+  return (
+    <BuyerIntelligenceLockedDialog
+      name="Prospects / Locked V3 — Final"
+      titleId="prospects-locked-v3-title"
+      title="Unlock Buyer Intelligence"
+      subtitle="See the companies researching your profile."
+      features={FEATURES}
+    >
+      <RevealContact />
+    </BuyerIntelligenceLockedDialog>
   );
 }

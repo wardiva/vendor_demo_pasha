@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import BuyerActivityBuyerIntentStarter from "@/imports/BuyerActivityBuyerIntentStarter/index";
 import BuyerActivityLeads from "@/imports/BuyerActivityLeads/index";
+import BuyerActivityIntegrations from "@/imports/BuyerActivityIntegrations";
 import FilterPanel from "@/components/FilterPanel";
 import { FIELD_ACTIVE_BORDER, FIELD_ACTIVE_SHADOW } from "@/components/filters/fieldStates";
 import BuyMoreModal from "@/components/BuyMoreModal";
@@ -106,7 +107,7 @@ const SIGNAL_CARD_FILTERS: Record<string, LeadSignalOption | undefined> = {
   "Competitor Signals": "Competitor",
 };
 
-type Page = "signals" | "leads";
+type Page = "signals" | "leads" | "integrations";
 
 /* ─────────────────────────── main component ─────────────────────────── */
 
@@ -259,6 +260,7 @@ export default function App() {
         const text = listItem.textContent?.trim() ?? "";
         if (text === "Prospects" || text.startsWith("Prospects")) { setPage("leads"); e.stopPropagation(); return; }
         if (text === "Signals" || text.startsWith("Signals")) { setPage("signals"); e.stopPropagation(); return; }
+        if (text === "Integrations" || text.startsWith("Integrations")) { setPage("integrations"); e.stopPropagation(); return; }
         if (text.length < 40) showToast(`Navigating to ${text}…`);
         return;
       }
@@ -1068,6 +1070,8 @@ export default function App() {
                 </LeadsTableProvider>
               </SignalsFiltersProvider>
             </SignalsAnalyticsProvider>
+          ) : page === "integrations" ? (
+            <BuyerActivityIntegrations />
           ) : (
             /* The prospect cards read the reveal allowance from here rather
                than having it threaded through the imported layout frames. */

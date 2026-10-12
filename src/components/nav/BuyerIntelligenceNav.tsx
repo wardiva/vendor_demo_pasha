@@ -246,8 +246,9 @@ function NavRow({
  * active item instead — so these rows sit at the top level of the drawer.
  */
 export default function BuyerIntelligenceSubNav({ active }: { active: BuyerIntelligencePage }) {
-  /* Read here rather than passed down, so the crown appears on the Prospects
-     row from whichever page the drawer is drawn on. */
+  /* Read here rather than passed down, so the crowns appear on the Prospects
+     and Integrations rows from whichever page the drawer is drawn on: the two
+     are locked and unlocked together. */
   const prospectsLocked = useProspectsLocked();
   return (
     <div className="content-stretch flex flex-col gap-[2px] items-start relative shrink-0 w-full" data-name="Applications">
@@ -260,6 +261,7 @@ export default function BuyerIntelligenceSubNav({ active }: { active: BuyerIntel
       />
       <NavRow
         label="Integrations"
+        locked={prospectsLocked}
         active={active === "integrations"}
         icon={<PlugIcon stroke={active === "integrations" ? ACTIVE : IDLE} />}
       />

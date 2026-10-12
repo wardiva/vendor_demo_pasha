@@ -47,30 +47,30 @@ import { INK } from "./ProspectCards";
  * every loop. Every position is a function of time, so the loop is seamless.
  */
 
-const MUTE = "rgba(47,43,61,0.62)";
+export const MUTE = "rgba(47,43,61,0.62)";
 /** Software Finder's violet — the "verified" colour in the reveal bundles. */
-const VIOLET = "#8C57FF";
+export const VIOLET = "#8C57FF";
 /** The company card's lift under the cursor: a touch more air, still Calendly-quiet. */
-const ELEVATION_UP = "0 4px 12px -4px rgba(7,41,41,0.10)";
+export const ELEVATION_UP = "0 4px 12px -4px rgba(7,41,41,0.10)";
 
 const PW = 389;
-const MID = 264;
-const CARD = { x: 24, w: PW - 48 };
+export const MID = 264;
+export const CARD = { x: 24, w: PW - 48 };
 /** The prospect: the same rimmed card as the contacts it becomes, one row at the card's
     20px padding all round — the 42px text block plus 20 above and below, in the 5px rim. */
-const PROSPECT_H = 92;
+export const PROSPECT_H = 92;
 /** A contact card: its outer size, and the translucent rim around the white card. */
-const CONTACT_H = 112;
+export const CONTACT_H = 112;
 const RIM = 5;
 /** How far the front contact tucks over the one behind: its rim and padding, never its text. */
-const OVER = 16;
+export const OVER = 16;
 /** The one behind sits a little back. */
-const BACK_SCALE = 0.96;
+export const BACK_SCALE = 0.96;
 /* The shell, to Calendly's measure: a band within a few levels of the gradient behind it,
    no ring and no hairline; the only edge is the white card's own faint shadow onto it. */
 /* The company tag in BambooHR's own colours: the wordmark green for the text, a pale tint
    of the app-icon green behind it. */
-const COMPANY_TAG = { tint: "rgba(140,198,63,0.18)", text: "#599D15" };
+export const COMPANY_TAG = { tint: "rgba(140,198,63,0.18)", text: "#599D15" };
 /* The shadows, to Calendly's measure — one language for all three cards. Their cards throw
    almost nothing onto the gradient (two or three levels, gone within a few pixels); what
    keeps each card off the background is a low, even halo at its edge, and the one shadow
@@ -79,8 +79,8 @@ const COMPANY_TAG = { tint: "rgba(140,198,63,0.18)", text: "#599D15" };
    and the front card adds only that upward ambient, so it is the layering that differs and
    never the card. On our pale gradient the halo sits a few levels above theirs, since the
    white has far less to stand off from than their blue. */
-const CARD_SHADOW = "0 1px 6px -1px rgba(7,41,41,0.08), 0 0 2px 0 rgba(7,41,41,0.05)";
-const FRONT_SHADOW = `${CARD_SHADOW}, 0 -3px 12px -3px rgba(7,41,41,0.10)`;
+export const CARD_SHADOW = "0 1px 6px -1px rgba(7,41,41,0.08), 0 0 2px 0 rgba(7,41,41,0.05)";
+export const FRONT_SHADOW = `${CARD_SHADOW}, 0 -3px 12px -3px rgba(7,41,41,0.10)`;
 const PAIR_TOP = MID - (2 * CONTACT_H - OVER) / 2;
 
 const LOOP = 5900;
@@ -98,19 +98,19 @@ const T = {
   exit: [5250, 5750] as const,
 };
 
-type Pt = { x: number; y: number };
+export type Pt = { x: number; y: number };
 /** Where the cursor waits between companies: low, clear of the cards. */
-const REST: Pt = { x: 232, y: 462 };
+export const REST: Pt = { x: 232, y: 462 };
 const PRESS_AT: Pt = { x: 236, y: MID + 4 };
 
-const bez = (a: Pt, b: Pt, c: Pt, d: Pt, p: number): Pt => {
+export const bez = (a: Pt, b: Pt, c: Pt, d: Pt, p: number): Pt => {
   const q = 1 - p;
   return {
     x: q * q * q * a.x + 3 * q * q * p * b.x + 3 * q * p * p * c.x + p * p * p * d.x,
     y: q * q * q * a.y + 3 * q * q * p * b.y + 3 * q * p * p * c.y + p * p * p * d.y,
   };
 };
-const easeOutBack = (p: number) => 1 + 2.2 * Math.pow(p - 1, 3) + 1.2 * Math.pow(p - 1, 2);
+export const easeOutBack = (p: number) => 1 + 2.2 * Math.pow(p - 1, 3) + 1.2 * Math.pow(p - 1, 2);
 
 /** The guide: in to the prospect, a press, then out of the way while the card turns. */
 function cursorAt(t: number): Pt {
@@ -130,7 +130,7 @@ function cursorAt(t: number): Pt {
 }
 
 /** The collaborative cursor: a violet pointer with its named label. */
-function TeamCursor({ at, pressed }: { at: Pt; pressed: number }) {
+export function TeamCursor({ at, pressed }: { at: Pt; pressed: number }) {
   const s = 1 - 0.12 * pressed;
   return (
     <span className="absolute block" style={{ left: at.x, top: at.y, transform: `scale(${s.toFixed(3)})`, transformOrigin: "0 0", zIndex: 200 }}>
@@ -227,7 +227,7 @@ function ContactBody({ c, company }: { c: Contact; company: string }) {
 }
 
 /** A card's shell: the white card, and the rim that grows around it as it becomes a contact. */
-function Shell({ rim, shadow, children }: { rim: number; shadow: string; children: ReactNode }) {
+export function Shell({ rim, shadow, children }: { rim: number; shadow: string; children: ReactNode }) {
   const pad = RIM * rim;
   return (
     <span

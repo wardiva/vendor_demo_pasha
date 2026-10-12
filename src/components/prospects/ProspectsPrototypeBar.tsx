@@ -68,11 +68,14 @@ function LockGlyph() {
 }
 
 export default function ProspectsPrototypeBar({
-  view,
+  view = "prospects",
   onChange,
+  lockOnly = false,
 }: {
-  view: ProspectsPrototypeView;
-  onChange: (view: ProspectsPrototypeView) => void;
+  view?: ProspectsPrototypeView;
+  onChange?: (view: ProspectsPrototypeView) => void;
+  /** Only the lock: for a page with nothing to switch, such as Integrations. */
+  lockOnly?: boolean;
 }) {
   const locked = useProspectsLocked();
   if (locked) return null;
@@ -92,6 +95,7 @@ export default function ProspectsPrototypeBar({
         boxShadow: "0px 4px 18px 0px rgba(47,43,61,0.16)",
       }}
     >
+      {!lockOnly && (
       <div role="tablist" aria-orientation="vertical" className="flex flex-col gap-[2px]">
         {OPTIONS.map(o => {
           const active = o.key === view;
@@ -104,7 +108,7 @@ export default function ProspectsPrototypeBar({
                     role="tab"
                     aria-selected={active}
                     aria-label={o.label}
-                    onClick={() => onChange(o.key)}
+                    onClick={() => onChange?.(o.key)}
                     className={`flex size-[36px] cursor-pointer items-center justify-center rounded-[9px] transition-colors ${
                       active ? "bg-[#072929] text-white" : "text-[#2f2b3d] hover:bg-[rgba(7,41,41,0.06)]"
                     }`}
@@ -118,7 +122,8 @@ export default function ProspectsPrototypeBar({
           );
         })}
       </div>
-      <span aria-hidden className="mx-[6px] my-[2px] block h-px bg-[rgba(47,43,61,0.12)]" />
+      )}
+      {!lockOnly && <span aria-hidden className="mx-[6px] my-[2px] block h-px bg-[rgba(47,43,61,0.12)]" />}
       <Tooltip>
         <TooltipTrigger
           render={
