@@ -1,3 +1,4 @@
+import ContactRevealsMeter from "@/components/ContactRevealsMeter";
 import InfoIcon from "@/components/InfoIcon";
 import LeadsTableEmptyState from "@/components/LeadsTableEmptyState";
 import ProspectCard from "@/components/prospects/ProspectCard";
@@ -122,8 +123,17 @@ export default function ProspectsCardList() {
             <p className="leading-[24px]">Buyers</p>
           </div>
           <InfoIcon />
+          {/* The same count the page heading carries, 10px from the title as it sits there. */}
+          <p className="ml-[2px] [word-break:break-word] font-['Inter',sans-serif] font-normal leading-[0] not-italic relative shrink-0 text-[13px] text-[rgba(47,43,61,0.7)] whitespace-nowrap">
+            <span className="leading-[22px]">{`Companies `}</span>
+            <span className="font-medium leading-[22px] text-[#072929]">478</span>
+            <span className="leading-[22px]">/600</span>
+          </p>
         </div>
-        <div
+        <div className="content-stretch flex gap-[20px] items-center relative shrink-0">
+          {/* The reveal allowance, as the page heading shows it: the list is what it is spent on. */}
+          <ContactRevealsMeter />
+          <div
           className="content-stretch flex gap-[6px] items-center justify-center relative shrink-0 cursor-pointer"
           data-name="btn-text-secondary btn-sm"
         >
@@ -131,6 +141,7 @@ export default function ProspectsCardList() {
             View All
           </p>
           <MaskedArrow />
+          </div>
         </div>
       </div>
 
