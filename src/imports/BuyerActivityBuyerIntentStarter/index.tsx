@@ -1,4 +1,5 @@
 import chevronDownGlyph from "@/components/nav/assets/icon-chevron-down.svg";
+import ProductSwitcher from "@/components/nav/ProductSwitcher";
 import BuyerIntelligenceSubNav, { MainNavBuyerIntelligence } from "@/components/nav/BuyerIntelligenceNav";
 import svgPaths from "./svg-dwbtzma8kn";
 import imgIconJpeg from "./62fcc20d40d8545e652158ad9365c64cfd17b62f.png";
@@ -2008,13 +2009,13 @@ function Frame129() {
   );
 }
 
-function Frame69() {
+function Frame69({ open = false }: { open?: boolean }) {
   return (
     <div className="content-stretch flex flex-[1_0_0] gap-[16px] items-center min-w-px relative">
       <Frame129 />
       {/* Figma 171:5581 — the chevron-down asset as exported, in its own
           14px frame. */}
-      <div className="relative shrink-0 size-[14px]" data-name="chevron-down">
+      <div className="relative shrink-0 size-[14px] transition-transform duration-200" data-name="chevron-down" style={{ transform: open ? "rotate(180deg)" : undefined }}>
         <img alt="" className="absolute block inset-0 max-w-none size-full" src={chevronDownGlyph} />
       </div>
     </div>
@@ -2026,7 +2027,10 @@ function Logo() {
     <div className="bg-[#f3f7f6] relative shrink-0 w-full" data-name="Logo">
       <div className="flex flex-row items-center justify-center size-full">
         <div className="content-stretch flex items-center justify-center pb-[12px] pt-[16px] px-[16px] relative size-full">
-          <Frame69 />
+          {/* The product card opens the product switcher. */}
+          <ProductSwitcher logo={<Group8 />} product={{ name: "Jira", category: "Project Management" }}>
+            {open => <Frame69 open={open} />}
+          </ProductSwitcher>
         </div>
       </div>
     </div>
