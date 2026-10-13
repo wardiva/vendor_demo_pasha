@@ -78,7 +78,7 @@ function Frame126() {
       <p className="[word-break:break-word] font-['Inter',sans-serif] font-normal leading-[0] not-italic relative shrink-0 text-[13px] text-[rgba(47,43,61,0.7)] text-center whitespace-nowrap">
         <span className="leading-[22px]">{`Companies `}</span>
         <span className="font-['Inter',sans-serif] font-medium leading-[22px] text-[#072929]">478</span>
-        <span className="leading-[22px]">/600</span>
+        <span className="leading-[22px]">/600 per month</span>
       </p>
     </div>
   );
