@@ -31,7 +31,7 @@ function CheckIcon() {
 function PlusIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="block shrink-0">
-      <path d="M8 3.25v9.5M3.25 8h9.5" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M8 3.75v8.5M3.75 8h8.5" stroke={INK} strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -114,7 +114,7 @@ export default function ProductSwitcher({
             style={{ left: at.left, top: at.top, width: at.width, border: `1px solid ${HAIR}`, boxShadow: "0px 4px 18px 0px rgba(47,43,61,0.16)" }}
             data-name="Product Switcher"
           >
-            <p className={`${FONT} px-[16px] pb-[6px] pt-[6px] leading-[18px] text-[13px]`} style={{ color: MUTED }}>
+            <p className={`${FONT} px-[16px] pb-[4px] pt-[6px] font-medium leading-[16px] text-[12px] tracking-[0.2px]`} style={{ color: "rgba(47,43,61,0.6)" }}>
               Products (1)
             </p>
             <div className="px-[6px]">
@@ -150,7 +150,7 @@ export default function ProductSwitcher({
                 className="flex h-[40px] w-full cursor-pointer items-center gap-[10px] rounded-[8px] px-[10px] text-left transition-colors hover:bg-[rgba(7,41,41,0.06)] focus-visible:bg-[rgba(7,41,41,0.06)] focus-visible:outline-none"
               >
                 <PlusIcon />
-                <span className={`${FONT} font-medium leading-[20px] text-[14px]`} style={{ color: INK }}>
+                <span className={`${FONT} font-normal leading-[20px] text-[14px]`} style={{ color: INK }}>
                   Add new product
                 </span>
               </button>
