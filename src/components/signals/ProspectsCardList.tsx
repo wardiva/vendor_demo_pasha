@@ -1,4 +1,3 @@
-import ContactRevealsMeter from "@/components/ContactRevealsMeter";
 import InfoIcon from "@/components/InfoIcon";
 import LeadsTableEmptyState from "@/components/LeadsTableEmptyState";
 import ProspectCard from "@/components/prospects/ProspectCard";
@@ -130,10 +129,7 @@ export default function ProspectsCardList() {
             <span className="leading-[22px]">/600</span>
           </p>
         </div>
-        <div className="content-stretch flex gap-[20px] items-center relative shrink-0">
-          {/* The reveal allowance, as the page heading shows it: the list is what it is spent on. */}
-          <ContactRevealsMeter />
-          <div
+        <div
           className="content-stretch flex gap-[6px] items-center justify-center relative shrink-0 cursor-pointer"
           data-name="btn-text-secondary btn-sm"
         >
@@ -141,7 +137,6 @@ export default function ProspectsCardList() {
             View All
           </p>
           <MaskedArrow />
-          </div>
         </div>
       </div>
 
