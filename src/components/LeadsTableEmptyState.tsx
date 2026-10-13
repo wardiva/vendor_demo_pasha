@@ -20,7 +20,7 @@ export default function LeadsTableEmptyState({
     >
       <div className="text-center">
         <p className="font-['Inter',sans-serif] text-[15px] font-medium text-[#2f2b3d] mb-[6px]">
-          No Prospects Match Your Filters
+          No Buyers Match Your Filters
         </p>
         <p className="font-['Inter',sans-serif] text-[13px] text-[rgba(47,43,61,0.55)]">
           Try adjusting or clearing your filter criteria

@@ -46,7 +46,7 @@ function Frame125() {
     <div className="content-stretch flex gap-[8px] items-center relative shrink-0">
       {/* 221:2040 */}
       <div className="content-stretch flex gap-[6px] items-center relative shrink-0">
-        <p className="[word-break:break-word] font-['Inter',sans-serif] font-medium leading-[46px] not-italic relative shrink-0 text-[#2f2b3d] text-[24px] whitespace-nowrap">Prospects</p>
+        <p className="[word-break:break-word] font-['Inter',sans-serif] font-medium leading-[46px] not-italic relative shrink-0 text-[#2f2b3d] text-[24px] whitespace-nowrap">Buyers</p>
         {/* 221:2042, on the same correction as the chip below — both marks read
             against the capitals, so both are lifted by the same 3px and stay
             level with each other. */}

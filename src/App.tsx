@@ -258,7 +258,7 @@ export default function App() {
       const listItem = target.closest('[data-name="ListItem"]') as HTMLElement | null;
       if (listItem) {
         const text = listItem.textContent?.trim() ?? "";
-        if (text === "Prospects" || text.startsWith("Prospects")) { setPage("leads"); e.stopPropagation(); return; }
+        if (text === "Buyers" || text.startsWith("Buyers")) { setPage("leads"); e.stopPropagation(); return; }
         if (text === "Signals" || text.startsWith("Signals")) { setPage("signals"); e.stopPropagation(); return; }
         if (text === "Integrations" || text.startsWith("Integrations")) { setPage("integrations"); e.stopPropagation(); return; }
         if (text.length < 40) showToast(`Navigating to ${text}…`);
@@ -803,7 +803,7 @@ export default function App() {
       visibleCount: visibleProspects.length,
       view: prospectView,
       setView: setProspectView,
-      onExport: () => showToast("Export started — 8 prospects"),
+      onExport: () => showToast("Export started — 8 buyers"),
       onNotify: () => setNotifyOpen(true),
       /* The filter row reads its state from here rather than being written to
          through the DOM, so a chip is active exactly when its group is. */

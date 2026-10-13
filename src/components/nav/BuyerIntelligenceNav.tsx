@@ -254,7 +254,7 @@ export default function BuyerIntelligenceSubNav({ active }: { active: BuyerIntel
     <div className="content-stretch flex flex-col gap-[2px] items-start relative shrink-0 w-full" data-name="Applications">
       <NavRow label="Signals" active={active === "signals"} icon={<SignalsIcon active={active === "signals"} />} />
       <NavRow
-        label="Prospects"
+        label="Buyers"
         active={active === "prospects"}
         icon={<ProspectsIcon active={active === "prospects"} />}
         locked={prospectsLocked}

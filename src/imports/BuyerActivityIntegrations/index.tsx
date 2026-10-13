@@ -302,7 +302,7 @@ function GenerateDialog({ onCancel, onGenerate }: { onCancel: () => void; onGene
   const [expiry, setExpiry] = useState<Expiry>("Never");
   const [busy, setBusy] = useState(false);
   return (
-    <Modal title="Generate API Key" description="Create a secure key to connect prospects to your CRM." labelledBy="integration-generate-title" onClose={onCancel}>
+    <Modal title="Generate API Key" description="Create a secure key to connect buyers to your CRM." labelledBy="integration-generate-title" onClose={onCancel}>
       <ExpirySelect value={expiry} onChange={setExpiry} />
       <div className="flex justify-end gap-[12px]">
         <OutlineButton onClick={onCancel}>Cancel</OutlineButton>
@@ -343,7 +343,7 @@ function KeyDialog({ apiKey, onDone }: { apiKey: ApiKey; onDone: () => void }) {
         <div className="flex items-center gap-[8px] rounded-[10px] px-[12px] py-[10px]" style={{ background: "rgba(183,121,31,0.08)" }}>
           <WarnIcon />
           <span className={`${FONT} leading-[20px] text-[13px]`} style={{ color: INK }}>
-            This key grants access to your prospects. Keep it secret, and rotate it if it is ever exposed.
+            This key grants access to your buyers. Keep it secret, and rotate it if it is ever exposed.
           </span>
         </div>
         <div className="flex items-center gap-[12px] rounded-[10px] px-[14px] py-[10px]" style={{ border: `1px solid ${HAIR}` }}>
@@ -460,7 +460,7 @@ function IntegrationContent() {
           Integration
         </p>
         <p className={`${FONT} leading-[21px] text-[14px]`} style={{ color: MUTED }}>
-          Connect Software Finder prospects directly to your CRM or internal systems using a secure API key.
+          Connect Software Finder buyers directly to your CRM or internal systems using a secure API key.
         </p>
       </div>
 
@@ -475,7 +475,7 @@ function IntegrationContent() {
                 API Key Management
               </h2>
               <p className={`${FONT} leading-[21px] text-[14px]`} style={{ color: MUTED }}>
-                {apiKey ? "API keys are displayed only once when generated to help keep your integration secure." : "Generate a key to authenticate requests and pull your prospects into your own system."}
+                {apiKey ? "API keys are displayed only once when generated to help keep your integration secure." : "Generate a key to authenticate requests and pull your buyers into your own system."}
               </p>
             </div>
           </div>
@@ -488,7 +488,7 @@ function IntegrationContent() {
         <span className="flex items-center gap-[12px]">
           <BookIcon />
           <span className={`${FONT} leading-[21px] text-[14px]`} style={{ color: INK }}>
-            New to the API? Learn how to authenticate and sync prospects into your CRM.
+            New to the API? Learn how to authenticate and sync buyers into your CRM.
           </span>
         </span>
         <a

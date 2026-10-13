@@ -101,7 +101,7 @@ function SearchControl() {
     return (
       <button
         type="button"
-        aria-label="Search prospects"
+        aria-label="Search buyers"
         onClick={() => setOpen(true)}
         className={`${FIELD} cursor-pointer justify-center py-[8px] size-[34px]`}
         data-name="search-toggle"
@@ -138,7 +138,7 @@ function SearchControl() {
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         placeholder="Search"
-        aria-label="Search prospects"
+        aria-label="Search buyers"
         className="bg-transparent border-none flex-[1_0_0] font-['Inter',sans-serif] leading-[18px] min-w-px outline-none text-[#2f2b3d] text-[13px] placeholder:text-[rgba(47,43,61,0.4)]"
       />
     </div>
@@ -233,7 +233,7 @@ function SortControl() {
     <div ref={hostRef} className="relative shrink-0">
       <button
         type="button"
-        aria-label="Sort prospects"
+        aria-label="Sort buyers"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={e => {

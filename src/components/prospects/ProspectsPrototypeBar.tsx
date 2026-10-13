@@ -34,7 +34,7 @@ import { setProspectsLocked, useProspectsLocked } from "@/lib/prospectsAccess";
 export type ProspectsPrototypeView = "prospects" | "empty";
 
 const OPTIONS: ReadonlyArray<{ key: ProspectsPrototypeView; label: string }> = [
-  { key: "prospects", label: "Prospects" },
+  { key: "prospects", label: "Buyers" },
   { key: "empty", label: "Empty state" },
 ];
 

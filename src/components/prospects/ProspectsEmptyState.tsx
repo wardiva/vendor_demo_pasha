@@ -173,10 +173,10 @@ export default function ProspectsEmptyState() {
       <Stage />
       <div className="flex flex-col items-center text-center" style={{ gap: 7, maxWidth: 520 }}>
         <h2 className="m-0 font-['Inter',sans-serif] font-semibold" style={{ fontSize: 24, lineHeight: 1.3, color: "var(--color-text)" }}>
-          No Prospects Found
+          No Buyers Found
         </h2>
         <p className="m-0 font-['Inter',sans-serif] font-normal" style={{ fontSize: 15, lineHeight: 1.5, color: "var(--color-text-secondary)", textWrap: "pretty" }}>
-          Prospects appear here once buyers engage with your profile or similar products.
+          Buyers appear here once they engage with your profile or similar products.
         </p>
       </div>
     </div>

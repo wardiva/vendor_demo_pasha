@@ -56,11 +56,11 @@ const GUTTER = 24;
 const FEATURES = [
   "Company-level buyer intent contacts*",
   "Contact reveal credits per month*",
-  "Buyer intent score on every prospect",
+  "Buyer intent score on every buyer",
   "Category and activity level signals",
   "Competitor signals*",
   "Company firmographics and technographics",
-  "Activity history and AI prospect summary",
+  "Activity history and AI buyer summary",
   "CSV export and API integration",
 ] as const;
 

@@ -479,7 +479,7 @@ export default function ProspectsTable({ showHeader = true }: { showHeader?: boo
       >
         <div className="content-stretch flex gap-[8px] items-center relative shrink-0">
           <div className="[word-break:break-word] flex flex-col font-['Inter',sans-serif] font-medium justify-center leading-[0] not-italic relative shrink-0 text-[#2f2b3d] text-[16px] whitespace-nowrap">
-            <p className="leading-[24px]">Prospects</p>
+            <p className="leading-[24px]">Buyers</p>
           </div>
           <InfoIcon />
         </div>

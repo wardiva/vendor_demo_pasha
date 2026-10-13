@@ -12,11 +12,11 @@ import ConnectCrm from "./animations/orbit/ConnectCrm";
 
 const FEATURES = [
   "Generate secure keys for API integrations",
-  "Sync prospects automatically to your CRM in real-time",
-  "View complete prospect profile details",
+  "Sync buyers automatically to your CRM in real-time",
+  "View complete buyer profile details",
   "Eliminate manual data entry",
-  "Enable your team to act on prospects instantly",
-  "Timely convert high intent prospects into conversions",
+  "Enable your team to act on buyers instantly",
+  "Timely convert high intent buyers into conversions",
 ] as const;
 
 export default function IntegrationsLockedOverlay() {
@@ -25,7 +25,7 @@ export default function IntegrationsLockedOverlay() {
       name="Integrations / Locked — Final"
       titleId="integrations-locked-title"
       title="Unlock Integrations"
-      subtitle="Send prospect data where you need it"
+      subtitle="Send buyer data where you need it"
       features={FEATURES}
       footnote={null}
       cta="See Plans"

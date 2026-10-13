@@ -303,7 +303,7 @@ function ProspectRow({ p, top, at }: { p: Prospect; top: number; at: number }) {
 
 /** The buyer's CRM: a tag and a status, the tile and name, the field the key goes into — and, once connected, the prospects. */
 function CrmBody({ filled, connected, rows, synced }: { filled: number; connected: number; rows: readonly [number, number]; synced: number }) {
-  const label = synced === 0 ? "Syncing" : synced === 1 ? "1 prospect synced" : `${synced} prospects synced`;
+  const label = synced === 0 ? "Syncing" : synced === 1 ? "1 buyer synced" : `${synced} buyers synced`;
   return (
     <>
       <Tag tint={GREY_TINT} color={MUTE} style={{ opacity: 1 - Math.min(1, connected * 2.5) }}>
