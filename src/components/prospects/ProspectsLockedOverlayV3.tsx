@@ -33,7 +33,7 @@
  * narrower ones — so its proportions never change.
  */
 
-import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import featureTick from "@/assets/locked-v3/feature-tick.svg";
 import arrowRight from "@/assets/locked-v3/arrow-right.svg";
 import panelSurface from "@/assets/locked-v3/panel-surface.svg";
@@ -169,6 +169,35 @@ function Illustration({ children }: { children?: ReactNode }) {
   );
 }
 
+/**
+ * Dismisses the dialog. It sits in the gradient panel's top-right corner, 12px in from
+ * the panel's edges, as a white tile in the animation's own card language — the soft
+ * card shadow, radius 10 like the tiles inside — so it reads as part of the panel rather
+ * than a hole punched in it. Quiet at rest; the ink darkens and a pale fill comes up on
+ * hover; the product's focus ring on keyboard focus.
+ */
+function CloseButton({ onClose }: { onClose: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label="Close"
+      onClick={onClose}
+      className="group absolute right-[36px] top-[36px] z-10 flex size-[32px] cursor-pointer items-center justify-center rounded-[10px] bg-white transition-[background-color,box-shadow] duration-150 ease-out hover:bg-[#F4F2F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#072929] focus-visible:ring-offset-2"
+      style={{ boxShadow: "0 1px 6px -1px rgba(7,41,41,0.10), 0 0 2px 0 rgba(7,41,41,0.06)" }}
+      data-name="Close"
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="block">
+        <path
+          d="M4.25 4.25 11.75 11.75M11.75 4.25 4.25 11.75"
+          className="stroke-[rgba(47,43,61,0.7)] transition-[stroke] duration-150 ease-out group-hover:stroke-[#2f2b3d]"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
+    </button>
+  );
+}
+
 export function BuyerIntelligenceLockedDialog({
   name,
   titleId,
@@ -194,6 +223,17 @@ export function BuyerIntelligenceLockedDialog({
 }) {
   const frame = useRef<HTMLDivElement>(null);
   const { scale, top, left } = useFit(frame);
+  /* Closing dismisses the dialog for this visit only: the frost and the lock stay over
+     the page, and the dialog is back the next time the page is opened. */
+  const [open, setOpen] = useState(true);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
   return (
     <div
       ref={frame}
@@ -202,6 +242,7 @@ export function BuyerIntelligenceLockedDialog({
       className="absolute bottom-0 left-[302px] right-0 top-[60px] z-[5] rounded-[10px] bg-[rgba(255,255,255,0.8)]"
       data-name={name}
     >
+      {open && (
       <div
         role="dialog"
         aria-modal="true"
@@ -281,7 +322,9 @@ export function BuyerIntelligenceLockedDialog({
 
         {/* 83:7863 — the illustration. */}
         <Illustration>{children}</Illustration>
+        <CloseButton onClose={() => setOpen(false)} />
       </div>
+      )}
     </div>
   );
 }

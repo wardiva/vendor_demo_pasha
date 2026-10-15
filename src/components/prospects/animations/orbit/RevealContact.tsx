@@ -6,7 +6,6 @@ import MailIcon from "@/components/MailIcon";
 import PhoneIcon from "@/components/PhoneIcon";
 import avatarOlivia from "./assets/avatar-olivia.png";
 import avatarDaniel from "./assets/avatar-daniel.png";
-import logoBambooHR from "./assets/logo-bamboohr.png";
 import { FONT } from "../shared";
 import { clamp01, easeInOut, easeOut, lerp, seg, useLoopClock } from "./kit";
 import { INK } from "./ProspectCards";
@@ -153,11 +152,24 @@ export function TeamCursor({ at, pressed, labelSide = "right", label = "Your Sal
   );
 }
 
-type Company = { name: string; industry: string; intentPct: number; logo: string };
+type Company = { name: string; industry: string; intentPct: number };
 type Contact = { avatar: string; name: string; jobTitle: string; variant: ContactVariant };
 
-/** The logo is BambooHR's own app icon, set in the card's 40px tile at its rounding. */
-const COMPANY: Company = { name: "BambooHR", industry: "HR Software", intentPct: 90, logo: logoBambooHR };
+/** A generic buyer: the company mark on the same tile as the Integrations animation's icons. */
+const COMPANY: Company = { name: "Buyer Company", industry: "HR Software", intentPct: 90 };
+/** The Integrations icons' colours: the pale tile and the secondary ink. */
+const BUYER_TILE = "#F4F2F0";
+const BUYER_INK = "#585164";
+
+/** A company: a building with its windows, in the 1.6 stroke the key and plug use. */
+function CompanyGlyph() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="block">
+      <path d="M4 17V4.5A1.5 1.5 0 0 1 5.5 3h6A1.5 1.5 0 0 1 13 4.5V17M13 8h2.5A1.5 1.5 0 0 1 17 9.5V17M2.5 17h15" stroke={BUYER_INK} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 6.5h3M7 9.5h3M7 12.5h3" stroke={BUYER_INK} strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
 const CONTACTS: readonly [Contact, Contact] = [
   { avatar: avatarOlivia, name: "Jessa Call", jobTitle: "VP of Human Resources", variant: "verified" },
   { avatar: avatarDaniel, name: "Jeff Smith", jobTitle: "Director of People Operations", variant: "recommended" },
@@ -168,8 +180,8 @@ const CONTACTS: readonly [Contact, Contact] = [
 function ProspectBody({ p }: { p: Company }) {
   return (
     <>
-      <span className="absolute left-[20px] top-[21px] block size-[40px]">
-        <img alt="" src={p.logo} className="block size-full rounded-[10px] object-cover" />
+      <span className="absolute left-[20px] top-[21px] flex size-[40px] items-center justify-center rounded-[10px]" style={{ background: BUYER_TILE }}>
+        <CompanyGlyph />
       </span>
       <span className="absolute right-[20px] top-[30px]">
         <IntentTag score={p.intentPct} />
@@ -191,12 +203,12 @@ function ContactBody({ c, company }: { c: Contact; company: string }) {
   return (
     <>
       {/* The company tag: the Intent tag's own box — 11/18 medium, 2px and 10px padding,
-          radius 6 — in the company's colour, so the two read as one tag in two variants. */}
+          radius 6 — in the company mark's colours, so the tag and the tile read as one. */}
       <span
         className="absolute left-[20px] top-[12px] flex min-w-[24px] max-w-[170px] items-center justify-center gap-[4px] rounded-[6px] px-[10px] py-[2px]"
-        style={{ background: COMPANY_TAG.tint }}
+        style={{ background: BUYER_TILE }}
       >
-        <span className={`${FONT} min-w-0 truncate font-medium leading-[18px] text-[11px]`} style={{ color: COMPANY_TAG.text }}>
+        <span className={`${FONT} min-w-0 truncate font-medium leading-[18px] text-[11px]`} style={{ color: BUYER_INK }}>
           {company}
         </span>
       </span>
@@ -304,7 +316,7 @@ export default function RevealContact() {
           )}
           {inP > 0 && (
             <span className="absolute inset-0 block" style={{ opacity: inP, transform: `translateY(${(8 * (1 - inP)).toFixed(2)}px)` }}>
-              <ContactBody c={first} company={p.name} />
+              <ContactBody c={first} company="Contact" />
             </span>
           )}
         </Shell>
@@ -326,7 +338,7 @@ export default function RevealContact() {
           }}
         >
           <Shell rim={1} shadow={FRONT_SHADOW}>
-            <ContactBody c={second} company={p.name} />
+            <ContactBody c={second} company="Contact" />
           </Shell>
         </div>
       )}
