@@ -85,7 +85,8 @@ export default function DetailModal({
         aria-modal="true"
         aria-label={ariaLabel}
       >
-        <div className="bg-white flex flex-col items-start rounded-[16px] shrink-0 w-full min-h-px">
+        {/* Shrinks with the dialog's cap, so the body inside it can too. */}
+        <div className="bg-white flex flex-col items-start rounded-[16px] shrink w-full min-h-0">
           {/* ── modal-header ── */}
           <div className="border-[rgba(0,0,0,0.08)] border-b border-solid flex flex-col items-start h-[76px] justify-center px-[24px] shrink-0 w-full">
             <div className="flex gap-[16px] items-start justify-end relative shrink-0 w-full">
@@ -132,9 +133,12 @@ export default function DetailModal({
           </div>
 
           {/* ── body: tab rail + detail panel ──
-              Fixed height holds the dialog at its designed 638px on every tab;
-              longer panels scroll inside the detail column. */}
-          <div className="flex items-start relative shrink-0 w-full h-[562px]">
+              562px holds the dialog at its designed 638px on every tab; longer
+              panels scroll inside the detail column. On a shorter window the
+              dialog's own cap (100vh - 48px) wins, so the body shrinks with it
+              (min-h-0) rather than being clipped — otherwise the end of a long
+              panel sat below the dialog's edge, out of reach of the scroll. */}
+          <div className="flex items-start relative min-h-0 shrink w-full h-[562px]">
             <div className="flex flex-[1_0_0] h-full items-start min-w-px relative">
               {/* Figma 236:3310 — the rail is 254 wide with a uniform 16px pad,
                   which is what puts each 222px nav-link at x=16. The left pad

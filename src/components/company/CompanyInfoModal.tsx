@@ -114,7 +114,8 @@ export default function CompanyInfoModal({
       ) : activeTab === "Company Tech Stack" ? (
         <TechStackPanel entries={details.techStack} />
       ) : activeTab === "Activity" ? (
-        <ActivitySessionsPanel company={company.name} />
+        /* Keyed by company, so each buyer opens on its own default: newest session open, the rest folded. */
+        <ActivitySessionsPanel key={company.name} company={company.name} />
       ) : activeTab === "Notes" ? (
         <NotesPanel company={company.name} />
       ) : (

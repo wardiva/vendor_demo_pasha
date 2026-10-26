@@ -1,4 +1,5 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
+import CountryFlag from "@/components/company/CountryFlag";
 import IntentSignals from "@/components/company/IntentSignals";
 import {
   getActivitySessions,
@@ -20,6 +21,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
  *
  * The session cards are the module's own framed card: a 2px tinted frame around
  * a white inner at 12px padding, the same shell the contact cards use.
+ *
+ * Each session folds, the way activity timelines do elsewhere (HubSpot's record
+ * timeline, GitHub's run log): the header is the trigger, with a chevron at its
+ * left. The newest session opens; the rest start folded;
+ * any number can be open.
  */
 
 const SUCCESS = "#24b364";
@@ -27,9 +33,12 @@ const DANGER = "#ff4c51";
 const NEUTRAL = "#dddde0";
 
 /* ── the framed card the panel is built out of ── */
-function Card({ children }: { children: React.ReactNode }) {
+function Card({ children, onClick }: { children: React.ReactNode; onClick?: (e: React.MouseEvent<HTMLDivElement>) => void }) {
   return (
-    <div className="bg-[rgba(244,242,240,0.6)] content-stretch flex items-center p-[2px] relative rounded-[12px] shrink-0 w-full">
+    <div
+      className={`bg-[rgba(244,242,240,0.6)] content-stretch flex items-center p-[2px] relative rounded-[12px] shrink-0 w-full${onClick ? " cursor-pointer" : ""}`}
+      onClick={onClick}
+    >
       <div className="bg-white content-stretch flex flex-[1_0_0] items-start min-w-px p-[12px] relative rounded-[10px]">
         {children}
       </div>
@@ -225,8 +234,26 @@ function PageRow({ page }: { page: ActivityPageVisit }) {
   );
 }
 
+/* The disclosure chevron: right when folded, down when open. */
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden
+      className="block shrink-0 transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      style={{ transform: open ? "rotate(90deg)" : undefined }}
+    >
+      <path d="m6 4 4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 /* ── 282:3642 — a session ── */
-function Session({ session }: { session: ActivitySession }) {
+function Session({ session, open, onToggle }: { session: ActivitySession; open: boolean; onToggle: () => void }) {
+  const regionId = useId();
   /* Newest first: how it ended, back through the pages, then how it began. The
      data stays in the order it happened; only the reading is reversed. */
   const pages = [...session.pages].reverse();
@@ -234,27 +261,54 @@ function Session({ session }: { session: ActivitySession }) {
   const entry = session.pages[0];
 
   return (
-    <div className="content-stretch flex flex-col gap-[12px] items-start overflow-clip relative shrink-0 w-full" data-name="Session">
+    <div className="content-stretch flex flex-col items-start relative shrink-0 w-full" data-name="Session">
       {/* 298:2566 — where the visit came from, and when it was.
 
           The session is no longer headed by whoever made it. An anonymous id
           and a stock portrait were two things standing in for a person nobody
           can name; what the reader can actually use is that this was a visit,
           where from, and when — so the header says that and stops. */}
-      <div className="[word-break:break-word] content-stretch flex items-start justify-between leading-[20px] not-italic relative shrink-0 w-full whitespace-nowrap">
-        <div className="content-stretch flex flex-col gap-[2px] items-start relative shrink-0">
-          <p className="font-['Inter',sans-serif] font-medium relative shrink-0 text-[13px] text-[#2f2b3d]">Visited</p>
-          <p className="font-['Inter',sans-serif] font-normal relative shrink-0 text-[12px] text-[rgba(47,43,61,0.7)]">
-            {session.location.city}, {session.location.region}, {session.location.country}
-          </p>
-        </div>
-        <p className="font-['Inter',sans-serif] font-normal relative shrink-0 text-[11px] text-[rgba(47,43,61,0.7)]">
-          {dayLabel(session.date)} · {clockLabel(session.endedAt)}
-        </p>
-      </div>
+      {/* The header is the trigger. */}
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={regionId}
+        onClick={onToggle}
+        className="flex w-full cursor-pointer items-start gap-[12px] rounded-[6px] text-left leading-[20px] not-italic whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#072929] focus-visible:ring-offset-4"
+      >
+        <span className="mt-[2px] text-[rgba(47,43,61,0.6)]">
+          <Chevron open={open} />
+        </span>
+        <span className="[word-break:break-word] flex min-w-0 flex-1 items-start justify-between gap-[12px]">
+          <span className="flex min-w-0 flex-col gap-[2px]">
+            <span className="font-['Inter',sans-serif] font-medium text-[13px] text-[#2f2b3d]">Visited</span>
+            {/* The vendor portal's location row: the 16px round flag, 6px, then the place. */}
+            <span className="flex min-w-0 items-center gap-[6px]" data-testid="activity-session-location">
+              <CountryFlag country={session.location.country} />
+              <span className="truncate font-['Inter',sans-serif] font-normal text-[12px] text-[rgba(47,43,61,0.7)]">
+                {session.location.city}, {session.location.region}, {session.location.country}
+              </span>
+            </span>
+          </span>
+          <span className="shrink-0 font-['Inter',sans-serif] font-normal text-[11px] text-[rgba(47,43,61,0.7)]">
+            {dayLabel(session.date)} · {clockLabel(session.endedAt)}
+          </span>
+        </span>
+      </button>
 
-      {/* 282:3654 — the timeline. */}
-      <div className="content-stretch flex flex-col gap-[12px] items-start overflow-clip relative shrink-0 w-full" data-name="Timeline">
+      {/* 282:3654 — the timeline, folding. Grid rows 0fr ↔ 1fr animate the height
+          to whatever the content is; the 12px that parted it from the header
+          is inside, so a folded session closes up to its header. */}
+      <div
+        id={regionId}
+        role="region"
+        aria-label={`Visit from ${session.location.city}, ${dayLabel(session.date)}`}
+        className="grid w-full transition-[grid-template-rows,opacity] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr", opacity: open ? 1 : 0 }}
+        inert={!open || undefined}
+      >
+      <div className="min-h-0 overflow-hidden">
+      <div className="content-stretch flex flex-col gap-[12px] items-start overflow-clip relative shrink-0 w-full pt-[12px]" data-name="Timeline">
         <Row colour={DANGER}>
           <p
             className="font-['Inter',sans-serif] font-medium leading-[21px] not-italic relative shrink-0 text-[13px]"
@@ -283,6 +337,8 @@ function Session({ session }: { session: ActivitySession }) {
           {entry && <PageUrl url={entry.url} />}
         </Row>
       </div>
+      </div>
+      </div>
     </div>
   );
 }
@@ -291,7 +347,17 @@ function Session({ session }: { session: ActivitySession }) {
 export default function ActivitySessionsPanel({ company }: { company: string }) {
   const sessions = getActivitySessions(company);
   const summary = summarise(sessions);
+  /* The newest session opens; the rest start folded. */
+  const [open, setOpen] = useState<ReadonlySet<number>>(() => new Set([0]));
   if (!sessions.length || !summary) return null;
+
+  const toggle = (i: number) =>
+    setOpen(prev => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
 
   return (
     /* 282:3622 — the summary row and the session cards, 12px apart. */
@@ -308,10 +374,27 @@ export default function ActivitySessionsPanel({ company }: { company: string }) 
           explains the score the modal's header is already showing. */}
       <IntentSignals company={company} />
 
+      {/* The sessions' own heading. */}
+      <div className="flex w-full items-center pt-[4px]">
+        <p className="font-['Inter',sans-serif] font-medium leading-[20px] text-[13px] text-[#2f2b3d]">
+          Sessions <span className="font-normal text-[rgba(47,43,61,0.7)]">({sessions.length})</span>
+        </p>
+      </div>
+
       {sessions.map((session, i) => (
-        <Card key={`${session.visitor}-${i}`}>
-          <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px overflow-clip relative" data-name="Sessions">
-            <Session session={session} />
+        <Card
+          key={`${session.visitor}-${i}`}
+          /* A click anywhere on the card opens or folds it — but a link still
+             opens, a selection still selects, and the header handles its own. */
+          onClick={e => {
+            const target = e.target as HTMLElement;
+            if (target.closest("a, button")) return;
+            if (window.getSelection()?.toString()) return;
+            toggle(i);
+          }}
+        >
+          <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative" data-name="Sessions">
+            <Session session={session} open={open.has(i)} onToggle={() => toggle(i)} />
           </div>
         </Card>
       ))}

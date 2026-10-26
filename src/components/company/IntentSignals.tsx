@@ -1791,10 +1791,12 @@ function ActivityChips({ views, company }: { views: View[]; company: string }) {
   return (
     /* 16 under, not 12: the marks sit at the bottom of the card and the
        uniform pad reads as clipped under a row that ends in a shape. */
+    <div className="flex w-full flex-col gap-[12px]">
+      <p className="pt-[4px] font-['Inter',sans-serif] font-medium leading-[20px] text-[13px] text-[#2f2b3d]">Buyer Intelligence Activity</p>
     <Panel face={{ paddingBottom: 16 }}>
-      <SignalsHeading>Buyer Intelligence Activity</SignalsHeading>
+      {/* The heading sits above the card, as "Sessions" does below it. */}
 
-      <div className="content-stretch flex gap-[20px] items-center w-full" style={{ marginTop: 12 }}>
+      <div className="content-stretch flex gap-[20px] items-center w-full" style={{ marginTop: 18 }}>
         <span
           className="font-['Inter',sans-serif] font-medium leading-[20px] shrink-0 text-[12px]"
           style={{ color: INK }}
@@ -1909,6 +1911,7 @@ function ActivityChips({ views, company }: { views: View[]; company: string }) {
         })}
       </div>
     </Panel>
+    </div>
   );
 }
 
