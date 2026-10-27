@@ -280,14 +280,12 @@ function Session({ session, open, onToggle }: { session: ActivitySession; open: 
           <Chevron open={open} />
         </span>
         <span className="[word-break:break-word] flex min-w-0 flex-1 items-start justify-between gap-[12px]">
-          <span className="flex min-w-0 flex-col gap-[2px]">
-            <span className="font-['Inter',sans-serif] font-medium text-[13px] text-[#2f2b3d]">Visited</span>
-            {/* The vendor portal's location row: the 16px round flag, 6px, then the place. */}
-            <span className="flex min-w-0 items-center gap-[6px]" data-testid="activity-session-location">
-              <CountryFlag country={session.location.country} />
-              <span className="truncate font-['Inter',sans-serif] font-normal text-[12px] text-[rgba(47,43,61,0.7)]">
-                {session.location.city}, {session.location.region}, {session.location.country}
-              </span>
+          {/* The session's title is where it came from: the 16px round flag, 6px,
+              then the place, in the title's own type. */}
+          <span className="flex min-w-0 items-center gap-[6px]" data-testid="activity-session-location">
+            <CountryFlag country={session.location.country} />
+            <span className="truncate font-['Inter',sans-serif] font-medium text-[13px] text-[#2f2b3d]">
+              {session.location.city}, {session.location.region}, {session.location.country}
             </span>
           </span>
           <span className="shrink-0 font-['Inter',sans-serif] font-normal text-[11px] text-[rgba(47,43,61,0.7)]">
@@ -343,13 +341,53 @@ function Session({ session, open, onToggle }: { session: ActivitySession; open: 
   );
 }
 
+/* A section's heading above its cards: 13px medium, the count muted. */
+function SectionHeading({ title, count }: { title: string; count: number }) {
+  return (
+    <div className="flex w-full items-center pt-[4px]">
+      <p className="font-['Inter',sans-serif] font-medium leading-[20px] text-[13px] text-[#2f2b3d]">
+        {title} <span className="font-normal text-[rgba(47,43,61,0.7)]">({count})</span>
+      </p>
+    </div>
+  );
+}
+
+/* A session in its framed card. A click anywhere on the card opens or folds
+   it — but a link still opens, a selection still selects, and the header
+   handles its own. */
+function SessionCard({ session, open, onToggle }: { session: ActivitySession; open: boolean; onToggle: () => void }) {
+  return (
+    <Card
+      onClick={e => {
+        const target = e.target as HTMLElement;
+        if (target.closest("a, button")) return;
+        if (window.getSelection()?.toString()) return;
+        onToggle();
+      }}
+    >
+      <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative" data-name="Sessions">
+        <Session session={session} open={open} onToggle={onToggle} />
+      </div>
+    </Card>
+  );
+}
+
 /* ── the panel ── */
 export default function ActivitySessionsPanel({ company }: { company: string }) {
   const sessions = getActivitySessions(company);
   const summary = summarise(sessions);
-  /* The newest session opens; the rest start folded. */
-  const [open, setOpen] = useState<ReadonlySet<number>>(() => new Set([0]));
+  /* The newest session in the vendor's own category opens; everything else —
+     the rest of that category, and every session from other categories —
+     starts folded. Indices are into the full, newest-first list. */
+  const [open, setOpen] = useState<ReadonlySet<number>>(() => {
+    const first = sessions.findIndex(s => s.inVendorCategory);
+    return new Set(first >= 0 ? [first] : []);
+  });
   if (!sessions.length || !summary) return null;
+
+  const indexed = sessions.map((session, i) => ({ session, i }));
+  const relevant = indexed.filter(x => x.session.inVendorCategory);
+  const other = indexed.filter(x => !x.session.inVendorCategory);
 
   const toggle = (i: number) =>
     setOpen(prev => {
@@ -374,30 +412,24 @@ export default function ActivitySessionsPanel({ company }: { company: string }) 
           explains the score the modal's header is already showing. */}
       <IntentSignals company={company} />
 
-      {/* The sessions' own heading. */}
-      <div className="flex w-full items-center pt-[4px]">
-        <p className="font-['Inter',sans-serif] font-medium leading-[20px] text-[13px] text-[#2f2b3d]">
-          Sessions <span className="font-normal text-[rgba(47,43,61,0.7)]">({sessions.length})</span>
-        </p>
-      </div>
+      {/* Then what matters most to the vendor, untitled: sessions in their own category. */}
+      {relevant.length > 0 && (
+        <>
+          {relevant.map(({ session, i }) => (
+            <SessionCard key={`${session.visitor}-${i}`} session={session} open={open.has(i)} onToggle={() => toggle(i)} />
+          ))}
+        </>
+      )}
 
-      {sessions.map((session, i) => (
-        <Card
-          key={`${session.visitor}-${i}`}
-          /* A click anywhere on the card opens or folds it — but a link still
-             opens, a selection still selects, and the header handles its own. */
-          onClick={e => {
-            const target = e.target as HTMLElement;
-            if (target.closest("a, button")) return;
-            if (window.getSelection()?.toString()) return;
-            toggle(i);
-          }}
-        >
-          <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative" data-name="Sessions">
-            <Session session={session} open={open.has(i)} onToggle={() => toggle(i)} />
-          </div>
-        </Card>
-      ))}
+      {/* Everything else this company browsed, other categories, folded. */}
+      {other.length > 0 && (
+        <>
+          <SectionHeading title="All Activity" count={other.length} />
+          {other.map(({ session, i }) => (
+            <SessionCard key={`${session.visitor}-${i}`} session={session} open={open.has(i)} onToggle={() => toggle(i)} />
+          ))}
+        </>
+      )}
     </div>
   );
 }

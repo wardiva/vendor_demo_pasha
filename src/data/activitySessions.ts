@@ -47,6 +47,10 @@ export type ActivitySession = {
   startedAt: string;
   endedAt: string;
   location: ActivityLocation;
+  /** The software category the session browsed, e.g. "Project Management". */
+  category: string;
+  /** Whether that is the vendor's own category — the sessions that matter most to them. */
+  inVendorCategory: boolean;
   /** Spelled out, e.g. "2 minutes, 22 seconds". */
   total: string;
   /** The same length as a number, so sessions can be summed. */
@@ -105,6 +109,13 @@ const CATEGORY_PATHS: Record<string, string> = {
   "Life Sciences": "life-sciences",
   Cybersecurity: "security",
 };
+
+/**
+ * The vendor's own category — Jira, in Project Management. A session spent on
+ * these pages is a buyer researching exactly what the vendor sells, so the
+ * Activity tab puts those first.
+ */
+export const VENDOR_CATEGORY = { name: "Project Management", slug: "project-management" } as const;
 
 const PAGE_SHAPES: ReadonlyArray<(category: string, slug: string) => { title: string; path: string }> = [
   (c, s) => ({ title: `Best ${c} Software - Compared for 2026`, path: `/${s}` }),
@@ -254,8 +265,12 @@ function buildSession(
   rand: () => number,
 ): ActivitySession {
   const prospect = PROSPECTS.find(p => p.name === company);
-  const category = prospect?.industry ?? "Business";
-  const slug = CATEGORY_PATHS[category] ?? "software";
+  /* The newest session is spent in the vendor's own category — the visit that
+     put this company in front of them; earlier ones wander the buyer's own
+     industry, so the tab has both kinds to tell apart. */
+  const inVendorCategory = index === 0;
+  const category = inVendorCategory ? VENDOR_CATEGORY.name : prospect?.industry ?? "Business";
+  const slug = inVendorCategory ? VENDOR_CATEGORY.slug : CATEGORY_PATHS[category] ?? "software";
 
   /* Two to four pages a session — enough to read as a visit, short enough that
      the timeline stays scannable. */
@@ -298,6 +313,8 @@ function buildSession(
     startedAt: `${two(Math.floor(startMinutes / 60) % 24)}:${two(startMinutes % 60)}`,
     endedAt: `${two(Math.floor(endMinutes / 60) % 24)}:${two(endMinutes % 60)}`,
     location: locationFor(company, index, usedCities, rand),
+    category,
+    inVendorCategory,
     total: longDuration(totalSeconds),
     totalSeconds,
     pages,
