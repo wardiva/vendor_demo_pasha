@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import BuyerActivityBuyerIntentStarter from "@/imports/BuyerActivityBuyerIntentStarter/index";
 import BuyerActivityLeads from "@/imports/BuyerActivityLeads/index";
 import BuyerActivityIntegrations from "@/imports/BuyerActivityIntegrations";
+import EmptyModulePage from "@/components/nav/EmptyModulePage";
+import { NAV } from "@/components/nav/MainRail";
+import { BUYER_INTELLIGENCE, NavSelectionProvider, type NavSelection } from "@/components/nav/navSelection";
 import FilterPanel from "@/components/FilterPanel";
 import { FIELD_ACTIVE_BORDER, FIELD_ACTIVE_SHADOW } from "@/components/filters/fieldStates";
 import BuyMoreModal from "@/components/BuyMoreModal";
@@ -129,6 +132,13 @@ export default function App() {
 
   /* ── routing ── */
   const [page, setPage] = useState<Page>("signals");
+  /* Another module's page, when one is selected. Those pages are not built,
+     so they render empty; null means Buyer Intelligence and its real pages. */
+  const [modulePage, setModulePage] = useState<NavSelection | null>(null);
+  const navSelection = useMemo<NavSelection>(
+    () => modulePage ?? { module: BUYER_INTELLIGENCE, item: page === "leads" ? "Buyers" : page === "integrations" ? "Integrations" : "Signals" },
+    [modulePage, page],
+  );
 
   /* ── shared filter state ── */
   const [filterOpen, setFilterOpen] = useState(false);
@@ -257,8 +267,20 @@ export default function App() {
       /* ── navigation: Leads / Signals in sidebar ── */
       const listItem = target.closest('[data-name="ListItem"]') as HTMLElement | null;
       if (listItem) {
-        const text = listItem.textContent?.trim() ?? "";
-        if (text === "Buyers" || text.startsWith("Buyers")) { setPage("leads"); e.stopPropagation(); return; }
+        /* A rail module: Buyer Intelligence opens its Signals page; any other
+           module opens its first page (or itself, when it has none). */
+        const module = listItem.dataset.module;
+        if (module) {
+          if (module === BUYER_INTELLIGENCE) { setModulePage(null); setPage("signals"); }
+          else setModulePage({ module, item: NAV.find(m => m.label === module)?.items[0]?.label ?? "" });
+          e.stopPropagation();
+          return;
+        }
+        /* The rail names its items in data-label, so its NEW tag never reads as part of the name. */
+        const text = listItem.dataset.label ?? listItem.textContent?.trim() ?? "";
+        /* A page of another module: select it. */
+        if (modulePage) { setModulePage({ ...modulePage, item: text }); e.stopPropagation(); return; }
+        if (text === "Buyers" || text.startsWith("Buyers")) { setModulePage(null); setPage("leads"); e.stopPropagation(); return; }
         if (text === "Signals" || text.startsWith("Signals")) { setPage("signals"); e.stopPropagation(); return; }
         if (text === "Integrations" || text.startsWith("Integrations")) { setPage("integrations"); e.stopPropagation(); return; }
         if (text.length < 40) showToast(`Navigating to ${text}…`);
@@ -515,7 +537,7 @@ export default function App() {
 
     document.addEventListener("click", handleClick, true);
     return () => document.removeEventListener("click", handleClick, true);
-  }, [page, showToast, openProspectDetails]);
+  }, [page, modulePage, showToast, openProspectDetails]);
 
   /* ── Filters button: green glow + badge only when filters active ── */
   useEffect(() => {
@@ -1029,7 +1051,7 @@ export default function App() {
      list, which grows with the dataset — takes the canvas down with it, so the
      surfaces painted against the canvas's bottom edge still reach the end of
      the content. */
-  const dims = page === "signals" ? { w: 1440, h: 1750 } : { w: 1440, h: 1069 };
+  const dims = page === "signals" && !modulePage ? { w: 1440, h: 1750 } : { w: 1440, h: 1069 };
 
   return (
     /* Both the page and the Prospect Details modal below read reveals from
@@ -1059,8 +1081,11 @@ export default function App() {
         }}
       >
         {/* Both pages show the Contact Reveals allowance in their header. */}
+        <NavSelectionProvider value={navSelection}>
         <RevealAllowanceProvider value={revealAllowance}>
-          {page === "signals" ? (
+          {modulePage ? (
+            <EmptyModulePage title={modulePage.item || modulePage.module} />
+          ) : page === "signals" ? (
             <SignalsAnalyticsProvider value={analytics}>
               {/* The filter row's chips read their counts and clearing from here. */}
               <SignalsFiltersProvider value={signalsFiltersState}>
@@ -1082,6 +1107,7 @@ export default function App() {
             </ProspectsPageProvider>
           )}
         </RevealAllowanceProvider>
+        </NavSelectionProvider>
       </div>
 
       {/* ── Filter Dropdown ── */}

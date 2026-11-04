@@ -1109,3 +1109,8 @@ body,
 @media (prefers-reduced-motion: reduce) {
   .bi-card-in { animation: none; }
 }
+
+/* The rail's NEW tag: a short stroke runs once round the pill's 78px outline every 2.4s. */
+.rail-newpill path { animation: rail-newrun 2.4s linear infinite; }
+@keyframes rail-newrun { from { stroke-dashoffset: -13.57; } to { stroke-dashoffset: -91.57; } }
+@media (prefers-reduced-motion: reduce) { .rail-newpill path { animation: none; } }

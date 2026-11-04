@@ -12,9 +12,21 @@
  */
 
 import type { CSSProperties, ReactNode } from "react";
-import iconSignals from "./assets/icon-signals.svg";
-import iconProspects from "./assets/icon-prospects.svg";
+import iconSignals from "./assets/portal/sn-signals.svg";
+import iconProspects from "./assets/portal/sn-buyers.svg";
+import iconIntegrations from "./assets/portal/sn-integrations.svg";
 import { useProspectsLocked } from "@/lib/prospectsAccess";
+import { NAV } from "./MainRail";
+import { BUYER_INTELLIGENCE, useNavSelection } from "./navSelection";
+import snProfile from "./assets/portal/sn-profile.svg";
+import snReviews from "./assets/portal/sn-reviews.svg";
+import snAnalytics from "./assets/portal/sn-analytics.svg";
+import snBadges from "./assets/portal/sn-badges.svg";
+import snPlacements from "./assets/portal/sn-placements.svg";
+import snCpc from "./assets/portal/sn-cpc.svg";
+import snMail from "./assets/portal/sn-mail.svg";
+import snContacts from "./assets/portal/sn-contacts.svg";
+import snRewards from "./assets/portal/sn-rewards.svg";
 
 /** Which module page the user is on; drives both navs' active state. */
 export type BuyerIntelligencePage = "signals" | "prospects" | "integrations";
@@ -132,11 +144,12 @@ function NavIcon({ src, active, inset, bleed }: { src: string; active: boolean; 
 }
 
 function SignalsIcon({ active }: { active: boolean }) {
-  return <NavIcon src={iconSignals} active={active} inset="inset-[27.27%_21.29%_27.27%_18.18%]" bleed="inset-[-8.25%_-6.2%]" />;
+  /* The portal's own side-nav glyphs (sn-*), drawn full-slot like theirs. */
+  return <NavIcon src={iconSignals} active={active} inset="inset-0" bleed="inset-0" />;
 }
 
 function ProspectsIcon({ active }: { active: boolean }) {
-  return <NavIcon src={iconProspects} active={active} inset="inset-[22.73%_18.18%_18.18%_22.73%]" bleed="inset-[-5.77%]" />;
+  return <NavIcon src={iconProspects} active={active} inset="inset-0" bleed="inset-0" />;
 }
 
 function PlugIcon({ stroke }: { stroke: string }) {
@@ -245,11 +258,70 @@ function NavRow({
  * Buyer Intelligence itself is no longer listed here — it is the main rail's
  * active item instead — so these rows sit at the top level of the drawer.
  */
+/* The other modules' side-nav glyphs, from the portal, each placed in the
+   22px slot so they read as one optical size (the source SVGs differ: Analytics
+   is a large square, Badges a narrow shield). */
+type Glyph = { src: string; fit?: { left: number; top: number; width: number; height: number } };
+const MODULE_GLYPHS: Record<string, Glyph> = {
+  "Profile Management": { src: snProfile, fit: { left: 2.75, top: 1.75, width: 16.5, height: 18.44 } },
+  Reviews: { src: snReviews, fit: { left: -0.28, top: 0.19, width: 22.55, height: 22.55 } },
+  Analytics: { src: snAnalytics, fit: { left: 2.63, top: 2.63, width: 16.74, height: 16.74 } },
+  Badges: { src: snBadges, fit: { left: -1.73, top: -1.73, width: 25.45, height: 25.45 } },
+  Placements: { src: snPlacements },
+  CPC: { src: snCpc },
+  "Review Campaign": { src: snMail },
+  Contacts: { src: snContacts },
+  Rewards: { src: snRewards },
+};
+
+function GlyphIcon({ glyph, active }: { glyph: Glyph; active: boolean }) {
+  const fit = glyph.fit ?? { left: 0, top: 0, width: 22, height: 22 };
+  const mask: CSSProperties = {
+    position: "absolute",
+    left: fit.left,
+    top: fit.top,
+    width: fit.width,
+    height: fit.height,
+    WebkitMaskImage: `url("${glyph.src}")`,
+    maskImage: `url("${glyph.src}")`,
+    WebkitMaskSize: "100% 100%",
+    maskSize: "100% 100%",
+    WebkitMaskRepeat: "no-repeat",
+    maskRepeat: "no-repeat",
+    backgroundColor: active ? ACTIVE : IDLE,
+  };
+  return (
+    <div className="relative shrink-0 size-[22px]" data-name="nav-icon">
+      <div style={mask} />
+    </div>
+  );
+}
+
+/** Any other module's pages: placeholders, but selectable like the real ones. */
+function ModuleSubNav({ module, item }: { module: string; item: string }) {
+  const items = NAV.find(m => m.label === module)?.items ?? [];
+  return (
+    <div className="content-stretch flex flex-col gap-[2px] items-start relative shrink-0 w-full" data-name="Applications">
+      {items.map(({ label }) => (
+        <NavRow
+          key={label}
+          label={label}
+          active={label === item}
+          icon={MODULE_GLYPHS[label] ? <GlyphIcon glyph={MODULE_GLYPHS[label]} active={label === item} /> : null}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function BuyerIntelligenceSubNav({ active }: { active: BuyerIntelligencePage }) {
   /* Read here rather than passed down, so the crowns appear on the Prospects
      and Integrations rows from whichever page the drawer is drawn on: the two
      are locked and unlocked together. */
   const prospectsLocked = useProspectsLocked();
+  /* With another module selected, the drawer lists that module's pages instead. */
+  const selection = useNavSelection();
+  if (selection.module !== BUYER_INTELLIGENCE) return <ModuleSubNav module={selection.module} item={selection.item} />;
   return (
     <div className="content-stretch flex flex-col gap-[2px] items-start relative shrink-0 w-full" data-name="Applications">
       <NavRow label="Signals" active={active === "signals"} icon={<SignalsIcon active={active === "signals"} />} />
@@ -263,7 +335,7 @@ export default function BuyerIntelligenceSubNav({ active }: { active: BuyerIntel
         label="Integrations"
         locked={prospectsLocked}
         active={active === "integrations"}
-        icon={<PlugIcon stroke={active === "integrations" ? ACTIVE : IDLE} />}
+        icon={<NavIcon src={iconIntegrations} active={active === "integrations"} inset="inset-0" bleed="inset-0" />}
       />
     </div>
   );

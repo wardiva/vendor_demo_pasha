@@ -1,6 +1,7 @@
 import chevronDownGlyph from "@/components/nav/assets/icon-chevron-down.svg";
 import ProductSwitcher from "@/components/nav/ProductSwitcher";
-import BuyerIntelligenceSubNav, { MainNavBuyerIntelligence } from "@/components/nav/BuyerIntelligenceNav";
+import BuyerIntelligenceSubNav from "@/components/nav/BuyerIntelligenceNav";
+import MainRail from "@/components/nav/MainRail";
 import svgPaths from "./svg-dwbtzma8kn";
 import imgIconJpeg from "./62fcc20d40d8545e652158ad9365c64cfd17b62f.png";
 import imgEllipse604 from "./dc37899f-c3de-43cc-b219-15a5468d33f4.png";
@@ -1653,19 +1654,9 @@ function ListItem4() {
 }
 
 function Applications() {
-  return (
-    <div className="content-stretch flex flex-col gap-[8px] items-center pb-[8px] pt-[12px] relative shrink-0 w-[63px]" data-name="Applications">
-      {/* The rail Figma 221:2933 draws: five destinations in this order, with
-          Buyer Intelligence second and filled as the active one. Alerts and
-          Support are not in the node and so are not listed; their components
-          are left defined just below, so restoring either is a single line. */}
-      <Dashboard />
-      <MainNavBuyerIntelligence active />
-      <ListItem2 />
-      <ListItem1 />
-      <ListItem3 />
-    </div>
-  );
+  /* The portal's rail: Profiles, Buyer Intelligence (active, NEW), Promotions,
+     Review Campaigns, Billing and Settings, one component for every page. */
+  return <MainRail />;
 }
 
 function MenuDrawer1() {
