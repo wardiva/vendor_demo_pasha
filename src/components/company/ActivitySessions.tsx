@@ -4,6 +4,7 @@ import IntentSignals from "@/components/company/IntentSignals";
 import {
   getActivitySessions,
   summarise,
+  type ActivityPageSection,
   type ActivityPageVisit,
   type ActivitySession,
 } from "@/data/activitySessions";
@@ -214,6 +215,70 @@ function PageUrl({ url }: { url: string }) {
   );
 }
 
+/* A section's address. The one place an address wraps rather than clips: every
+   section on a page shares everything up to the anchor, so an ellipsis would cut
+   off the only part that tells them apart. It breaks at the #, never inside
+   either half, so a long one reads as the page, then the section under it. */
+function SectionUrl({ url }: { url: string }) {
+  const hash = url.indexOf("#");
+  return (
+    <p className="leading-[20px] relative shrink-0 w-full">
+      <a href={url} target="_blank" rel="noopener noreferrer" className={`${URL_TEXT} cursor-pointer hover:underline`}>
+        <span className="whitespace-nowrap">{url.slice(0, hash)}</span>
+        <wbr />
+        <span className="whitespace-nowrap">{url.slice(hash)}</span>
+      </a>
+    </p>
+  );
+}
+
+/* ── the page's sections ──
+   Folded under the page, on the same grid-rows move a session folds with, so a
+   page stays as short as its name, address and time until someone asks. Open,
+   they sit in a soft box, which keeps them reading as parts of this page rather
+   than as more pages. Time is only tracked per page, so no section carries one. */
+function PageSections({ sections }: { sections: ActivityPageSection[] }) {
+  const [open, setOpen] = useState(false);
+  const regionId = useId();
+  return (
+    <div className="mt-[3px] w-full">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={regionId}
+        onClick={() => setOpen(o => !o)}
+        className="flex cursor-pointer items-center gap-[4px] rounded-[4px] font-['Inter',sans-serif] font-medium leading-[20px] text-[12px] text-[#2f2b3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#072929]"
+      >
+        <span className="text-[rgba(47,43,61,0.6)]">
+          <Chevron open={open} />
+        </span>
+        {sections.length} sections
+      </button>
+      <div
+        id={regionId}
+        className="grid w-full transition-[grid-template-rows,opacity] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr", opacity: open ? 1 : 0 }}
+        inert={!open || undefined}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="pt-[6px]">
+            <ul className="flex w-full list-none flex-col gap-[8px] rounded-[8px] bg-[rgba(244,242,240,0.6)] p-[10px]" data-name="Sections">
+              {sections.map(section => (
+                <li key={section.url} className="w-full">
+                  <p className="font-['Inter',sans-serif] font-medium leading-[20px] not-italic text-[12px] text-[#2f2b3d]">
+                    {section.name}
+                  </p>
+                  <SectionUrl url={section.url} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── 282:3661 — a page visit ── */
 function PageRow({ page }: { page: ActivityPageVisit }) {
   return (
@@ -230,6 +295,7 @@ function PageRow({ page }: { page: ActivityPageVisit }) {
       <p className="font-['Inter',sans-serif] font-normal leading-[20px] not-italic relative shrink-0 text-[12px] text-[rgba(47,43,61,0.7)] whitespace-nowrap">
         {page.duration}
       </p>
+      <PageSections sections={page.sections} />
     </Row>
   );
 }

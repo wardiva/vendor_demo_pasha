@@ -21,6 +21,13 @@ import { PROSPECTS } from "@/data/prospects";
  * a date the dataset does not already hold.
  */
 
+/** A section inside a page. Time is only tracked per page, so a section has none. */
+export type ActivityPageSection = {
+  name: string;
+  /** The page's own address with the section's anchor on it. */
+  url: string;
+};
+
 export type ActivityPageVisit = {
   title: string;
   url: string;
@@ -30,6 +37,8 @@ export type ActivityPageVisit = {
   at: string;
   /** What was clicked while on it, in order. */
   clicks: string[];
+  /** The page's sections, in the order the page lays them out. */
+  sections: ActivityPageSection[];
 };
 
 export type ActivityLocation = {
@@ -86,8 +95,8 @@ const pick = <T,>(items: readonly T[], rand: () => number): T => items[Math.floo
  * The pages a buyer in a given category reads.
  *
  * Software Finder's own pages — the product this module reports on — so a
- * visit reads as somebody researching on it. Each entry is a title and the
- * path it sits at; the category segment comes from the prospect's industry.
+ * visit reads as somebody researching on it. Each entry is the path it sits at
+ * and the sections on it; the category segment comes from the prospect's industry.
  */
 const CATEGORY_PATHS: Record<string, string> = {
   Manufacturing: "manufacturing",
@@ -117,15 +126,66 @@ const CATEGORY_PATHS: Record<string, string> = {
  */
 export const VENDOR_CATEGORY = { name: "Project Management", slug: "project-management" } as const;
 
-const PAGE_SHAPES: ReadonlyArray<(category: string, slug: string) => { title: string; path: string }> = [
-  (c, s) => ({ title: `Best ${c} Software - Compared for 2026`, path: `/${s}` }),
-  (c, s) => ({ title: `${c} Software Pricing Guide - 2026`, path: `/${s}/pricing` }),
-  (c, s) => ({ title: `Top 10 ${c} Platforms - Reviews and Ratings`, path: `/${s}/reviews` }),
-  (c, s) => ({ title: `${c} Software Buyer's Guide`, path: `/${s}/buyers-guide` }),
-  (c, s) => ({ title: `${c} Software Alternatives and Competitors`, path: `/${s}/alternatives` }),
-  (c, s) => ({ title: `${c} Software Demo - Book a Walkthrough`, path: `/${s}/demo` }),
-  (c, s) => ({ title: `${c} Software Implementation Checklist`, path: `/${s}/implementation` }),
+const PAGE_SHAPES: ReadonlyArray<(slug: string) => { path: string; sections: string[] }> = [
+  s => ({
+    path: `/${s}`,
+    sections: ["Top Picks", "Comparison Table", "How We Evaluated", "Pricing Overview", "FAQs"],
+  }),
+  s => ({
+    path: `/${s}/pricing`,
+    sections: ["Pricing Models", "Cost by Company Size", "Free vs Paid Plans", "Hidden Costs", "FAQs"],
+  }),
+  s => ({
+    path: `/${s}/reviews`,
+    sections: ["Top Rated Platforms", "Ratings by Feature", "User Reviews", "Pros and Cons"],
+  }),
+  s => ({
+    path: `/${s}/buyers-guide`,
+    sections: ["Key Features", "Benefits", "How to Choose", "Questions to Ask Vendors"],
+  }),
+  s => ({
+    path: `/${s}/alternatives`,
+    sections: ["Top Alternatives", "Feature Comparison", "Pricing Comparison", "How to Switch"],
+  }),
+  s => ({
+    path: `/${s}/demo`,
+    sections: ["Book a Walkthrough", "What the Demo Covers", "Customer Stories", "FAQs"],
+  }),
+  s => ({
+    path: `/${s}/implementation`,
+    sections: ["Planning Checklist", "Data Migration", "Team Onboarding", "Go-Live Checklist"],
+  }),
 ];
+
+/**
+ * The products a page visit is named for, by category slug.
+ *
+ * Four each, because a session opens at most four pages, so no product repeats
+ * inside one. The vendor's own product leads its category, so a session in that
+ * category names them first.
+ */
+const CATEGORY_PRODUCTS: Record<string, readonly string[]> = {
+  "project-management": ["Jira", "Asana", "ClickUp", "monday.com"],
+  manufacturing: ["Katana", "Fishbowl", "Plex", "Epicor"],
+  cloud: ["DigitalOcean", "Cloudways", "Vultr", "Linode"],
+  logistics: ["ShipStation", "Freightos", "project44", "Flexport"],
+  "supply-chain": ["Kinaxis", "Coupa", "SAP Ariba", "Blue Yonder"],
+  healthcare: ["Epic", "athenahealth", "Kareo", "Cerner"],
+  analytics: ["Tableau", "Looker", "Power BI", "Qlik"],
+  construction: ["Procore", "Buildertrend", "PlanGrid", "CoConstruct"],
+  energy: ["Aurora Solar", "Enverus", "Arcadia", "Uplight"],
+  marketing: ["HubSpot", "Semrush", "AdRoll", "Marketo"],
+  finance: ["NetSuite", "Sage Intacct", "QuickBooks", "Xero"],
+  iot: ["ThingWorx", "Samsara", "Particle", "Losant"],
+  consulting: ["Kantata", "BigTime", "Scoro", "Accelo"],
+  aerospace: ["IFS", "Ramco", "Teamcenter", "Infor"],
+  "life-sciences": ["Veeva", "Benchling", "MasterControl", "Medidata"],
+  security: ["CrowdStrike", "Okta", "Splunk", "SentinelOne"],
+  software: ["Zoho", "Odoo", "Salesforce", "Freshworks"],
+};
+
+/** "Free vs Paid Plans" as the anchor it sits at: "free-vs-paid-plans". */
+const anchorFor = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
 const CLICKS = [
   "Watch Demo",
@@ -281,8 +341,16 @@ function buildSession(
   const startMinutes = clock;
   let startSeconds = Math.floor(rand() * 60);
 
+  const products = CATEGORY_PRODUCTS[slug] ?? CATEGORY_PRODUCTS.software;
+  let productIndex = 0;
+
   const pages: ActivityPageVisit[] = shapes.map(shape => {
-    const { title, path } = shape(category, slug);
+    const { path, sections } = shape(slug);
+    const url = `https://softwarefinder.com${path}`;
+    /* A page is named for its product. The category listing is about no one
+       product, so it keeps the category's own name. Taken in turn rather than
+       drawn from `rand`, so naming a page moves nothing else in the session. */
+    const title = path === `/${slug}` ? category : products[productIndex++];
     const seconds = 25 + Math.floor(rand() * 170);
     const at = `${two(Math.floor(clock / 60) % 24)}:${two(clock % 60)}`;
     clock += Math.max(1, Math.round(seconds / 60));
@@ -297,7 +365,14 @@ function buildSession(
       if (!clicks.includes(label)) clicks.push(label);
     }
 
-    return { title, url: `https://softwarefinder.com${path}`, duration: shortDuration(seconds), at, clicks };
+    return {
+      title,
+      url,
+      duration: shortDuration(seconds),
+      at,
+      clicks,
+      sections: sections.map(name => ({ name, url: `${url}#${anchorFor(name)}` })),
+    };
   });
 
   const totalSeconds = pages.reduce((sum, p) => {
