@@ -15,8 +15,8 @@ import { createPortal } from "react-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const OPTIONS = [
-  { expired: false, label: "Connected" },
-  { expired: true, label: "Connection expired (simulated)" },
+  { expired: false, label: "Show healthy connection (demo)" },
+  { expired: true, label: "Show expired connection (demo)" },
 ] as const;
 
 /** 16px on a 1.5 stroke: a ticked circle, and a circle with a warning mark. */

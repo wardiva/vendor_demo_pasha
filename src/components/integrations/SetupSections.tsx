@@ -32,16 +32,23 @@ type Props = {
 /** One name per section, used for the setup step and the Settings section alike. A line under it only when it says something the name doesn't. */
 export function sectionCopy(crm: CrmId): Record<"companies" | "records" | "mapping" | "schedule", { title: string; description?: string }> {
   const hs = crm === "hubspot"
+  const name = hs ? "HubSpot" : "Salesforce"
   return {
-    companies: { title: "Filter Companies" },
+    companies: {
+      title: "Companies to Sync",
+      description: `Companies you leave out still show in Software Finder, just not in ${name}.`,
+    },
     records: { title: "Configure Records" },
     mapping: {
       title: "Field Mapping",
       description: hs
-        ? "Standard properties are only filled when empty. New ones go in a “Software Finder” group."
-        : "Standard fields are only filled when empty. New Software Finder fields are created for you.",
+        ? "We never overwrite your data: standard properties are only filled when they're empty."
+        : "We never overwrite your data: standard fields are only filled when they're empty.",
     },
-    schedule: { title: "Schedule" },
+    schedule: {
+      title: "Schedule",
+      description: `New buyer activity is sent to ${name} on this schedule. You can change it any time.`,
+    },
   }
 }
 
@@ -259,7 +266,8 @@ function CheckRow({
   onChange: (v: boolean) => void
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-[12px] py-[14px]">
+    /* 14px label on a 20px line; the 14px box sits 3px down, centred on it, 10px from the text. */
+    <label className="flex cursor-pointer items-start gap-[10px] py-[14px]">
       <input
         type="checkbox"
         checked={checked}
@@ -268,7 +276,7 @@ function CheckRow({
       />
       <span
         aria-hidden
-        className="mt-[3px] flex size-[16px] shrink-0 items-center justify-center rounded-[4px] transition-colors duration-150 motion-reduce:transition-none peer-focus-visible:ring-2 peer-focus-visible:ring-[#072929] peer-focus-visible:ring-offset-2"
+        className="mt-[3px] flex size-[14px] shrink-0 items-center justify-center rounded-[3.5px] transition-colors duration-150 motion-reduce:transition-none peer-focus-visible:ring-2 peer-focus-visible:ring-[#072929] peer-focus-visible:ring-offset-2"
         style={
           checked
             ? { background: DEEP }
@@ -276,12 +284,21 @@ function CheckRow({
         }
       >
         {checked && (
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M2 5.2 4.1 7.3 8 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+            <path d="M2 5.2 4.1 7.3 8 3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
       </span>
-      <RowText label={label} hint={hint} />
+      <span className="flex min-w-0 flex-1 flex-col gap-[2px]">
+        <span className={`${FONT} font-medium leading-[20px] text-[14px]`} style={{ color: INK }}>
+          {label}
+        </span>
+        {hint && (
+          <span className={`${FONT} leading-[18px] text-[13px]`} style={{ color: MUTED }}>
+            {hint}
+          </span>
+        )}
+      </span>
     </label>
   )
 }
@@ -306,7 +323,7 @@ export function CompaniesRows({ s, set, inCard = false }: Props & { inCard?: boo
       <SettingsCard>
         <SelectRow
           label="Minimum intent score"
-          hint="We recommend 51% and up."
+          hint="Only companies at this score or higher sync."
           value={String(s.minIntent)}
           onChange={(v) =>
             set({ manual: false, minIntent: Number(v) as 30 | 51 | 71 })

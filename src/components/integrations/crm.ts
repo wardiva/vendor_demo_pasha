@@ -147,7 +147,7 @@ export const SALESFORCE_MAPPING: MappingTab[] = [
   {
     id: "account",
     label: "Account",
-    description: "Matched on Website domain. Standard fields only fill when empty unless you choose otherwise.",
+    description: "Matched on Website domain. Standard fields are only filled when empty.",
     rows: [
       { key: "sf-a-name", source: "Company name", dest: "Account Name", api: "Name", kind: "mapped", type: "Name" },
       { key: "sf-a-site", source: "Website", dest: "Website", api: "Website", kind: "mapped", type: "URL", match: true },

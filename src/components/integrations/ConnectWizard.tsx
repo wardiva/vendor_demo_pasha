@@ -735,7 +735,7 @@ export function MappingStep({ crm, s, set, quiet, onPage }: { crm: CrmId; s: Crm
                 />
               </span>
             ) : (
-              <span className={`${FONT} min-w-0 truncate pl-[11px] leading-[20px] text-[14px]`} style={{ color: INK }} title={`${r.dest} · ${r.api} · ${r.type}`}>
+              <span className={`${FONT} min-w-0 truncate pl-[11px] leading-[20px] text-[14px]`} style={{ color: INK }} title={`${r.dest} · Internal name: ${r.api} · ${r.type}`}>
                 {r.dest}
               </span>
             )}

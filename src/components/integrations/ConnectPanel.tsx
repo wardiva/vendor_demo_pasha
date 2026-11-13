@@ -61,7 +61,7 @@ const DOES: Record<CrmId, string[]> = {
   hubspot: [
     "Match buyers to your companies by website domain",
     "Add companies that aren't in HubSpot yet, and update the ones that are",
-    "Add revealed contacts to their company, with no owner assigned",
+    "Add revealed contacts to their company",
     "Add buyer visits to company timelines, one event per company per day",
     "Create Software Finder properties",
   ],
@@ -131,13 +131,13 @@ function AuthorizeCard({
             className={`${FONT} font-medium leading-[20px] text-[14px]`}
             style={{ color: INK }}
           >
-            Authorization successful
+            Connected to {CRMS[crm].name}
           </p>
           <p
             className={`${FONT} leading-[20px] text-[13px]`}
             style={{ color: MUTED }}
           >
-            Your {CRMS[crm].name} account is now connected to Software Finder.
+            Software Finder can now sync buyers to your {CRMS[crm].name} account.
           </p>
         </div>
       </div>
@@ -181,21 +181,21 @@ function AuthorizeCard({
       </div>
       <div className="flex flex-col gap-[4px]">
         <p className={`${FONT} font-medium leading-[21px] text-[15px]`} style={{ color: INK }}>
-          {auth === "checking" ? "Checking access" : auth === "waiting" ? (crm === "hubspot" ? "Waiting for HubSpot" : `Signing in to ${name}`) : "Authorize connection"}
+          {auth === "checking" ? "Checking access" : auth === "waiting" ? (crm === "hubspot" ? "Waiting for HubSpot" : `Signing in to ${name}`) : `Approve access in ${name}`}
         </p>
         <p
           className={`${FONT} max-w-[460px] leading-[20px] text-[13px]`}
           style={{ color: MUTED }}
         >
           {auth === "checking"
-            ? "Making sure Software Finder can read and write the records it needs."
+            ? "Checking that Software Finder can read and write the records it needs."
             : auth === "waiting"
               ? crm === "hubspot"
                 ? "Finish signing in and approve access in the HubSpot window."
                 : "This takes a few seconds."
               : crm === "hubspot"
-                ? "Software Finder needs access to your HubSpot account, approved by a Super Admin or a user with App Marketplace Access. You can revoke it at any time."
-                : "Software Finder needs admin access to your Salesforce org. You can revoke it at any time."}
+                ? "You'll need to be a HubSpot Super Admin, or have App Marketplace Access. You can remove access at any time."
+                : "You'll need to be a Salesforce admin. You can remove access at any time."}
         </p>
       </div>
       {busy ? (

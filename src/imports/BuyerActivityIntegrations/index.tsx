@@ -163,7 +163,7 @@ function GenerateDialog({ onCancel, onGenerate }: { onCancel: () => void; onGene
   const [expiry, setExpiry] = useState<Expiry>("Never");
   const [busy, setBusy] = useState(false);
   return (
-    <Modal title="Generate API Key" description="Create a secure key to connect buyers to your CRM." labelledBy="integration-generate-title" onClose={onCancel}>
+    <Modal title="Generate API Key" description="Use it to pull buyers into your own systems." labelledBy="integration-generate-title" onClose={onCancel}>
       <ExpirySelect value={expiry} onChange={setExpiry} />
       <div className="flex justify-end gap-[12px]">
         <OutlineButton onClick={onCancel}>Cancel</OutlineButton>
@@ -176,7 +176,7 @@ function GenerateDialog({ onCancel, onGenerate }: { onCancel: () => void; onGene
             window.setTimeout(() => onGenerate("", expiry), 650);
           }}
         >
-          {busy ? "Creating…" : "Create API Key"}
+          {busy ? "Generating…" : "Generate API Key"}
         </InkButton>
       </div>
     </Modal>
@@ -371,7 +371,7 @@ function ApiAccessPage({ apiKey, onBack, onGenerate, onDelete }: { apiKey: ApiKe
               ) : (
                 <tr style={{ borderTop: `1px solid ${HAIR}` }}>
                   <td colSpan={5} className={`${td} text-center`} style={{ color: MUTED }}>
-                    No active keys.
+                    No API keys yet.
                   </td>
                 </tr>
               )}
@@ -382,7 +382,7 @@ function ApiAccessPage({ apiKey, onBack, onGenerate, onDelete }: { apiKey: ApiKe
 
       <div className="flex w-full flex-wrap items-center justify-between gap-[12px] rounded-[16px] bg-white px-[24px] py-[18px]">
         <p className={`${FONT} leading-[22px] text-[15px]`} style={{ color: MUTED }}>
-          New to the API? Learn how to authenticate and sync buyers into your CRM.
+          New to the API? Learn how to authenticate and pull buyers into your systems.
         </p>
         <a
           href="#api-documentation"
@@ -626,7 +626,7 @@ function IntegrationContent() {
             </OutlineButton>
           ) : (
             <InkButton size="sm" onClick={() => setDialog({ kind: "connect", crm, edit: false })}>
-              {c ? "Finish setup" : "Connect"}
+              {c ? "Finish Setup" : "Connect"}
             </InkButton>
           )
         }
@@ -694,7 +694,7 @@ function IntegrationContent() {
           Integrations
         </p>
         <p className={`${FONT} leading-[21px] text-[14px]`} style={{ color: MUTED }}>
-          Connect Software Finder buyers directly to your CRM or internal systems using a secure API key.
+          Send Software Finder buyers to your CRM, or pull them into your own systems with an API key.
         </p>
       </div>
 

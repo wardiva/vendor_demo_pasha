@@ -39,6 +39,7 @@ import {
   INK,
   InkButton,
   MUTED,
+  Modal,
   OutlineButton,
   Spinner,
   SUCCESS,
@@ -136,10 +137,10 @@ export default function CrmPage({
         style={{ color: MUTED, border: `1px solid ${HAIR}` }}
       >
         {manual
-          ? "Nothing is sent automatically. Send buyers from Prospects and each send shows here."
+          ? "Nothing syncs automatically. Buyers you send from the Buyers page show here."
           : run
             ? "Your first sync is running. It shows here when it finishes."
-            : `No syncs yet. The first one runs ${FREQUENCY[s.frequency].next}, or select Sync now.`}
+            : `Nothing has synced yet. The first sync runs ${FREQUENCY[s.frequency].next}.`}
       </p>
     ) : (
       <div className="flex flex-col gap-[10px]">
@@ -191,7 +192,7 @@ export default function CrmPage({
                     style={{ color: row.failed ? MUTED : INK }}
                     title={
                       row.companies
-                        ? `${row.created} new · ${row.updated} updated`
+                        ? `${row.created} added, ${row.updated} updated`
                         : undefined
                     }
                   >
@@ -225,10 +226,8 @@ export default function CrmPage({
                           Done
                           {row.skipped > 0 && (
                             <span
-                              tabIndex={0}
-                              className="cursor-help rounded-[2px] underline decoration-dotted decoration-[rgba(47,43,61,0.35)] underline-offset-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#072929]"
                               style={{ color: MUTED }}
-                              title={`No website domain in Software Finder yet, so ${row.skipped === 1 ? "it can't" : "they can't"} be matched ${hs ? "in HubSpot" : "to a Salesforce Account"}. ${row.skipped === 1 ? "It syncs" : "They sync"} once one is found.`}
+                              title={`${row.skipped === 1 ? "This company has" : "These companies have"} no website domain in Software Finder yet, so we can't match ${row.skipped === 1 ? "it" : "them"} ${hs ? "in HubSpot" : "to a Salesforce Account"}. ${row.skipped === 1 ? "It syncs" : "They sync"} once a domain is found.`}
                             >
                               · {row.skipped} {hs ? (row.skipped === 1 ? "company" : "companies") : row.skipped === 1 ? "Account" : "Accounts"} skipped
                             </span>
@@ -261,20 +260,12 @@ export default function CrmPage({
       <CardTitle.Provider value={{ title, tip }}>{body}</CardTitle.Provider>
     </section>
   )
-  /* One sentence each, behind the heading's ⓘ: what the section decides. */
-  const tips = hs
-    ? {
-        companies: "Which companies sync to HubSpot, based on their intent score and contacts.",
-        records: "How companies and contacts are created, owned and updated in HubSpot.",
-        schedule: "How often new buyer activity syncs to HubSpot.",
-        connection: "The HubSpot account Software Finder syncs to.",
-      }
-    : {
-        companies: "Which companies sync to Salesforce, based on their intent score and contacts.",
-        records: "How Accounts, Leads and Contacts are created, owned and updated in Salesforce.",
-        schedule: "How often new buyer activity syncs to Salesforce.",
-        connection: "The Salesforce org Software Finder syncs to.",
-      }
+  /* Behind each heading's ⓘ: what the heading doesn't already say — what's left out, how to go faster, what Disconnect keeps. */
+  const tips = {
+    companies: `Companies left out here aren't lost: you can still see them in Software Finder, just not in ${info.name}.`,
+    schedule: "New buyer activity is sent on this schedule. To send it right away, use Sync Now.",
+    connection: `The ${hs ? "HubSpot account" : "Salesforce org"} buyers sync to. Disconnecting stops new syncs; records already in ${info.name} stay.`,
+  }
 
   const copy = sectionCopy(crm)
   const settings = (
@@ -290,44 +281,23 @@ export default function CrmPage({
         tips.schedule,
         <ScheduleRows crm={crm} s={draft} set={set} />,
       )}
-      {/* Last, apart from the rest: the account, and the one destructive action, confirmed in place. */}
+      {/* Last, apart from the rest: the account, and the one destructive action, confirmed in a modal. */}
       {section(
         "Connection",
         tips.connection,
         <SettingsCard>
-          {confirming ? (
-            <div
-              className="-mx-[8px] my-[8px] flex flex-wrap items-center justify-between gap-x-[24px] gap-y-[12px] rounded-[8px] px-[12px] py-[12px]"
-              style={{ background: "#FFF5F5" }}
-            >
-              <p
-                className={`${FONT} min-w-[220px] flex-1 leading-[20px] text-[14px]`}
-                style={{ color: INK }}
-              >
-                <b className="font-medium">Disconnect {info.name}?</b> New
-                activity stops syncing. Everything already in {info.name} stays
-                there.
-              </p>
-              <div className="flex shrink-0 gap-[8px]">
-                <OutlineButton size="sm" onClick={() => setConfirming(false)}>
-                  Cancel
-                </OutlineButton>
-                <OutlineButton size="sm" tone="danger" onClick={onDisconnect}>
-                  Disconnect {info.name}
-                </OutlineButton>
-              </div>
-            </div>
-          ) : (
+          {(
             <div className="flex flex-wrap items-center justify-between gap-x-[24px] gap-y-[10px] py-[14px]">
               <span className="flex min-w-[220px] flex-1 flex-col gap-[2px]">
+                {/* The same type as every other settings row: 15px medium label, 14px muted line. */}
                 <span
-                  className={`${FONT} font-medium leading-[20px] text-[14px]`}
+                  className={`${FONT} font-medium leading-[22px] text-[15px]`}
                   style={{ color: INK }}
                 >
                   {connection.account.name}
                 </span>
                 <span
-                  className={`${FONT} leading-[18px] text-[13px]`}
+                  className={`${FONT} leading-[20px] text-[14px]`}
                   style={{ color: MUTED }}
                 >
                   {connection.account.detail} ·{" "}
@@ -356,6 +326,31 @@ export default function CrmPage({
             </div>
           )}
         </SettingsCard>,
+      )}
+      {/* The live portal's confirmation, as Delete API Key: the action named in the title and on the button. */}
+      {confirming && (
+        <Modal
+          title={`Disconnect ${info.name}?`}
+          labelledBy="crm-disconnect-title"
+          onClose={() => setConfirming(false)}
+          width={600}
+        >
+          <p className={`${FONT} leading-[22px] text-[15px]`} style={{ color: INK }}>
+            New buyer activity will stop syncing to {info.name}. Records already in {info.name} stay there, and you
+            can connect again at any time.
+          </p>
+          <div className="flex justify-end gap-[12px]">
+            <OutlineButton onClick={() => setConfirming(false)}>Cancel</OutlineButton>
+            <button
+              type="button"
+              onClick={onDisconnect}
+              className={`${FONT} flex h-[42px] shrink-0 cursor-pointer items-center justify-center rounded-[12px] px-[22px] font-medium leading-[26px] text-[15px] text-white transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c42f33] focus-visible:ring-offset-2`}
+              style={{ background: "#D92D20", boxShadow: "0px 1px 6px 0px rgba(19,17,32,0.16)" }}
+            >
+              Disconnect
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   )
@@ -470,7 +465,7 @@ export default function CrmPage({
           style={{ background: "#FDF3E2" }}
         >
           <div className="flex min-w-[260px] flex-1 items-start gap-[10px]">
-            <svg width="20" height="20" viewBox="0 0 22 22" fill="none" aria-hidden className="block shrink-0">
+            <svg width="20" height="20" viewBox="0 0 22 22" fill="none" aria-hidden className="mt-[1px] block shrink-0">
                 <path d="M11 7.33398V10.8004" stroke="#8A5300" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M11 14.2441L11 14.2877" stroke="#8A5300" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 <path
@@ -483,11 +478,10 @@ export default function CrmPage({
               </svg>
             <div className={`${FONT} flex flex-col gap-[2px] leading-[20px] text-[14px]`}>
               <p style={{ color: INK }}>
-                <b className="font-medium">{info.name} connection expired.</b>{" "}
-                This usually happens when the person who connected it leaves or loses admin access.
-              </p>
-              <p style={{ color: MUTED }}>
-                Reconnect as {hs ? "a HubSpot Super Admin" : "a Salesforce admin"}. Activity from the pause syncs straight away, and your settings are kept.
+                {/* One paragraph: what happened and its effect, why, what to do, and that nothing is lost. */}
+                <b className="font-medium">{info.name} connection expired, so syncing is paused.</b>{" "}
+                This usually means the person who connected it left or lost admin access. Reconnect as{" "}
+                {hs ? "a HubSpot Super Admin" : "a Salesforce admin"}. Nothing is lost: activity since it expired syncs as soon as you do.
               </p>
             </div>
           </div>
@@ -557,7 +551,7 @@ export default function CrmPage({
                 className={`${FONT} leading-[20px] text-[14px]`}
                 style={{ color: INK }}
               >
-                Unsaved changes <span style={{ color: MUTED }}>· they apply from the next sync</span>
+                Unsaved changes. <span style={{ color: MUTED }}>They apply from the next sync.</span>
               </p>
               <div className="flex gap-[8px]">
                 <OutlineButton size="sm" onClick={() => setDraft(s)}>
