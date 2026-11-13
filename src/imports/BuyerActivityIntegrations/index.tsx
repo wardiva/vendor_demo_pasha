@@ -1,29 +1,49 @@
 /**
  * Buyer Intelligence / Integrations.
  *
- * The page a buyer connects their CRM from: one API key, generated here and
- * pasted into the CRM, through which Buyer Intelligence's prospects flow into
- * it. Built from the recorded flow — the API Key Management card, the Generate
- * dialog with its expiration, the one-time Your API Key dialog with Copy, and
- * the key's row afterwards — in the Prospects page's own shell and language.
+ * Three ways to get buyers out of Software Finder, as three cards: HubSpot and
+ * Salesforce, each connected through its own setup flow, and API Access, the
+ * key the page has always generated. The API key's flow is unchanged — the
+ * Generate dialog with its expiration, the one-time Your API Key dialog with
+ * Copy, and the key's row — and now opens from its card.
  *
  * Locked together with Prospects: the same lock state, the same frost and
  * dialog over the page, with the integration's own copy and animation.
  */
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 import { PageShell } from "@/imports/BuyerActivityLeads";
 import IntegrationsLockedOverlay from "@/components/prospects/IntegrationsLockedOverlay";
-import ProspectsPrototypeBar from "@/components/prospects/ProspectsPrototypeBar";
 import { useProspectsLocked } from "@/lib/prospectsAccess";
-
-const INK = "#2f2b3d";
-const DEEP = "#072929";
-const MUTED = "rgba(47,43,61,0.7)";
-const HAIR = "rgba(47,43,61,0.1)";
-const FONT = "font-['Inter',sans-serif]";
-const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+import ConnectPanel from "@/components/integrations/ConnectPanel";
+import CrmPage from "@/components/integrations/CrmPage";
+import ConnectionPrototypeBar from "@/components/integrations/ConnectionPrototypeBar";
+import CrmLogo from "@/components/integrations/CrmLogo";
+import { CRMS, fieldsToCreate, FREQUENCY, readConnection, timeAgo, writeConnection, type Connection, type CrmId, type RunRecord, type SectionId, type SyncRun } from "@/components/integrations/crm";
+import {
+  ArrowOutIcon,
+  DocsIcon,
+  CheckIcon,
+  ChevronIcon,
+  Chip,
+  CloseIcon,
+  ClockIcon,
+  CopyIcon,
+  DEEP,
+  FONT,
+  HAIR,
+  INK,
+  InkButton,
+  KeyIcon,
+  Modal,
+  MONO,
+  MUTED,
+  OutlineButton,
+  Spinner,
+  SUCCESS,
+  TrashIcon,
+  WarnIcon,
+} from "@/components/integrations/ui";
 
 /* ── the key ── */
 
@@ -38,7 +58,8 @@ const EXPIRY_MS: Record<Expiry, number | null> = {
   "90 days": 90 * 864e5,
 };
 
-type ApiKey = { key: string; expiry: Expiry; createdAt: number; expiresAt: number | null };
+/** `name` is the connection's own label (the meeting's "connection pointer"), so a team can tell its keys apart. */
+type ApiKey = { key: string; name: string; expiry: Expiry; createdAt: number; expiresAt: number | null };
 
 const STORE = "integration-api-key";
 
@@ -61,179 +82,19 @@ function writeKey(k: ApiKey | null) {
 }
 
 /** A vendor prospect key: the prefix, then 56 hex characters from the browser's own randomness. */
-function makeKey(expiry: Expiry): ApiKey {
+function makeKey(name: string, expiry: Expiry): ApiKey {
   const bytes = new Uint8Array(28);
   crypto.getRandomValues(bytes);
   const hex = Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
   const createdAt = Date.now();
   const ms = EXPIRY_MS[expiry];
-  return { key: `vpk_${hex.slice(0, 8)}_${hex.slice(8)}`, expiry, createdAt, expiresAt: ms === null ? null : createdAt + ms };
+  return { key: `vpk_${hex.slice(0, 8)}_${hex.slice(8)}`, name: name.trim() || "API connection", expiry, createdAt, expiresAt: ms === null ? null : createdAt + ms };
 }
 
 /** The key as the list shows it: the prefix and first segment, the rest hidden, the tail kept. */
 const mask = (key: string) => `${key.slice(0, 8)}••••••••${key.slice(-3)}`;
 
 const formatDate = (ms: number) => new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-
-/* ── icons, 1.5 stroke in the page's ink ── */
-
-function KeyIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden className="block">
-      <circle cx="8" cy="15" r="4" stroke={INK} strokeWidth="1.5" />
-      <path d="M10.8 12.2 19 4M16 7l2.5 2.5M13.5 9.5 16 12" stroke={INK} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function BookIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden className="block">
-      <path d="M10 5.5c-1.4-1.2-3.4-1.6-6.5-1.5v11c3.1-.1 5.1.3 6.5 1.5 1.4-1.2 3.4-1.6 6.5-1.5V4c-3.1-.1-5.1.3-6.5 1.5Zm0 0v11" stroke={INK} strokeWidth="1.5" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ArrowOutIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden className="block">
-      <path d="M4 10 10 4M5.5 4H10v4.5" stroke={DEEP} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="block transition-transform" style={{ transform: open ? "rotate(180deg)" : undefined }}>
-      <path d="m4 6 4 4 4-4" stroke={MUTED} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CheckIcon({ color = DEEP, size = 16 }: { color?: string; size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden className="block">
-      <path d="m3.5 8.5 3 3 6-6.5" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="block">
-      <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" stroke={DEEP} strokeWidth="1.4" />
-      <path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5" stroke={DEEP} strokeWidth="1.4" />
-    </svg>
-  );
-}
-
-function WarnIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="block shrink-0">
-      <path d="M8 2.2 14.3 13H1.7L8 2.2Z" stroke="#b7791f" strokeWidth="1.4" strokeLinejoin="round" />
-      <path d="M8 6.3v3.2M8 11.4v.1" stroke="#b7791f" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden className="block shrink-0">
-      <circle cx="8" cy="8" r="6" stroke={MUTED} strokeWidth="1.4" />
-      <path d="M8 4.8V8l2.2 1.4" stroke={MUTED} strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="block">
-      <path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5M6.8 7v4M9.2 7v4" stroke={MUTED} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="block">
-      <path d="m4 4 8 8M12 4l-8 8" stroke={MUTED} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-/* ── controls, in the page's own language ── */
-
-/** The ink button: the locked dialog's View Plans, without the arrow. */
-function InkButton({ children, onClick, disabled, busy }: { children: string; onClick?: () => void; disabled?: boolean; busy?: boolean }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-busy={busy || undefined}
-      className={`${FONT} flex h-[42px] cursor-pointer items-center justify-center rounded-[12px] px-[22px] font-medium leading-[26px] text-[15px] text-white transition-colors disabled:cursor-default`}
-      style={{ background: disabled ? "rgba(7,41,41,0.45)" : DEEP, boxShadow: "0px 1px 6px 0px rgba(19,17,32,0.16)" }}
-    >
-      {children}
-    </button>
-  );
-}
-
-/** The outline button, as Buy More draws it. */
-function OutlineButton({ children, onClick }: { children: string; onClick?: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`${FONT} relative flex h-[42px] cursor-pointer items-center justify-center rounded-[12px] px-[22px] font-medium leading-[26px] text-[15px] transition-colors hover:bg-[rgba(7,41,41,0.04)]`}
-      style={{ color: DEEP, border: `1px solid ${DEEP}` }}
-    >
-      {children}
-    </button>
-  );
-}
-
-/** A dialog over the page: the frost, and a white card at the product's radius. */
-function Modal({ title, description, labelledBy, onClose, children }: { title: string; description: string; labelledBy: string; onClose: () => void; children: ReactNode }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-  return createPortal(
-    <div className="fixed inset-0 z-[8000] flex items-center justify-center" data-name="Integration Dialog">
-      <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 cursor-default" style={{ background: "rgba(47,43,61,0.45)" }} />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={labelledBy}
-        className="relative flex w-[560px] max-w-[calc(100vw-48px)] flex-col gap-[24px] rounded-[16px] bg-white p-[24px]"
-        style={{ boxShadow: "0px 4px 18px 0px rgba(47,43,61,0.16)" }}
-      >
-        <button
-          type="button"
-          aria-label="Close"
-          onClick={onClose}
-          className="absolute right-[12px] top-[12px] flex size-[28px] cursor-pointer items-center justify-center rounded-[8px] transition-colors hover:bg-[rgba(7,41,41,0.06)]"
-        >
-          <CloseIcon />
-        </button>
-        <div className="flex flex-col gap-[6px] pr-[28px]">
-          <h2 id={labelledBy} className={`${FONT} font-medium leading-[28px] text-[20px]`} style={{ color: INK }}>
-            {title}
-          </h2>
-          <p className={`${FONT} leading-[21px] text-[14px]`} style={{ color: MUTED }}>
-            {description}
-          </p>
-        </div>
-        {children}
-      </div>
-    </div>,
-    document.body,
-  );
-}
 
 /** The expiration: a field that opens the six choices beneath it, the current one ticked. */
 function ExpirySelect({ value, onChange }: { value: Expiry; onChange: (v: Expiry) => void }) {
@@ -296,9 +157,9 @@ function ExpirySelect({ value, onChange }: { value: Expiry; onChange: (v: Expiry
   );
 }
 
-/* ── the dialogs ── */
+/* ── the key's dialogs ── */
 
-function GenerateDialog({ onCancel, onGenerate }: { onCancel: () => void; onGenerate: (expiry: Expiry) => void }) {
+function GenerateDialog({ onCancel, onGenerate }: { onCancel: () => void; onGenerate: (name: string, expiry: Expiry) => void }) {
   const [expiry, setExpiry] = useState<Expiry>("Never");
   const [busy, setBusy] = useState(false);
   return (
@@ -312,10 +173,10 @@ function GenerateDialog({ onCancel, onGenerate }: { onCancel: () => void; onGene
           onClick={() => {
             setBusy(true);
             /* A moment, as the real call takes one, so the key is seen to be made. */
-            window.setTimeout(() => onGenerate(expiry), 650);
+            window.setTimeout(() => onGenerate("", expiry), 650);
           }}
         >
-          {busy ? "Generating…" : "Generate"}
+          {busy ? "Creating…" : "Create API Key"}
         </InkButton>
       </div>
     </Modal>
@@ -326,7 +187,7 @@ function KeyDialog({ apiKey, onDone }: { apiKey: ApiKey; onDone: () => void }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) return;
-    const id = window.setTimeout(() => setCopied(false), 1800);
+    const id = window.setTimeout(() => setCopied(false), 2000);
     return () => window.clearTimeout(id);
   }, [copied]);
   const copy = async () => {
@@ -337,117 +198,457 @@ function KeyDialog({ apiKey, onDone }: { apiKey: ApiKey; onDone: () => void }) {
     }
     setCopied(true);
   };
+  /*
+   * The live vendor portal's RevealApiKeyModal, matched exactly: no subtitle, one
+   * notice with a grey warning triangle, the whole key (wrapping, never cut off)
+   * with a plain-text Copy, then the expiry with a calendar. It stays open on
+   * outside click and Escape, so the key can't be dismissed before it's copied.
+   */
   return (
-    <Modal title="Your API Key" description="Copy and securely store your API key before continuing. It is displayed only once." labelledBy="integration-key-title" onClose={onDone}>
-      <div className="flex flex-col gap-[12px]">
-        <div className="flex items-center gap-[8px] rounded-[10px] px-[12px] py-[10px]" style={{ background: "rgba(183,121,31,0.08)" }}>
-          <WarnIcon />
-          <span className={`${FONT} leading-[20px] text-[13px]`} style={{ color: INK }}>
-            This key grants access to your buyers. Keep it secret, and rotate it if it is ever exposed.
-          </span>
+    <Modal title="Your API Key" labelledBy="integration-key-title" onClose={onDone} width={700} dismissible={false}>
+      <div className="flex flex-col gap-[8px] pt-[8px]">
+        <div className="mb-[24px] flex items-center gap-[8px] rounded-[12px] p-[12px]" style={{ border: "1px solid rgba(0,0,0,0.08)" }}>
+          <svg width="20" height="20" viewBox="0 0 22 22" fill="none" aria-hidden className="block shrink-0">
+            <path d="M11 7.33398V10.8004" stroke="#827D8B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M11 14.2441L11 14.2877" stroke="#827D8B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M4.58197 17.4165H17.4153C18.0226 17.4122 18.5884 17.1075 18.9262 16.6027C19.2639 16.0979 19.3297 15.4587 19.102 14.8956L12.5936 3.66648C12.2707 3.0829 11.6564 2.7207 10.9895 2.7207C10.3225 2.7207 9.70818 3.0829 9.3853 3.66648L2.87697 14.8956C2.65366 15.4454 2.71024 16.0692 3.02881 16.5698C3.34738 17.0705 3.88854 17.3859 4.48113 17.4165"
+              stroke="#827D8B"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <p className={`${FONT} leading-[20px] text-[14px]`} style={{ color: "#585164" }}>
+            Copy and securely store your API key before continuing. It is displayed only once
+          </p>
         </div>
-        <div className="flex items-center gap-[12px] rounded-[10px] px-[14px] py-[10px]" style={{ border: `1px solid ${HAIR}` }}>
-          <code className="min-w-0 flex-1 truncate leading-[20px] text-[13px]" style={{ color: INK, fontFamily: MONO }}>
+        <div className="flex items-center justify-between gap-[12px] rounded-[12px] bg-white px-[16px] py-[12px]" style={{ border: "1px solid rgba(0,0,0,0.1)" }}>
+          <span className={`${FONT} min-w-0 break-all font-medium leading-[20px] text-[14px]`} style={{ color: INK }}>
             {apiKey.key}
-          </code>
+          </span>
           <button
             type="button"
             onClick={copy}
-            className={`${FONT} flex h-[32px] shrink-0 cursor-pointer items-center gap-[6px] rounded-[8px] px-[10px] font-medium leading-[20px] text-[13px] transition-colors hover:bg-[rgba(7,41,41,0.06)]`}
-            style={{ color: DEEP, border: `1px solid ${HAIR}` }}
+            className={`${FONT} flex shrink-0 cursor-pointer items-center gap-[6px] rounded-[6px] p-[2px] font-medium leading-[20px] text-[13px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#072929]`}
+            style={{ color: DEEP }}
           >
-            {copied ? <CheckIcon color="#599D15" size={14} /> : <CopyIcon />}
+            {copied ? <CheckIcon color="#599D15" size={16} /> : <CopyIcon />}
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
-        <span className={`${FONT} flex items-center gap-[6px] leading-[18px] text-[13px]`} style={{ color: MUTED }}>
-          <ClockIcon />
-          Expiry: {apiKey.expiresAt === null ? "Never" : formatDate(apiKey.expiresAt)}
-        </span>
+        <div className="flex items-center gap-[8px]">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="block shrink-0">
+            <circle cx="8" cy="8" r="6" stroke="#6D6777" strokeWidth="1.5" />
+            <path d="M8 5v3l2 1.33" stroke="#6D6777" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <p className={`${FONT} leading-[22px] text-[15px]`} style={{ color: "rgba(47,43,61,0.7)" }}>
+            Expiry:{" "}
+            <span style={{ color: INK }}>
+              {apiKey.expiresAt === null
+                ? "Never"
+                : (() => {
+                    /* The live format: "11 Nov 2026 at 14:05". */
+                    const d = new Date(apiKey.expiresAt);
+                    const day = d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+                    const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+                    return `${day} at ${time}`;
+                  })()}
+            </span>
+          </p>
+        </div>
       </div>
-      <div className="flex justify-end">
+      <div className="mt-[8px] flex justify-end">
         <InkButton onClick={onDone}>Done</InkButton>
       </div>
     </Modal>
   );
 }
 
-/* ── the page ── */
-
-/** The key's row: the list the product keeps of it, with its status and dates. */
-function KeyTable({ apiKey, onDelete }: { apiKey: ApiKey; onDelete: () => void }) {
-  const head = `${FONT} font-medium uppercase leading-[16px] text-[11px] tracking-[0.6px]`;
-  const cell = `${FONT} leading-[20px] text-[13px]`;
+/** The live product's delete confirmation, word for word. */
+function DeleteKeyDialog({ onCancel, onDelete }: { onCancel: () => void; onDelete: () => void }) {
   return (
-    <table className="w-full border-collapse">
-      <thead>
-        <tr style={{ borderBottom: `1px solid ${HAIR}` }}>
-          <th scope="col" className={`${head} pb-[10px] text-left`} style={{ color: MUTED }}>
-            Key
-          </th>
-          <th scope="col" className={`${head} pb-[10px] text-left`} style={{ color: MUTED }}>
-            Status
-          </th>
-          <th scope="col" className={`${head} pb-[10px] text-left`} style={{ color: MUTED }}>
-            Created on
-          </th>
-          <th scope="col" className={`${head} pb-[10px] text-left`} style={{ color: MUTED }}>
-            Expires on
-          </th>
-          <th scope="col" className={`${head} pb-[10px] text-right`} style={{ color: MUTED }}>
-            Action
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td className="pt-[12px]">
-            <code className="leading-[20px] text-[13px]" style={{ color: INK, fontFamily: MONO }}>
-              {mask(apiKey.key)}
-            </code>
-          </td>
-          <td className="pt-[12px]">
-            <span className={`${FONT} inline-flex min-w-[24px] items-center justify-center rounded-[6px] px-[10px] py-[2px] font-medium leading-[18px] text-[11px]`} style={{ background: "#C3FFC9", color: DEEP }}>
-              Active
-            </span>
-          </td>
-          <td className={`${cell} pt-[12px]`} style={{ color: INK }}>
-            {formatDate(apiKey.createdAt)}
-          </td>
-          <td className={`${cell} pt-[12px]`} style={{ color: INK }}>
-            {apiKey.expiresAt === null ? "Never" : formatDate(apiKey.expiresAt)}
-          </td>
-          <td className="pt-[12px] text-right">
-            <button
-              type="button"
-              aria-label="Delete API key"
-              onClick={onDelete}
-              className="inline-flex size-[28px] cursor-pointer items-center justify-center rounded-[8px] transition-colors hover:bg-[rgba(7,41,41,0.06)]"
-            >
-              <TrashIcon />
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <Modal title="Delete API Key" labelledBy="integration-delete-title" onClose={onCancel} width={600}>
+      <p className={`${FONT} leading-[22px] text-[15px]`} style={{ color: INK }}>
+        Deleting this API key will stop any integration using it. Once deleted, this change cannot be reversed.
+      </p>
+      <div className="flex justify-end gap-[12px]">
+        <OutlineButton onClick={onCancel}>Cancel</OutlineButton>
+        <button
+          type="button"
+          onClick={onDelete}
+          className={`${FONT} flex h-[42px] shrink-0 cursor-pointer items-center justify-center rounded-[12px] px-[22px] font-medium leading-[26px] text-[15px] text-white transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c42f33] focus-visible:ring-offset-2`}
+          style={{ background: "#D92D20", boxShadow: "0px 1px 6px 0px rgba(19,17,32,0.16)" }}
+        >
+          Delete
+        </button>
+      </div>
+    </Modal>
   );
 }
+
+/**
+ * API Access as its own page, opened from its card as the CRMs' pages are.
+ * Its content is the live product's Integration page: the "API Key
+ * Management" card (key, status, created, expires, delete) and the docs strip.
+ */
+function ApiAccessPage({ apiKey, onBack, onGenerate, onDelete }: { apiKey: ApiKey | null; onBack: () => void; onGenerate: () => void; onDelete: () => void }) {
+  const [deleting, setDeleting] = useState(false);
+  const th = `${FONT} px-[16px] py-[12px] text-left font-medium uppercase leading-[16px] text-[12px] tracking-[0.4px]`;
+  const td = `${FONT} px-[16px] py-[16px] leading-[20px] text-[14px]`;
+  return (
+    <div className="flex w-full flex-col gap-[20px]" data-name="API Access Page">
+      <nav aria-label="Breadcrumb" className={`${FONT} flex items-center gap-[6px] leading-[20px] text-[13px]`} style={{ color: MUTED }}>
+        <button type="button" onClick={onBack} className="cursor-pointer rounded-[2px] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#072929]" style={{ color: MUTED }}>
+          Integrations
+        </button>
+        <span aria-hidden>›</span>
+        <span aria-current="page" style={{ color: INK }}>
+          API Access
+        </span>
+      </nav>
+
+      <section className="flex w-full flex-col gap-[20px] rounded-[16px] bg-white p-[32px]" aria-labelledby="api-key-management">
+        <div className="flex flex-wrap items-start justify-between gap-[16px]">
+          <div className="flex min-w-0 items-start gap-[16px]">
+            <span className="mt-[6px] shrink-0">
+              <KeyIcon />
+            </span>
+            <div className="flex min-w-0 flex-col gap-[2px]">
+              <h1 id="api-key-management" className={`${FONT} font-medium leading-[28px] text-[20px]`} style={{ color: INK }}>
+                API Key Management
+              </h1>
+              <p className={`${FONT} leading-[22px] text-[15px]`} style={{ color: MUTED }}>
+                API keys are displayed only once when generated to help keep your integration secure.
+              </p>
+            </div>
+          </div>
+          <InkButton onClick={onGenerate}>{apiKey ? "Regenerate API Key" : "Generate API Key"}</InkButton>
+        </div>
+
+        <div className="overflow-x-auto rounded-[12px]" style={{ border: `1px solid ${HAIR}` }}>
+          <table className="w-full min-w-[620px] border-collapse">
+            <thead>
+              <tr style={{ background: "#f3f2f0" }}>
+                {["Key", "Status", "Created on", "Expires on"].map(h => (
+                  <th key={h} scope="col" className={th} style={{ color: MUTED }}>
+                    {h}
+                  </th>
+                ))}
+                <th scope="col" className={`${th} text-center`} style={{ color: MUTED }}>
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {apiKey ? (
+                <tr style={{ borderTop: `1px solid ${HAIR}` }}>
+                  <td className={td}>
+                    <code className="text-[14px]" style={{ color: INK, fontFamily: MONO }}>
+                      {mask(apiKey.key)}
+                    </code>
+                  </td>
+                  <td className={td}>
+                    <Chip tone="live">Active</Chip>
+                  </td>
+                  <td className={td} style={{ color: INK }}>
+                    {formatDate(apiKey.createdAt)}
+                  </td>
+                  <td className={td} style={{ color: INK }}>
+                    {apiKey.expiresAt === null ? "Never" : formatDate(apiKey.expiresAt)}
+                  </td>
+                  <td className="px-[16px] py-[8px] text-center">
+                    <button
+                      type="button"
+                      aria-label="Delete API key"
+                      onClick={() => setDeleting(true)}
+                      className="inline-flex size-[28px] cursor-pointer items-center justify-center rounded-full p-[5px] transition-colors hover:bg-[rgba(0,0,0,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#072929]"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </td>
+                </tr>
+              ) : (
+                <tr style={{ borderTop: `1px solid ${HAIR}` }}>
+                  <td colSpan={5} className={`${td} text-center`} style={{ color: MUTED }}>
+                    No active keys.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div className="flex w-full flex-wrap items-center justify-between gap-[12px] rounded-[16px] bg-white px-[24px] py-[18px]">
+        <p className={`${FONT} leading-[22px] text-[15px]`} style={{ color: MUTED }}>
+          New to the API? Learn how to authenticate and sync buyers into your CRM.
+        </p>
+        <a
+          href="#api-documentation"
+          onClick={e => e.preventDefault()}
+          className={`${FONT} inline-flex items-center gap-[6px] whitespace-nowrap rounded-[4px] font-medium leading-[20px] text-[14px] transition-colors hover:underline hover:underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#072929] focus-visible:ring-offset-2`}
+          style={{ color: DEEP }}
+        >
+          <DocsIcon />
+          View API Docs
+        </a>
+      </div>
+
+      {deleting && (
+        <DeleteKeyDialog
+          onCancel={() => setDeleting(false)}
+          onDelete={() => {
+            setDeleting(false);
+            onDelete();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ── the cards ── */
+
+function IntegrationCard({
+  icon,
+  title,
+  category,
+  description,
+  status,
+  action,
+  meta,
+}: {
+  icon: ReactNode;
+  title: string;
+  category: string;
+  description: string;
+  status?: ReactNode;
+  action: ReactNode;
+  meta: ReactNode;
+}) {
+  return (
+    <article className="flex min-w-0 flex-col gap-[16px] rounded-[16px] bg-white p-[24px]" data-name="Integration Card">
+      <div className="flex items-start justify-between gap-[12px]">
+        <span className="flex size-[44px] shrink-0 items-center justify-center rounded-[10px]" style={{ background: "rgba(7,41,41,0.05)" }}>
+          {icon}
+        </span>
+        {status}
+      </div>
+      <div className="flex flex-col gap-[2px]">
+        <h2 className={`${FONT} font-medium leading-[24px] text-[16px]`} style={{ color: INK }}>
+          {title}
+        </h2>
+        <p className={`${FONT} leading-[18px] text-[12px]`} style={{ color: MUTED }}>
+          {category}
+        </p>
+      </div>
+      <p className={`${FONT} flex-1 leading-[22px] text-[14px]`} style={{ color: MUTED }}>
+        {description}
+      </p>
+      {/* Wraps rather than clips: on a narrow card the meta drops to its own line, never cut off mid-word. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-[12px] gap-y-[8px]">
+        {action}
+        <span className={`${FONT} whitespace-nowrap leading-[18px] text-[12px]`} style={{ color: MUTED }}>
+          {meta}
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function StatusChip({ children }: { children: ReactNode }) {
+  return (
+    <Chip tone="live">
+      <span className="size-[6px] rounded-full" style={{ background: SUCCESS }} />
+      {children}
+    </Chip>
+  );
+}
+
+/* ── the page ── */
+
+type Dialog =
+  | { kind: "none" }
+  | { kind: "generate" }
+  | { kind: "key" }
+  | { kind: "connect"; crm: CrmId; edit: boolean; focus?: SectionId; reconnect?: boolean };
 
 function IntegrationContent() {
   const locked = useProspectsLocked();
   const [apiKey, setApiKey] = useState<ApiKey | null>(readKey);
-  const [dialog, setDialog] = useState<"none" | "generate" | "key">("none");
+  const [connections, setConnections] = useState<Record<CrmId, Connection | null>>(() => ({ hubspot: readConnection("hubspot"), salesforce: readConnection("salesforce") }));
+  const [dialog, setDialog] = useState<Dialog>({ kind: "none" });
+  /* A connected CRM opens as its own page in this column, as Hightouch opens a
+     destination: Integrations › HubSpot, with tabs. Null is the cards. */
+  const [page, setPage] = useState<{ crm: CrmId } | null>(null);
+  const [apiPage, setApiPage] = useState(false);
+  /* Re-render once a minute so "synced 3 min ago" stays true. */
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => setTick(t => t + 1), 60e3);
+    return () => window.clearInterval(id);
+  }, []);
 
-  const generate = (expiry: Expiry) => {
-    const k = makeKey(expiry);
+  const generate = (name: string, expiry: Expiry) => {
+    const k = makeKey(name, expiry);
     setApiKey(k);
     writeKey(k);
-    setDialog("key");
+    setDialog({ kind: "key" });
   };
-  const remove = () => {
+  const removeKey = () => {
     setApiKey(null);
     writeKey(null);
   };
+  const saveConnection = (crm: CrmId, c: Connection | null) => {
+    writeConnection(crm, c);
+    setConnections(prev => ({ ...prev, [crm]: c }));
+  };
+
+  /* Syncs run here, on the page, so they keep going whichever dialog is open.
+     Finishing setup opens the connection with its first run live on it, as
+     Leadfeeder lands you on "Connected · Syncing"; the card shows it too, and if
+     Manage is closed by the time it finishes, a toast says so. */
+  const [runs, setRuns] = useState<Record<CrmId, SyncRun | null>>({ hubspot: null, salesforce: null });
+  const runTimers = useRef<Partial<Record<CrmId, number>>>({});
+  const [toast, setToast] = useState<{ crm: CrmId; title: string; body: string } | null>(null);
+  const toastTimer = useRef<number | undefined>(undefined);
+  const pageNow = useRef(page);
+  pageNow.current = page;
+  useEffect(
+    () => () => {
+      window.clearTimeout(toastTimer.current);
+      Object.values(runTimers.current).forEach(id => window.clearInterval(id));
+    },
+    [],
+  );
+  const stopRun = (crm: CrmId) => {
+    window.clearInterval(runTimers.current[crm]);
+    setRuns(prev => ({ ...prev, [crm]: null }));
+  };
+  const startRun = (crm: CrmId, run: Omit<SyncRun, "done">, record: Omit<RunRecord, "at">) => {
+    window.clearInterval(runTimers.current[crm]);
+    const total = Math.max(1, run.total);
+    /* Twelve ticks whatever the size, so even a small run is long enough to see. */
+    let tick = 0;
+    setRuns(prev => ({ ...prev, [crm]: { ...run, total, done: 0 } }));
+    runTimers.current[crm] = window.setInterval(() => {
+      tick += 1;
+      const done = Math.floor((total * tick) / 12);
+      if (tick < 12) {
+        setRuns(prev => (prev[crm] ? { ...prev, [crm]: { ...prev[crm]!, done } } : prev));
+        return;
+      }
+      stopRun(crm);
+      const now = readConnection(crm);
+      if (!now) return;
+      const at = Date.now();
+      saveConnection(crm, { ...now, lastSyncAt: at, runs: [{ ...record, at }, ...now.runs] });
+      /* The corner that showed it running says it finished, wherever you are. */
+      const what =
+        record.note ??
+        `${record.companies.toLocaleString("en-US")} ${unitFor(crm, record.companies)} synced${record.skipped ? `, ${record.skipped} skipped` : ""}`;
+      setToast({ crm, title: `${CRMS[crm].name} sync finished`, body: `${what}. New activity syncs ${FREQUENCY[now.settings.frequency].every}.` });
+      window.clearTimeout(toastTimer.current);
+      toastTimer.current = window.setTimeout(() => setToast(null), 6000);
+    }, 450);
+  };
+  const unitFor = (crm: CrmId, n = 2) => (crm === "hubspot" ? (n === 1 ? "company" : "companies") : n === 1 ? "Account" : "Accounts");
+  const finished = (crm: CrmId, c: Connection, startSync: boolean) => {
+    saveConnection(crm, c);
+    setDialog({ kind: "none" });
+    setPage({ crm });
+    if (!startSync) return;
+    const r = c.result;
+    if (c.settings.backfill) {
+      const created = Math.ceil(r.companies / 3);
+      startRun(
+        crm,
+        { label: "Sending the last 30 days", unit: unitFor(crm), total: r.companies, first: true },
+        { label: "First sync · last 30 days", companies: r.companies, buyers: r.buyers, activity: r.activity, created, updated: r.companies - created, skipped: r.skipped },
+      );
+    } else {
+      const fields = crm === "hubspot" ? "properties" : "fields";
+      startRun(
+        crm,
+        { label: `Creating Software Finder ${fields}`, unit: fields, total: fieldsToCreate(CRMS[crm], c.settings).length, first: true },
+        { label: "First sync", companies: 0, buyers: 0, activity: 0, created: 0, updated: 0, skipped: 0, note: `Software Finder ${fields} created` },
+      );
+    }
+  };
+  /* After reconnecting an expired connection: everything held back while it was paused, sent at once, as Zapier replays held runs. */
+  const catchUp = (crm: CrmId, c: Connection) => {
+    if (c.settings.manual) return;
+    const n = Math.max(3, Math.round(c.result.companies * 0.3));
+    startRun(
+      crm,
+      { label: "Sending activity from the pause", unit: unitFor(crm), total: n, first: false },
+      { label: "Catch-up after reconnect", companies: n, buyers: Math.round(n * 1.5), activity: n * 5, created: 1, updated: n - 1, skipped: 0 },
+    );
+  };
+  const syncNow = (crm: CrmId) => {
+    const n = Math.max(2, Math.round(connections[crm]!.result.companies * 0.2));
+    startRun(
+      crm,
+      { label: "Sending new activity", unit: unitFor(crm), total: n, first: false },
+      { label: "Manual sync", companies: n, buyers: Math.round(n * 1.5), activity: n * 4, created: 1, updated: n - 1, skipped: 0 },
+    );
+  };
+
+  const crmCard = (crm: CrmId) => {
+    const info = CRMS[crm];
+    const c = connections[crm];
+    return (
+      <IntegrationCard
+        key={crm}
+        icon={<CrmLogo crm={crm} size={24} />}
+        title={info.name}
+        category={info.category}
+        description={info.blurb}
+        status={
+          c && !c.setupDone ? (
+            <Chip tone="warn">Setup not finished</Chip>
+          ) : c?.expired ? (
+            <Chip tone="warn">Reconnect needed</Chip>
+          ) : c && runs[crm] ? (
+            <Chip tone="wash">
+              <Spinner size={10} />
+              Syncing
+            </Chip>
+          ) : c ? (
+            <StatusChip>Connected</StatusChip>
+          ) : undefined
+        }
+        action={
+          c?.setupDone ? (
+            <OutlineButton size="sm" onClick={() => setPage({ crm })}>
+              Manage
+            </OutlineButton>
+          ) : (
+            <InkButton size="sm" onClick={() => setDialog({ kind: "connect", crm, edit: false })}>
+              {c ? "Finish setup" : "Connect"}
+            </InkButton>
+          )
+        }
+        meta={
+          !c
+            ? "Not connected"
+            : !c.setupDone
+              ? "Not syncing yet"
+              : c.expired
+                ? "Syncing paused"
+              : runs[crm]
+                ? `Syncing · ${runs[crm]!.done} of ${runs[crm]!.total} ${runs[crm]!.unit}`
+                : c.runs.length
+                  ? `Synced ${timeAgo(c.lastSyncAt)}`
+                  : "Not synced yet"
+        }
+      />
+    );
+  };
+
+  const open = dialog.kind === "connect" ? dialog.crm : null;
+  const pageCrm = page && connections[page.crm]?.setupDone ? page.crm : null;
 
   return (
     <div
@@ -455,59 +656,180 @@ function IntegrationContent() {
       /* Locked, the column is blurred here, as the Prospects page blurs its own: see Frame63. */
       style={locked ? { filter: "blur(4px)" } : undefined}
     >
+      {apiPage ? (
+        <ApiAccessPage apiKey={apiKey} onBack={() => setApiPage(false)} onGenerate={() => setDialog({ kind: "generate" })} onDelete={removeKey} />
+      ) : pageCrm && page ? (
+        <CrmPage
+          crm={pageCrm}
+          connection={connections[pageCrm]!}
+          run={runs[pageCrm]}
+          onBack={() => setPage(null)}
+          onSave={settings => saveConnection(pageCrm, { ...connections[pageCrm]!, settings })}
+          onSyncNow={() => syncNow(pageCrm)}
+          onReconnect={() => setDialog({ kind: "connect", crm: pageCrm, edit: true, reconnect: true })}
+          onDisconnect={() => {
+            stopRun(pageCrm);
+            saveConnection(pageCrm, null);
+            setPage(null);
+          }}
+        />
+      ) : null}
+      {/* Review control: flips this connection to expired, to show the reconnect state. */}
+      {!apiPage && pageCrm && page && !locked ? (
+        <ConnectionPrototypeBar
+          expired={!!connections[pageCrm]!.expired}
+          onChange={expired => {
+            const c = connections[pageCrm]!;
+            if (!expired) return saveConnection(pageCrm, { ...c, expired: undefined });
+            stopRun(pageCrm);
+            const failedRun: RunRecord = { at: Date.now(), label: "Scheduled sync", companies: 0, buyers: 0, activity: 0, created: 0, updated: 0, skipped: 0, failed: "Connection expired" };
+            saveConnection(pageCrm, { ...c, expired: true, runs: c.runs[0]?.failed ? c.runs : [failedRun, ...c.runs] });
+          }}
+        />
+      ) : null}
+      {apiPage || (pageCrm && page) ? null : (
+      <>
       <div className="flex flex-col gap-[2px]">
-        <p className={`${FONT} font-medium leading-[46px] text-[24px] whitespace-nowrap`} style={{ color: INK }}>
-          Integration
+        <p className={`${FONT} font-medium leading-[46px] text-[32px] whitespace-nowrap`} style={{ color: INK }}>
+          Integrations
         </p>
         <p className={`${FONT} leading-[21px] text-[14px]`} style={{ color: MUTED }}>
           Connect Software Finder buyers directly to your CRM or internal systems using a secure API key.
         </p>
       </div>
 
-      <section className="flex w-full flex-col gap-[20px] rounded-[12px] bg-white p-[24px]" style={{ border: `1px solid ${HAIR}` }} aria-labelledby="integration-api-key-title">
-        <div className="flex items-start justify-between gap-[24px]">
-          <div className="flex items-start gap-[16px]">
-            <span className="flex size-[40px] shrink-0 items-center justify-center rounded-[10px]" style={{ background: "rgba(7,41,41,0.06)" }}>
-              <KeyIcon />
+      <div className="grid w-full grid-cols-3 gap-[16px]" data-name="Integration Cards">
+        {crmCard("hubspot")}
+        {crmCard("salesforce")}
+        <IntegrationCard
+          icon={<KeyIcon />}
+          title="API Access"
+          category="Data and Developer"
+          description="Pull buyers and intent signals into internal systems with a secure API key."
+          status={apiKey ? <StatusChip>Active</StatusChip> : undefined}
+          action={
+            apiKey ? (
+              <OutlineButton size="sm" onClick={() => setApiPage(true)}>
+                Manage
+              </OutlineButton>
+            ) : (
+              <InkButton size="sm" onClick={() => setDialog({ kind: "generate" })}>
+                Generate API Key
+              </InkButton>
+            )
+          }
+          /* The API docs live on the API card: they are no help to anyone connecting a CRM,
+             so they no longer run full-width under all three cards. */
+          meta={
+            <span className="inline-flex items-center gap-[6px]">
+              <a
+                href="#api-documentation"
+                onClick={e => e.preventDefault()}
+                className={`${FONT} inline-flex items-center gap-[6px] whitespace-nowrap rounded-[4px] font-medium leading-[20px] text-[14px] transition-colors hover:underline hover:underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#072929] focus-visible:ring-offset-2`}
+                style={{ color: DEEP }}
+              >
+                <DocsIcon />
+                View API Docs
+              </a>
             </span>
-            <div className="flex flex-col gap-[4px] pt-[4px]">
-              <h2 id="integration-api-key-title" className={`${FONT} font-medium leading-[26px] text-[18px]`} style={{ color: INK }}>
-                API Key Management
-              </h2>
-              <p className={`${FONT} leading-[21px] text-[14px]`} style={{ color: MUTED }}>
-                {apiKey ? "API keys are displayed only once when generated to help keep your integration secure." : "Generate a key to authenticate requests and pull your buyers into your own system."}
+          }
+        />
+      </div>
+      </>
+      )}
+
+      {dialog.kind === "generate" && <GenerateDialog onCancel={() => setDialog({ kind: "none" })} onGenerate={generate} />}
+      {dialog.kind === "key" && apiKey && <KeyDialog apiKey={apiKey} onDone={() => setDialog({ kind: "none" })} />}
+      {dialog.kind === "connect" && open && (
+        <ConnectPanel
+          crm={open}
+          existing={connections[open]}
+          focus={dialog.focus}
+          reconnect={dialog.reconnect}
+          onClose={() => setDialog({ kind: "none" })}
+          onConnected={(c, opts) => {
+            if (opts) return finished(open, c, opts.syncing);
+            saveConnection(open, c);
+            if (dialog.reconnect && connections[open]?.expired) catchUp(open, c);
+          }}
+        />
+      )}
+      {/*
+        Sync status lives in one corner, as Gmail's upload panel does: while a
+        sync runs it shows which CRM, how far, and a bar, on every page; when it
+        finishes, the same corner says so. Two CRMs syncing stack.
+      */}
+      <div className="pointer-events-none fixed bottom-[24px] right-[24px] z-[9600] flex flex-col items-end gap-[8px] [&>*]:pointer-events-auto">
+        {(Object.keys(runs) as CrmId[])
+          .filter(c => runs[c])
+          .map(c => {
+            const r = runs[c]!;
+            const pct = Math.round((r.done / Math.max(1, r.total)) * 100);
+            return (
+              <div
+                key={c}
+                role="status"
+                aria-live="polite"
+                className="flex w-[360px] items-center gap-[12px] rounded-[12px] bg-white p-[14px] motion-safe:animate-[toast-in_200ms_cubic-bezier(0.2,0,0,1)]"
+                style={{ border: `1px solid ${HAIR}`, boxShadow: "0 12px 32px -12px rgba(7,41,41,0.22)" }}
+              >
+                <span className="flex size-[36px] shrink-0 items-center justify-center rounded-[10px] bg-white" style={{ border: `1px solid ${HAIR}` }}>
+                  <CrmLogo crm={c} size={20} />
+                </span>
+                <div className="flex min-w-0 flex-1 flex-col gap-[8px]">
+                  <div className="flex items-baseline justify-between gap-[8px]">
+                    <p className={`${FONT} truncate font-medium leading-[20px] text-[14px]`} style={{ color: INK }}>
+                      {`Syncing to ${CRMS[c].name}`}
+                    </p>
+                    <span className={`${FONT} shrink-0 leading-[18px] text-[12px] tabular-nums`} style={{ color: MUTED }}>
+                      {r.done.toLocaleString("en-US")} of {r.total.toLocaleString("en-US")} {r.unit}
+                    </span>
+                  </div>
+                  <div
+                    role="progressbar"
+                    aria-label={r.label}
+                    aria-valuemin={0}
+                    aria-valuemax={r.total}
+                    aria-valuenow={r.done}
+                    className="h-[4px] overflow-hidden rounded-full"
+                    style={{ background: "rgba(7,41,41,0.08)" }}
+                  >
+                    <div className="h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none" style={{ width: `${pct}%`, background: DEEP }} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        {toast && (
+          <div
+            role="status"
+            className="flex w-[360px] items-start gap-[12px] rounded-[12px] bg-white p-[14px] motion-safe:animate-[toast-in_200ms_cubic-bezier(0.2,0,0,1)]"
+            style={{ border: `1px solid ${HAIR}`, boxShadow: "0 12px 32px -12px rgba(7,41,41,0.22)" }}
+          >
+            <span className="mt-[1px] flex size-[20px] shrink-0 items-center justify-center rounded-full" style={{ background: SUCCESS }}>
+              <CheckIcon color="#fff" size={12} />
+            </span>
+            <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
+              <p className={`${FONT} font-medium leading-[20px] text-[14px]`} style={{ color: INK }}>
+                {toast.title}
+              </p>
+              <p className={`${FONT} leading-[19px] text-[13px]`} style={{ color: MUTED }}>
+                {toast.body}
               </p>
             </div>
+            <button
+              type="button"
+              aria-label="Dismiss"
+              onClick={() => setToast(null)}
+              className="-mr-[4px] -mt-[4px] flex size-[26px] shrink-0 cursor-pointer items-center justify-center rounded-[6px] hover:bg-[rgba(7,41,41,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#072929]"
+            >
+              <CloseIcon />
+            </button>
           </div>
-          <InkButton onClick={() => setDialog("generate")}>{apiKey ? "Regenerate API Key" : "Generate API Key"}</InkButton>
+        )}
         </div>
-        {apiKey && <KeyTable apiKey={apiKey} onDelete={remove} />}
-      </section>
 
-      <div className="flex w-full items-center justify-between gap-[24px] rounded-[12px] bg-white px-[24px] py-[16px]" style={{ border: `1px solid ${HAIR}` }}>
-        <span className="flex items-center gap-[12px]">
-          <BookIcon />
-          <span className={`${FONT} leading-[21px] text-[14px]`} style={{ color: INK }}>
-            New to the API? Learn how to authenticate and sync buyers into your CRM.
-          </span>
-        </span>
-        <a
-          href="#api-documentation"
-          onClick={e => e.preventDefault()}
-          className={`${FONT} flex shrink-0 items-center gap-[6px] font-medium leading-[21px] text-[14px]`}
-          style={{ color: DEEP }}
-        >
-          View API Documentation
-          <ArrowOutIcon />
-        </a>
-      </div>
 
-      {dialog === "generate" && <GenerateDialog onCancel={() => setDialog("none")} onGenerate={generate} />}
-      {dialog === "key" && apiKey && <KeyDialog apiKey={apiKey} onDone={() => setDialog("none")} />}
-
-      {/* The review control, with only its lock here: the Prospects / Empty state
-          switch has nothing to switch on this page. */}
-      <ProspectsPrototypeBar lockOnly />
     </div>
   );
 }

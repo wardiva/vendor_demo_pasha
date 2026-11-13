@@ -1114,3 +1114,11 @@ body,
 .rail-newpill path { animation: rail-newrun 2.4s linear infinite; }
 @keyframes rail-newrun { from { stroke-dashoffset: -13.57; } to { stroke-dashoffset: -91.57; } }
 @media (prefers-reduced-motion: reduce) { .rail-newpill path { animation: none; } }
+
+/* The integrations toast rises into place. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

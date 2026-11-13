@@ -131,7 +131,10 @@ export default function App() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   /* ── routing ── */
-  const [page, setPage] = useState<Page>("signals");
+  /* "#integrations" opens straight on Integrations (the published walkthrough's link); otherwise Signals, as before. */
+  const [page, setPage] = useState<Page>(() =>
+    typeof window !== "undefined" && window.location.hash === "#integrations" ? "integrations" : "signals",
+  );
   /* Another module's page, when one is selected. Those pages are not built,
      so they render empty; null means Buyer Intelligence and its real pages. */
   const [modulePage, setModulePage] = useState<NavSelection | null>(null);
